@@ -54,14 +54,21 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
   }, [currentSession, onSessionUpdate]);
 
   // Send prompt to Flow via Chrome extension
-  const sendPromptToFlow = useCallback((prompt: string) => {
-    // @ts-ignore
-    if (typeof window !== 'undefined' && window.chrome?.runtime) {
+  const sendPromptToFlow = useCallback((prompt: string, sceneNumber: number) => {
+    // @ts-ignore - chrome is defined only in extension context
+    if (typeof window !== 'undefined' && window.chrome?.runtime?.sendMessage) {
       // @ts-ignore
       window.chrome.runtime.sendMessage({
         type: 'INJECT_BATCH_PROMPT',
         prompt,
         folderName: currentSession.downloadFolder,
+        sceneNumber,
+      }, (response: { success: boolean; error?: string }) => {
+        if (response?.success) {
+          console.log('[BatchQueue] Prompt enviado ao Flow');
+        } else {
+          console.error('[BatchQueue] Erro ao enviar:', response?.error);
+        }
       });
       return true;
     }
@@ -82,17 +89,17 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
     // Update item status to sending
     updateItem(nextItem.id, { status: 'sending' });
 
-    // Send to Flow
-    const sent = sendPromptToFlow(nextItem.prompt);
+    // Send to Flow via content script
+    const sent = sendPromptToFlow(nextItem.prompt, nextItem.sceneNumber);
     
     if (sent) {
       updateItem(nextItem.id, { status: 'processing' });
-      toast.info(`Cena ${nextItem.sceneNumber} enviada ao Flow`);
+      toast.info(`🚀 Cena ${nextItem.sceneNumber} enviada ao Google Flow`);
     } else {
-      // Fallback: copy to clipboard
+      // Fallback: copy to clipboard if not in extension context
       navigator.clipboard.writeText(nextItem.prompt);
       updateItem(nextItem.id, { status: 'processing' });
-      toast.info(`Cena ${nextItem.sceneNumber} copiada! Cole no Flow manualmente.`);
+      toast.warning(`📋 Cena ${nextItem.sceneNumber} copiada! Cole no Flow manualmente.`);
     }
   }, [currentSession, updateItem, sendPromptToFlow, updateSession]);
 
