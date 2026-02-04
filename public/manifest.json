@@ -2,16 +2,18 @@
   "manifest_version": 3,
   "name": "La Casa Dark CORE - Personagens Consistentes para Veo 3",
   "description": "Crie vídeos com personagens consistentes no Google Flow/Veo 3. Gerencie prompts, lotes automáticos e download de cenas.",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "permissions": [
     "sidePanel",
     "storage",
     "activeTab",
-    "downloads"
+    "downloads",
+    "scripting"
   ],
   "host_permissions": [
     "https://aitestkitchen.withgoogle.com/*",
-    "https://labs.google/*"
+    "https://labs.google.com/*",
+    "https://*.labs.google.com/*"
   ],
   "side_panel": {
     "default_path": "index.html"
@@ -30,17 +32,18 @@
     "128": "icons/icon128.png"
   },
   "background": {
-    "service_worker": "background.js",
-    "type": "module"
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
       "matches": [
         "https://aitestkitchen.withgoogle.com/*",
-        "https://labs.google/*"
+        "https://labs.google.com/*",
+        "https://*.labs.google.com/*"
       ],
       "js": ["content.js"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "all_frames": true
     }
   ]
 }
