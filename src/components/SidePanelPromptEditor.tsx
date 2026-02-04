@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Character, ApiConfig } from "@/types/character";
 import { PromptTemplate } from "@/data/promptTemplates";
+import { savePromptToHistory } from "@/lib/promptHistory";
 import { TemplateLibrary } from "@/components/TemplateLibrary";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +37,17 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
     return `${character.basePrompt}${templatePart}\n\n[${promptType.toUpperCase()}]: ${promptText}`;
   };
 
+  const saveToHistory = (fullPrompt: string) => {
+    savePromptToHistory({
+      characterId: character.id,
+      characterName: character.name,
+      templateName: selectedTemplate?.name,
+      promptType,
+      userPrompt: promptText || selectedTemplate?.description || '',
+      fullPrompt,
+    });
+  };
+
   const handleGenerate = async () => {
     if (!promptText.trim() && !selectedTemplate) {
       toast.error("Digite um prompt ou selecione um template");
@@ -68,11 +80,13 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
       // Auto-retry com variação
       setTimeout(() => {
         setLastGeneratedPrompt(fullPrompt);
+        saveToHistory(fullPrompt);
         setIsGenerating(false);
         toast.success("Prompt gerado com sucesso na segunda tentativa!");
       }, 1500);
     } else {
       setLastGeneratedPrompt(fullPrompt);
+      saveToHistory(fullPrompt);
       setIsGenerating(false);
       setAlternativeSuggestions([]);
       toast.success("Prompt gerado com sucesso!");
