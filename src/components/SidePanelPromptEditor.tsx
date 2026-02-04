@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
-import { Character, Prompt, ApiConfig } from "@/types/character";
+import { useState } from "react";
+import { Character, ApiConfig } from "@/types/character";
+import { PromptTemplate } from "@/data/promptTemplates";
+import { TemplateLibrary } from "@/components/TemplateLibrary";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Wand2, Loader2, Copy, Send, RefreshCw, Lightbulb, ChevronLeft, Sparkles } from "lucide-react";
+import { Wand2, Loader2, Copy, Send, Lightbulb, ChevronLeft, Sparkles, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
 interface SidePanelPromptEditorProps {
@@ -13,11 +15,10 @@ interface SidePanelPromptEditorProps {
   apiConfig: ApiConfig;
 }
 
-const promptSuggestions = [
-  "O personagem caminha em direção à câmera em uma rua escura",
-  "Close-up do rosto com expressão pensativa",
-  "O personagem olha para o horizonte ao pôr do sol",
-  "Cena dramática com iluminação lateral",
+const quickSuggestions = [
+  "Caminhando na escuridão",
+  "Close-up dramático",
+  "Olhar misterioso",
 ];
 
 export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePanelPromptEditorProps) {
@@ -27,14 +28,17 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
   const [retryCount, setRetryCount] = useState(0);
   const [lastGeneratedPrompt, setLastGeneratedPrompt] = useState<string | null>(null);
   const [alternativeSuggestions, setAlternativeSuggestions] = useState<string[]>([]);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<PromptTemplate | null>(null);
 
   const generateFullPrompt = () => {
-    return `${character.basePrompt}\n\n[${promptType.toUpperCase()}]: ${promptText}`;
+    const templatePart = selectedTemplate ? `\n[TEMPLATE: ${selectedTemplate.name}]\n${selectedTemplate.prompt}` : '';
+    return `${character.basePrompt}${templatePart}\n\n[${promptType.toUpperCase()}]: ${promptText}`;
   };
 
   const handleGenerate = async () => {
-    if (!promptText.trim()) {
-      toast.error("Digite um prompt primeiro");
+    if (!promptText.trim() && !selectedTemplate) {
+      toast.error("Digite um prompt ou selecione um template");
       return;
     }
 
@@ -53,11 +57,12 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
       setRetryCount(prev => prev + 1);
       toast.warning(`Tentativa ${retryCount + 1}/${apiConfig.maxRetries} falhou. Tentando variação...`);
       
-      // Gerar sugestões alternativas
+      // Gerar sugestões alternativas baseadas no contexto
+      const baseText = promptText || selectedTemplate?.prompt || '';
       setAlternativeSuggestions([
-        `${promptText}, cinematic lighting, 8k quality`,
-        `${promptText}, dramatic atmosphere, detailed`,
-        `${promptText}, high quality render, professional`,
+        `${baseText}, cinematic lighting, 8k quality, ultra detailed`,
+        `${baseText}, dramatic atmosphere, film grain, professional`,
+        `${baseText}, high quality render, masterpiece, award winning`,
       ]);
       
       // Auto-retry com variação
@@ -99,9 +104,25 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
     }
   };
 
-  const useSuggestion = (suggestion: string) => {
-    setPromptText(suggestion);
+  const handleSelectTemplate = (template: PromptTemplate) => {
+    setSelectedTemplate(template);
+    setPromptText(template.description);
+    setShowTemplates(false);
+    toast.success(`Template "${template.name}" selecionado!`);
   };
+
+  const clearTemplate = () => {
+    setSelectedTemplate(null);
+  };
+
+  if (showTemplates) {
+    return (
+      <TemplateLibrary 
+        onSelect={handleSelectTemplate}
+        onClose={() => setShowTemplates(false)}
+      />
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -124,9 +145,43 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
       </div>
 
       {/* Área de scroll */}
-      <div className="flex-1 overflow-y-auto p-3 space-y-4">
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* Botão de Templates */}
+        <Button 
+          variant="outline" 
+          className="w-full justify-start gap-2 h-10"
+          onClick={() => setShowTemplates(true)}
+        >
+          <Bookmark className="w-4 h-4 text-primary" />
+          <span className="flex-1 text-left">Templates Dark</span>
+          <Badge variant="secondary" className="text-xs">18</Badge>
+        </Button>
+
+        {/* Template selecionado */}
+        {selectedTemplate && (
+          <div className="p-2.5 rounded-lg bg-primary/10 border border-primary/30 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-primary flex items-center gap-1">
+                <Bookmark className="w-3 h-3" />
+                {selectedTemplate.name}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 px-2 text-xs"
+                onClick={clearTemplate}
+              >
+                Remover
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground line-clamp-2">
+              {selectedTemplate.prompt}
+            </p>
+          </div>
+        )}
+
         {/* Tipo de prompt */}
-        <Select value={promptType} onValueChange={(v) => setPromptType(v as any)}>
+        <Select value={promptType} onValueChange={(v) => setPromptType(v as 'scene' | 'action' | 'dialogue')}>
           <SelectTrigger className="h-9 text-sm">
             <SelectValue />
           </SelectTrigger>
@@ -139,27 +194,27 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
 
         {/* Textarea do prompt */}
         <Textarea
-          placeholder="Descreva a cena que você quer criar..."
+          placeholder="Descreva detalhes adicionais para a cena..."
           value={promptText}
           onChange={(e) => setPromptText(e.target.value)}
-          className="min-h-24 text-sm resize-none"
+          className="min-h-20 text-sm resize-none"
         />
 
         {/* Sugestões rápidas */}
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <p className="text-xs text-muted-foreground flex items-center gap-1">
             <Lightbulb className="w-3 h-3" />
             Sugestões rápidas
           </p>
           <div className="flex flex-wrap gap-1">
-            {promptSuggestions.slice(0, 2).map((suggestion, i) => (
+            {quickSuggestions.map((suggestion, i) => (
               <Badge 
                 key={i}
                 variant="secondary" 
                 className="text-xs cursor-pointer hover:bg-primary/20 transition-colors"
-                onClick={() => useSuggestion(suggestion)}
+                onClick={() => setPromptText(prev => prev ? `${prev}, ${suggestion.toLowerCase()}` : suggestion)}
               >
-                {suggestion.slice(0, 30)}...
+                {suggestion}
               </Badge>
             ))}
           </div>
@@ -168,7 +223,7 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
         {/* Botão gerar */}
         <Button 
           onClick={handleGenerate}
-          disabled={isGenerating || !promptText.trim()}
+          disabled={isGenerating || (!promptText.trim() && !selectedTemplate)}
           variant="glow"
           className="w-full"
         >
@@ -187,10 +242,10 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
 
         {/* Sugestões alternativas (quando há erro) */}
         {alternativeSuggestions.length > 0 && (
-          <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-2">
+          <div className="p-2.5 rounded-lg bg-muted/50 border border-border space-y-2">
             <p className="text-xs font-medium flex items-center gap-1 text-primary">
               <Sparkles className="w-3 h-3" />
-              Prompts alternativos sugeridos:
+              Prompts alternativos:
             </p>
             {alternativeSuggestions.map((alt, i) => (
               <button
@@ -199,7 +254,7 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
                   setPromptText(alt);
                   setAlternativeSuggestions([]);
                 }}
-                className="w-full text-left text-xs p-2 rounded bg-card hover:bg-primary/10 transition-colors border border-border/50"
+                className="w-full text-left text-xs p-2 rounded bg-card hover:bg-primary/10 transition-colors border border-border/50 line-clamp-2"
               >
                 {alt}
               </button>
@@ -211,8 +266,8 @@ export function SidePanelPromptEditor({ character, onBack, apiConfig }: SidePane
         {lastGeneratedPrompt && (
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Prompt gerado:</p>
-            <div className="p-3 rounded-lg bg-muted/30 border border-border">
-              <pre className="text-xs font-mono whitespace-pre-wrap text-foreground/90 max-h-32 overflow-y-auto">
+            <div className="p-2.5 rounded-lg bg-muted/30 border border-border">
+              <pre className="text-xs font-mono whitespace-pre-wrap text-foreground/90 max-h-28 overflow-y-auto">
                 {lastGeneratedPrompt}
               </pre>
             </div>
