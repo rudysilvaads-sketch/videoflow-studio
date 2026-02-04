@@ -35,5 +35,36 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     });
     sendResponse({ success: true });
   }
+  
+  if (message.type === 'INJECT_BATCH_PROMPT') {
+    // Injetar prompt de lote no Google Flow
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'INJECT_BATCH_PROMPT',
+          prompt: message.prompt,
+          folderName: message.folderName
+        });
+      }
+    });
+    sendResponse({ success: true });
+  }
+  
+  if (message.type === 'DOWNLOAD_VIDEO') {
+    // Baixar vídeo usando a API de downloads do Chrome
+    chrome.downloads.download({
+      url: message.url,
+      filename: message.filename,
+      saveAs: false
+    }, (downloadId) => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true, downloadId });
+      }
+    });
+    return true; // Manter o canal aberto para resposta assíncrona
+  }
+  
   return true;
 });

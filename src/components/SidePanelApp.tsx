@@ -1,15 +1,18 @@
 import { useState, useEffect } from "react";
 import { Character, ApiConfig } from "@/types/character";
 import { getPromptHistory } from "@/lib/promptHistory";
+import { BatchSession, getCurrentBatch, saveBatch } from "@/lib/batchQueue";
 import { SidePanelCharacterList } from "@/components/SidePanelCharacterList";
 import { SidePanelPromptEditor } from "@/components/SidePanelPromptEditor";
 import { SidePanelCharacterForm } from "@/components/SidePanelCharacterForm";
 import { PromptHistory } from "@/components/PromptHistory";
+import { BatchPromptInput } from "@/components/BatchPromptInput";
+import { BatchQueueManager } from "@/components/BatchQueueManager";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, Key, Shield, ChevronLeft } from "lucide-react";
+import { Settings, Key, Shield, ChevronLeft, Layers } from "lucide-react";
 import { toast } from "sonner";
 
 const STORAGE_KEY = 'characterflow_data';
@@ -58,10 +61,19 @@ export function SidePanelApp() {
   const [showForm, setShowForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showBatchInput, setShowBatchInput] = useState(false);
+  const [batchSession, setBatchSession] = useState<BatchSession | null>(null);
   const [apiConfig, setApiConfig] = useState<ApiConfig>(defaultApiConfig);
   const [historyCount, setHistoryCount] = useState(0);
   const [promptToUse, setPromptToUse] = useState<string | null>(null);
 
+  // Load existing batch on mount
+  useEffect(() => {
+    const existingBatch = getCurrentBatch();
+    if (existingBatch && existingBatch.items.some(i => i.status !== 'completed')) {
+      setBatchSession(existingBatch);
+    }
+  }, []);
   // Atualizar contagem do histórico
   useEffect(() => {
     const updateCount = () => {
@@ -190,6 +202,17 @@ export function SidePanelApp() {
     </div>
   );
 
+  const handleStartBatch = (session: BatchSession) => {
+    setBatchSession(session);
+    saveBatch(session);
+    setShowBatchInput(false);
+  };
+
+  const handleBatchUpdate = (session: BatchSession) => {
+    setBatchSession(session);
+    saveBatch(session);
+  };
+
   return (
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
       {showSettings ? (
@@ -201,6 +224,18 @@ export function SidePanelApp() {
             handleHistoryUpdated();
           }}
           onUsePrompt={handleUseHistoryPrompt}
+        />
+      ) : showBatchInput ? (
+        <BatchPromptInput
+          character={selectedCharacter || undefined}
+          onBack={() => setShowBatchInput(false)}
+          onStartBatch={handleStartBatch}
+        />
+      ) : batchSession ? (
+        <BatchQueueManager
+          session={batchSession}
+          onBack={() => setBatchSession(null)}
+          onSessionUpdate={handleBatchUpdate}
         />
       ) : showForm ? (
         <SidePanelCharacterForm
@@ -226,7 +261,17 @@ export function SidePanelApp() {
             historyCount={historyCount}
           />
           
-          <div className="p-2 border-t border-border">
+          <div className="p-2 border-t border-border space-y-1">
+            <Button 
+              variant="glow" 
+              size="sm" 
+              className="w-full justify-start"
+              onClick={() => setShowBatchInput(true)}
+            >
+              <Layers className="w-4 h-4 mr-2" />
+              Modo Lote Automático
+            </Button>
+            
             <Button 
               variant="ghost" 
               size="sm" 
