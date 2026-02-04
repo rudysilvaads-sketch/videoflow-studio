@@ -1,4 +1,5 @@
-// Background service worker para a extensão CharacterFlow
+// Background service worker para La Casa Dark CORE
+// Gerencia comunicação entre side panel e content scripts
 
 // Abrir side panel quando clicar no ícone da extensão
 chrome.action.onClicked.addListener((tab) => {
@@ -21,50 +22,76 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   }
 });
 
-// Listener para mensagens do content script ou side panel
+// Listener para mensagens do side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === 'COPY_TO_FLOW') {
-    // Injetar prompt no Google Flow
+  console.log('[Background] Mensagem recebida:', message.type);
+  
+  // Mensagem do side panel para injetar prompt simples
+  if (message.type === 'COPY_TO_FLOW' || message.type === 'INJECT_PROMPT') {
+    // Enviar para o content script da aba ativa
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
+      if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {
           type: 'INJECT_PROMPT',
           prompt: message.prompt
+        }, (response) => {
+          sendResponse(response || { success: false, error: 'Sem resposta do content script' });
         });
+      } else {
+        sendResponse({ success: false, error: 'Nenhuma aba ativa encontrada' });
       }
     });
-    sendResponse({ success: true });
+    return true; // Manter canal aberto para resposta assíncrona
   }
   
+  // Mensagem do side panel para injetar prompt em lote
   if (message.type === 'INJECT_BATCH_PROMPT') {
-    // Injetar prompt de lote no Google Flow
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      if (tabs[0]) {
+      if (tabs[0]?.id) {
         chrome.tabs.sendMessage(tabs[0].id, {
           type: 'INJECT_BATCH_PROMPT',
           prompt: message.prompt,
-          folderName: message.folderName
+          folderName: message.folderName,
+          sceneNumber: message.sceneNumber
+        }, (response) => {
+          sendResponse(response || { success: false, error: 'Sem resposta do content script' });
         });
+      } else {
+        sendResponse({ success: false, error: 'Nenhuma aba ativa encontrada' });
       }
     });
-    sendResponse({ success: true });
+    return true;
   }
   
+  // Mensagem do content script para baixar vídeo
   if (message.type === 'DOWNLOAD_VIDEO') {
-    // Baixar vídeo usando a API de downloads do Chrome
     chrome.downloads.download({
       url: message.url,
       filename: message.filename,
       saveAs: false
     }, (downloadId) => {
       if (chrome.runtime.lastError) {
+        console.error('[Background] Erro no download:', chrome.runtime.lastError);
         sendResponse({ success: false, error: chrome.runtime.lastError.message });
       } else {
+        console.log('[Background] Download iniciado:', downloadId);
         sendResponse({ success: true, downloadId });
       }
     });
-    return true; // Manter o canal aberto para resposta assíncrona
+    return true;
+  }
+  
+  // Mensagens de status do content script - retransmitir para side panel
+  if (message.type === 'VIDEO_COMPLETED' || message.type === 'VIDEO_ERROR') {
+    // Broadcast para todas as extensões (side panel vai receber)
+    chrome.runtime.sendMessage(message).catch(() => {
+      // Ignorar erro se side panel não estiver aberto
+    });
+    sendResponse({ received: true });
+    return true;
   }
   
   return true;
 });
+
+console.log('[La Casa Dark CORE] Background service worker carregado');
