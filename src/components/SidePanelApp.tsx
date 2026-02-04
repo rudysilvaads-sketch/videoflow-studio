@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Character, ApiConfig } from "@/types/character";
+import { getPromptHistory } from "@/lib/promptHistory";
 import { SidePanelCharacterList } from "@/components/SidePanelCharacterList";
 import { SidePanelPromptEditor } from "@/components/SidePanelPromptEditor";
 import { SidePanelCharacterForm } from "@/components/SidePanelCharacterForm";
+import { PromptHistory } from "@/components/PromptHistory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Settings, X, Key, Shield, ChevronLeft } from "lucide-react";
+import { Settings, Key, Shield, ChevronLeft } from "lucide-react";
+import { toast } from "sonner";
 
 const STORAGE_KEY = 'characterflow_data';
 
@@ -49,17 +52,28 @@ const defaultCharacters: Character[] = [
   },
 ];
 
-interface StorageData {
-  characters?: Character[];
-  apiConfig?: ApiConfig;
-}
-
 export function SidePanelApp() {
   const [characters, setCharacters] = useState<Character[]>(defaultCharacters);
   const [selectedCharacter, setSelectedCharacter] = useState<Character | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [apiConfig, setApiConfig] = useState<ApiConfig>(defaultApiConfig);
+  const [historyCount, setHistoryCount] = useState(0);
+  const [promptToUse, setPromptToUse] = useState<string | null>(null);
+
+  // Atualizar contagem do histórico
+  useEffect(() => {
+    const updateCount = () => {
+      setHistoryCount(getPromptHistory().length);
+    };
+    updateCount();
+    
+    // Atualizar quando localStorage mudar
+    const handleStorage = () => updateCount();
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, [showHistory]);
 
   const handleSaveCharacter = (data: Omit<Character, 'id' | 'createdAt'> & { id?: string }) => {
     if (data.id) {
@@ -76,6 +90,15 @@ export function SidePanelApp() {
       };
       setCharacters(prev => [newCharacter, ...prev]);
     }
+  };
+
+  const handleUseHistoryPrompt = (prompt: string) => {
+    navigator.clipboard.writeText(prompt);
+    toast.success("Prompt copiado! Pronto para usar no Flow.");
+  };
+
+  const handleHistoryUpdated = () => {
+    setHistoryCount(getPromptHistory().length);
   };
 
   // Settings Panel inline
@@ -171,6 +194,14 @@ export function SidePanelApp() {
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
       {showSettings ? (
         <SettingsPanel />
+      ) : showHistory ? (
+        <PromptHistory
+          onClose={() => {
+            setShowHistory(false);
+            handleHistoryUpdated();
+          }}
+          onUsePrompt={handleUseHistoryPrompt}
+        />
       ) : showForm ? (
         <SidePanelCharacterForm
           onSave={handleSaveCharacter}
@@ -179,7 +210,10 @@ export function SidePanelApp() {
       ) : selectedCharacter ? (
         <SidePanelPromptEditor
           character={selectedCharacter}
-          onBack={() => setSelectedCharacter(null)}
+          onBack={() => {
+            setSelectedCharacter(null);
+            handleHistoryUpdated();
+          }}
           apiConfig={apiConfig}
         />
       ) : (
@@ -188,6 +222,8 @@ export function SidePanelApp() {
             characters={characters}
             onSelect={setSelectedCharacter}
             onNew={() => setShowForm(true)}
+            onOpenHistory={() => setShowHistory(true)}
+            historyCount={historyCount}
           />
           
           <div className="p-2 border-t border-border">
