@@ -227,7 +227,7 @@ export function SidePanelApp() {
         />
       ) : showBatchInput ? (
         <BatchPromptInput
-          character={selectedCharacter || undefined}
+          characters={characters}
           onBack={() => setShowBatchInput(false)}
           onStartBatch={handleStartBatch}
         />

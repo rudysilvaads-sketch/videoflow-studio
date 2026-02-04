@@ -14,6 +14,10 @@ export interface BatchSession {
   name: string;
   characterId?: string;
   characterName?: string;
+  characterBasePrompt?: string;
+  templateId?: string;
+  templateName?: string;
+  templatePrompt?: string;
   items: BatchPromptItem[];
   currentIndex: number;
   isRunning: boolean;
@@ -48,29 +52,61 @@ export function saveBatch(session: BatchSession): void {
   localStorage.setItem(BATCH_KEY, JSON.stringify(session));
 }
 
+export interface BatchConfig {
+  characterId?: string;
+  characterName?: string;
+  characterBasePrompt?: string;
+  templateId?: string;
+  templateName?: string;
+  templatePrompt?: string;
+}
+
 export function createBatchFromText(
   text: string, 
-  characterId?: string, 
-  characterName?: string
+  config?: BatchConfig
 ): BatchSession {
   const lines = text
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0);
 
-  const items: BatchPromptItem[] = lines.map((line, index) => ({
-    id: crypto.randomUUID(),
-    prompt: line,
-    sceneNumber: index + 1,
-    status: 'pending',
-    createdAt: new Date(),
-  }));
+  // Build full prompt for each line combining character + template + user input
+  const items: BatchPromptItem[] = lines.map((line, index) => {
+    let fullPrompt = '';
+    
+    // Add character base prompt if provided
+    if (config?.characterBasePrompt) {
+      fullPrompt += config.characterBasePrompt;
+    }
+    
+    // Add template prompt if provided
+    if (config?.templatePrompt) {
+      fullPrompt += fullPrompt ? '\n\n' : '';
+      fullPrompt += `[TEMPLATE: ${config.templateName}]\n${config.templatePrompt}`;
+    }
+    
+    // Add user's scene description
+    fullPrompt += fullPrompt ? '\n\n' : '';
+    fullPrompt += `[SCENE ${index + 1}]: ${line}`;
+
+    return {
+      id: crypto.randomUUID(),
+      prompt: fullPrompt,
+      sceneNumber: index + 1,
+      status: 'pending',
+      createdAt: new Date(),
+    };
+  });
 
   const session: BatchSession = {
     id: crypto.randomUUID(),
     name: `Batch ${new Date().toLocaleString('pt-BR')}`,
-    characterId,
-    characterName,
+    characterId: config?.characterId,
+    characterName: config?.characterName,
+    characterBasePrompt: config?.characterBasePrompt,
+    templateId: config?.templateId,
+    templateName: config?.templateName,
+    templatePrompt: config?.templatePrompt,
     items,
     currentIndex: 0,
     isRunning: false,
