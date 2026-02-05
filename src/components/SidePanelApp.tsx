@@ -55,8 +55,6 @@ import {
   AlertTriangle,
   CheckCircle2,
    RefreshCw,
-   ChevronUp,
-   ChevronDown,
    GripVertical
 } from "lucide-react";
 import { toast } from "sonner";
@@ -179,6 +177,7 @@ export function SidePanelApp() {
     return [];
   });
   const [failedTasks, setFailedTasks] = useState<BatchPromptItem[]>([]);
+   const [draggedCharId, setDraggedCharId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
    const processNextItemRef = useRef<() => void>(() => {});
@@ -971,49 +970,47 @@ export function SidePanelApp() {
                           return (
                             <div 
                               key={charId}
-                              className="flex items-center gap-1.5 p-1 rounded bg-muted/50 group"
+                              draggable
+                              onDragStart={(e) => {
+                                setDraggedCharId(charId);
+                                e.dataTransfer.effectAllowed = 'move';
+                              }}
+                              onDragEnd={() => setDraggedCharId(null)}
+                              onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault();
+                                if (!draggedCharId || draggedCharId === charId) return;
+                                const fromIndex = selectedCharacterIds.indexOf(draggedCharId);
+                                const toIndex = index;
+                                const newOrder = [...selectedCharacterIds];
+                                newOrder.splice(fromIndex, 1);
+                                newOrder.splice(toIndex, 0, draggedCharId);
+                                setSelectedCharacterIds(newOrder);
+                                setDraggedCharId(null);
+                              }}
+                              className={`flex items-center gap-1.5 p-1.5 rounded bg-muted/50 group cursor-grab active:cursor-grabbing transition-all ${
+                                draggedCharId === charId ? 'opacity-50 scale-95' : ''
+                              } ${draggedCharId && draggedCharId !== charId ? 'hover:bg-primary/20 hover:border-primary/50 border border-transparent' : ''}`}
                             >
-                              <GripVertical className="w-3 h-3 text-muted-foreground shrink-0" />
+                              <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                               {char.imageUrl && (
                                 <img src={char.imageUrl} alt="" className="w-4 h-4 rounded-full shrink-0" />
                               )}
                               <span className="text-xs flex-1 truncate">{char.name}</span>
-                              <div className="flex gap-0.5">
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 opacity-60 hover:opacity-100"
-                                  disabled={index === 0}
-                                  onClick={() => {
-                                    const newOrder = [...selectedCharacterIds];
-                                    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
-                                    setSelectedCharacterIds(newOrder);
-                                  }}
-                                >
-                                  <ChevronUp className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 opacity-60 hover:opacity-100"
-                                  disabled={index === selectedCharacterIds.length - 1}
-                                  onClick={() => {
-                                    const newOrder = [...selectedCharacterIds];
-                                    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-                                    setSelectedCharacterIds(newOrder);
-                                  }}
-                                >
-                                  <ChevronDown className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-5 w-5 opacity-60 hover:opacity-100 text-destructive"
-                                  onClick={() => setSelectedCharacterIds(prev => prev.filter(id => id !== charId))}
-                                >
-                                  <X className="w-3 h-3" />
-                                </Button>
-                              </div>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5 opacity-0 group-hover:opacity-60 hover:!opacity-100 text-destructive shrink-0"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCharacterIds(prev => prev.filter(id => id !== charId));
+                                }}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
                             </div>
                           );
                         })}
