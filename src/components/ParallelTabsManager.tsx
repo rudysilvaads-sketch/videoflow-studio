@@ -20,7 +20,9 @@
    Check,
    AlertCircle,
    Layers,
-   Trash2
+    Trash2,
+    PlayCircle,
+    PauseCircle
  } from "lucide-react";
  import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -115,9 +117,13 @@ import confetti from "canvas-confetti";
           
           // Enviar próximo prompt se ainda houver
           if (isRunning && newPromptIndex < tab.promptsAssigned.length) {
+            // Verificar se a aba não está pausada antes de enviar próximo prompt
+            const currentTab = currentSession.tabs.find(t => t.id === tab.id);
+            if (currentTab && !currentTab.isPaused) {
             setTimeout(() => {
               sendPromptToTabRef.current({ ...tab, currentPromptIndex: newPromptIndex });
             }, 1000);
+            }
           }
         }
       }
@@ -295,7 +301,7 @@ import confetti from "canvas-confetti";
      
      // Send first prompt to each tab
      currentSession.tabs.forEach(tab => {
-       if (tab.status === 'ready') {
+      if (tab.status === 'ready' && !tab.isPaused) {
          sendPromptToTab(tab);
          updateTab(tab.id, { status: 'processing' });
        }
@@ -338,6 +344,22 @@ import confetti from "canvas-confetti";
      toast.success("Sessão removida");
    };
  
+  // Pausar/retomar aba individual
+  const toggleTabPause = (tab: ParallelTab) => {
+    const newPausedState = !tab.isPaused;
+    updateTab(tab.id, { isPaused: newPausedState });
+    
+    if (newPausedState) {
+      toast.info(`Aba ${tab.id.split('-')[1]} pausada`);
+    } else {
+      toast.success(`Aba ${tab.id.split('-')[1]} retomada`);
+      // Se estava processando e foi retomada, enviar próximo prompt
+      if (isRunning && tab.status === 'processing' && tab.currentPromptIndex < tab.promptsAssigned.length) {
+        setTimeout(() => sendPromptToTab(tab), 500);
+      }
+    }
+  };
+
    // Copy prompts for a specific tab
    const copyTabPrompts = (tab: ParallelTab) => {
      const prompts = tab.promptsAssigned.map(idx => currentSession.allPrompts[idx]).join('\n\n---\n\n');
@@ -464,6 +486,20 @@ import confetti from "canvas-confetti";
                  </div>
                  
                  <div className="flex items-center gap-1">
+                    <Button
+                      variant={tab.isPaused ? "default" : "ghost"}
+                      size="icon"
+                      className={`h-7 w-7 ${tab.isPaused ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
+                      onClick={() => toggleTabPause(tab)}
+                      disabled={tab.status === 'pending' || tab.status === 'error'}
+                      title={tab.isPaused ? 'Retomar aba' : 'Pausar aba'}
+                    >
+                      {tab.isPaused ? (
+                        <PlayCircle className="w-4 h-4" />
+                      ) : (
+                        <PauseCircle className="w-4 h-4" />
+                      )}
+                    </Button>
                    <Button
                      variant="ghost"
                      size="sm"
@@ -483,6 +519,15 @@ import confetti from "canvas-confetti";
                  </div>
                </div>
                
+                {tab.isPaused && (
+                  <div className="flex items-center gap-1 mb-2">
+                    <Badge variant="outline" className="text-[10px] bg-amber-500/20 text-amber-600 border-amber-500/30">
+                      <Pause className="w-2.5 h-2.5 mr-1" />
+                      Pausada
+                    </Badge>
+                  </div>
+                )}
+
                <Progress 
                  value={
                    tab.tabId && realtimeProgress[tab.tabId]?.progress 

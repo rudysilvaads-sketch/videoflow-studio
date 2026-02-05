@@ -2,6 +2,7 @@
    id: string;
    tabId?: number;
    status: 'pending' | 'opening' | 'ready' | 'processing' | 'error';
+  isPaused: boolean;
    currentPromptIndex: number;
    promptsAssigned: number[];
    completedCount: number;
@@ -66,6 +67,7 @@
        tabs.push({
          id: `tab-${i + 1}`,
          status: 'pending',
+          isPaused: false,
          currentPromptIndex: 0,
          promptsAssigned: assignedPrompts,
          completedCount: 0,
