@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
  import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users } from "lucide-react";
 import { toast } from "sonner";
  import { visualStyles, styleCategories, getStylesByCategory } from "@/data/visualStyles";
- import { characterTemplates } from "@/data/characterTemplates";
+ import { characterTemplates, templateCategories, getTemplatesByCategory, TemplateCategory } from "@/data/characterTemplates";
 
 interface SidePanelCharacterFormProps {
   character?: Character;
@@ -38,7 +38,10 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
    const [isDragging, setIsDragging] = useState(false);
    const [imagePreview, setImagePreview] = useState<string | null>(character?.imageUrl || null);
    const [showTemplates, setShowTemplates] = useState(false);
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<TemplateCategory>("Todos");
    const fileInputRef = useRef<HTMLInputElement>(null);
+ 
+  const filteredTemplates = getTemplatesByCategory(selectedTemplateCategory);
  
    const filteredStyles = visualStyles.filter(s => 
      s.label.toLowerCase().includes(styleSearch.toLowerCase()) ||
@@ -205,21 +208,45 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
            className="border-b border-border overflow-hidden"
          >
            <div className="p-3">
-             <p className="text-xs text-muted-foreground mb-2">Selecione um template para começar:</p>
-             <div className="grid grid-cols-3 gap-2">
-               {characterTemplates.map((template) => (
-                 <button
-                   key={template.id}
-                   type="button"
-                   onClick={() => applyTemplate(template)}
-                   className="p-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-center group"
-                 >
-                   <span className="text-2xl block mb-1">{template.thumbnail}</span>
-                   <span className="text-[10px] font-medium text-foreground group-hover:text-primary line-clamp-1">
-                     {template.name}
-                   </span>
-                 </button>
-               ))}
+            {/* Category Filter */}
+            <div className="flex gap-1 mb-3 flex-wrap">
+              {templateCategories.map((category) => (
+                <Button
+                  key={category}
+                  type="button"
+                  variant={selectedTemplateCategory === category ? "default" : "outline"}
+                  size="sm"
+                  className="h-6 text-[10px] px-2"
+                  onClick={() => setSelectedTemplateCategory(category)}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
+            
+            {/* Templates Grid */}
+            <ScrollArea className="h-36">
+              <div className="grid grid-cols-3 gap-2">
+                {filteredTemplates.map((template) => (
+                  <button
+                    key={template.id}
+                    type="button"
+                    onClick={() => applyTemplate(template)}
+                    className="p-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-center group"
+                  >
+                    <span className="text-2xl block mb-1">{template.thumbnail}</span>
+                    <span className="text-[10px] font-medium text-foreground group-hover:text-primary line-clamp-1">
+                      {template.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </ScrollArea>
+            
+            <div className="mt-2 pt-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground text-center">
+                {filteredTemplates.length} templates em "{selectedTemplateCategory}"
+              </p>
              </div>
            </div>
          </motion.div>
