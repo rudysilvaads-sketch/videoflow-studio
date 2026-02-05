@@ -8,3 +8,8 @@
  export { HistoryTab } from './HistoryTab';
  export { ToolsTab } from './ToolsTab';
  export { ConnectionScreen } from './ConnectionScreen';
+export { SurvivalTab } from './SurvivalTab';
+export { SeriesManager } from './SeriesManager';
+export { ScenarioLibrary } from './ScenarioLibrary';
+export { SurvivorProfile } from './SurvivorProfile';
+export { PromptBuilder } from './PromptBuilder';

@@ -70,8 +70,10 @@ import {
   Layers,
   Sparkles,
   Video,
-  Zap
+  Zap,
+  Compass
 } from "lucide-react";
+import { SurvivalTab } from "@/components/sidepanel";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
 
@@ -1083,6 +1085,13 @@ export function SidePanelApp() {
             <Wrench className="w-3.5 h-3.5" />
             Ferramentas
           </TabsTrigger>
+          <TabsTrigger 
+            value="survival" 
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+          >
+            <Compass className="w-3.5 h-3.5" />
+            Sobrevivência
+          </TabsTrigger>
         </TabsList>
 
         {/* Control Tab */}
@@ -1824,6 +1833,18 @@ Com detalhes visuais e cinematográficos.
               </div>
             </div>
           </div>
+        </TabsContent>
+
+        {/* Survival Tab */}
+        <TabsContent value="survival" className="flex-1 overflow-hidden mt-0 p-0">
+          <SurvivalTab 
+            onPromptReady={(prompt) => {
+              // Add the generated prompt to the batch text
+              setBatchText(prev => prev ? `${prev}\n\n${prompt}` : prompt);
+              setActiveTab("control");
+              toast.success("Prompt adicionado à fila!");
+            }}
+          />
         </TabsContent>
       </Tabs>
     </div>
