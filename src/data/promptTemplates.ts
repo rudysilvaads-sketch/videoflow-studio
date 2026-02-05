@@ -279,17 +279,100 @@ export const promptTemplates: PromptTemplate[] = [
     prompt: "POV walking through forest trail, feet on leaves and twigs, dappled sunlight through canopy, peaceful hiking path, nature sounds implied, crunch of footsteps, wilderness exploration, calming nature walk",
     tags: ["trilha", "caminhada", "pov"],
   },
+  // ASMR Roleplay
+  {
+    id: "asmr-roleplay-1",
+    name: "Médico(a) Gentil",
+    category: "asmr",
+    description: "Consulta médica relaxante e cuidadosa",
+    prompt: "caring doctor in white coat, soft examination room lighting, gentle hand gestures, medical equipment visible, calming professional demeanor, POV patient perspective, soft smile, warm ambient lighting, ASMR medical roleplay aesthetic",
+    tags: ["roleplay", "médico", "consulta"],
+  },
+  {
+    id: "asmr-roleplay-2",
+    name: "Cabeleireiro(a)",
+    category: "asmr",
+    description: "Sessão relaxante de cuidados com cabelo",
+    prompt: "hairdresser brushing hair slowly, salon mirror reflection, soft warm lighting, scissors and combs visible, gentle focused expression, POV client view, hair care products in background, relaxing salon atmosphere",
+    tags: ["roleplay", "cabelo", "salão"],
+  },
+  {
+    id: "asmr-roleplay-3",
+    name: "Maquiador(a)",
+    category: "asmr",
+    description: "Aplicação suave de maquiagem no espectador",
+    prompt: "makeup artist applying products gently, close-up on hands with brushes, soft studio lighting, makeup palette visible, focused caring expression, POV client perspective, beauty studio background, intimate ASMR setting",
+    tags: ["roleplay", "maquiagem", "beleza"],
+  },
+  {
+    id: "asmr-roleplay-4",
+    name: "Bibliotecário(a)",
+    category: "asmr",
+    description: "Ambiente silencioso de biblioteca com sussurros",
+    prompt: "librarian among old books, whisper-quiet atmosphere, warm reading lamp light, glasses, cardigan, organizing books carefully, library shelves background, cozy academic aesthetic, soft page turning sounds implied",
+    tags: ["roleplay", "biblioteca", "livros"],
+  },
+  // Atenção Pessoal
+  {
+    id: "asmr-attention-1",
+    name: "Cuidando de Você",
+    category: "asmr",
+    description: "Atenção pessoal direta e carinhosa",
+    prompt: "gentle person giving personal attention, soft hand movements near camera, caring warm expression, fairy lights background, extremely soft lighting, intimate close-up, cozy bedroom setting, soothing presence, ASMR personal attention",
+    tags: ["atenção", "cuidado", "íntimo"],
+  },
+  {
+    id: "asmr-attention-2",
+    name: "Limpeza Facial",
+    category: "asmr",
+    description: "Spa facial relaxante com produtos suaves",
+    prompt: "spa facial treatment POV, soft cotton pads, gentle cream application, serene spa therapist face, candles glowing, white towels, cucumber slices nearby, ultra soft lighting, zen spa atmosphere, pampering session",
+    tags: ["spa", "facial", "relaxante"],
+  },
+  {
+    id: "asmr-attention-3",
+    name: "Massagem Craniana",
+    category: "asmr",
+    description: "Massagem relaxante na cabeça e couro cabeludo",
+    prompt: "scalp massage therapy, gentle fingers in hair, soft overhead angle, relaxed peaceful expression, spa treatment room, warm dim lighting, essential oils visible, deeply relaxing atmosphere, ASMR head massage",
+    tags: ["massagem", "cabeça", "relaxante"],
+  },
+  // Variedade de Sons
+  {
+    id: "asmr-sounds-1",
+    name: "Mesa de Triggers",
+    category: "asmr",
+    description: "Coleção de objetos para sons variados",
+    prompt: "overhead view of ASMR trigger collection, organized objects on dark surface, brushes, wooden items, glass bottles, fabric textures, soft studio lighting, hands reaching for items, professional ASMR setup, satisfying arrangement",
+    tags: ["triggers", "objetos", "variedade"],
+  },
+  {
+    id: "asmr-sounds-2",
+    name: "Texturas Satisfatórias",
+    category: "asmr",
+    description: "Tocando diferentes texturas relaxantes",
+    prompt: "hands touching various textures, macro close-up, soft fabric, smooth wood, cold glass, rough stone, satisfying sensory experience, soft lighting, organized texture collection, ASMR texture exploration",
+    tags: ["texturas", "toque", "satisfatório"],
+  },
+  {
+    id: "asmr-sounds-3",
+    name: "Sons de Água",
+    category: "asmr",
+    description: "Água pingando, fluindo e borbulhando",
+    prompt: "water sounds setup, glass containers with water, droplets falling, soft ripples, gentle pouring, spa-like water feature, soft blue lighting, close-up on water movement, calming aquatic atmosphere",
+    tags: ["água", "gotas", "fluindo"],
+  },
 ];
 
 export const categoryLabels: Record<PromptTemplate['category'], string> = {
   horror: "🎃 Terror",
   mystery: "🔍 Mistério",
-  thriller: "⚡ Thriller",
+  thriller: "⚡ Suspense",
   paranormal: "👻 Paranormal",
   crime: "🔪 Crime",
   conspiracy: "🕵️ Conspiração",
   asmr: "🎧 ASMR",
-  "asmr-survivor": "🏕️ ASMR Survivor",
+  "asmr-survivor": "🏕️ ASMR Sobrevivência",
 };
 
 export const categoryColors: Record<PromptTemplate['category'], string> = {

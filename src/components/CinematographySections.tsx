@@ -45,7 +45,7 @@ import { toast } from "sonner";
  const sections: SectionConfig[] = [
    {
      id: "character",
-     title: "CHARACTER LOCK",
+    title: "PERSONAGEM",
      icon: <User className="w-3.5 h-3.5" />,
      fields: [
        { key: "physicalDescription", label: "Descrição Física", placeholder: "Pele, rosto, olhos, sobrancelhas, cicatrizes, características distintivas...", multiline: true },
@@ -56,7 +56,7 @@ import { toast } from "sonner";
    },
    {
      id: "outfit",
-     title: "OUTFIT & PROPS",
+    title: "ROUPA & OBJETOS",
      icon: <Shirt className="w-3.5 h-3.5" />,
      fields: [
        { key: "outfit", label: "Roupa Fixa", placeholder: "Descrição detalhada da roupa que deve ser mantida...", multiline: true },
@@ -66,30 +66,30 @@ import { toast } from "sonner";
    },
    {
      id: "cinematography",
-     title: "CINEMATOGRAPHY",
+    title: "CINEMATOGRAFIA",
      icon: <Camera className="w-3.5 h-3.5" />,
      fields: [
-       { key: "shotType", label: "Tipo de Shot", placeholder: "Medium shot, Close-up, Wide shot..." },
-       { key: "lensStyle", label: "Estilo de Lente", placeholder: "35mm cinematic, shallow depth of field..." },
-       { key: "cameraMovement", label: "Movimento de Câmera", placeholder: "Handheld, tracking, static, dolly..." },
+      { key: "shotType", label: "Tipo de Plano", placeholder: "Plano médio, Close-up, Plano geral..." },
+      { key: "lensStyle", label: "Estilo de Lente", placeholder: "35mm cinematográfico, profundidade de campo rasa..." },
+      { key: "cameraMovement", label: "Movimento de Câmera", placeholder: "Câmera na mão, travelling, estático, dolly..." },
        { key: "focusDescription", label: "Foco", placeholder: "Descrição do foco e transições..." },
      ]
    },
    {
      id: "lighting",
-     title: "LIGHTING",
+    title: "ILUMINAÇÃO",
      icon: <Sun className="w-3.5 h-3.5" />,
      fields: [
-       { key: "lightingSetup", label: "Setup de Iluminação", placeholder: "Exterior night, studio, natural light..." },
-       { key: "keyLight", label: "Key Light", placeholder: "Luz principal: direção, cor, intensidade..." },
-       { key: "fillLight", label: "Fill Light", placeholder: "Luz de preenchimento..." },
-       { key: "backLight", label: "Back Light", placeholder: "Contraluz, rim light..." },
-       { key: "environmentalLighting", label: "Efeitos de Luz", placeholder: "Neon, reflexos de chuva, fog..." },
+      { key: "lightingSetup", label: "Configuração de Luz", placeholder: "Exterior noturno, estúdio, luz natural..." },
+      { key: "keyLight", label: "Luz Principal", placeholder: "Luz principal: direção, cor, intensidade..." },
+      { key: "fillLight", label: "Luz de Preenchimento", placeholder: "Luz de preenchimento para suavizar sombras..." },
+      { key: "backLight", label: "Contraluz", placeholder: "Contraluz, luz de borda..." },
+      { key: "environmentalLighting", label: "Efeitos de Luz", placeholder: "Neon, reflexos de chuva, névoa..." },
      ]
    },
    {
      id: "location",
-     title: "LOCATION / CONTEXT",
+    title: "CENÁRIO / CONTEXTO",
      icon: <MapPin className="w-3.5 h-3.5" />,
      fields: [
        { key: "locationDescription", label: "Cenário", placeholder: "Descrição detalhada do local...", multiline: true },
@@ -99,7 +99,7 @@ import { toast } from "sonner";
    },
    {
      id: "audio",
-     title: "AUDIO",
+    title: "ÁUDIO",
      icon: <Music className="w-3.5 h-3.5" />,
      fields: [
        { key: "ambientSound", label: "Som Ambiente", placeholder: "Sons de fundo, trânsito, natureza..." },
@@ -109,16 +109,16 @@ import { toast } from "sonner";
    },
    {
      id: "style",
-     title: "STYLE & COLOR",
+    title: "ESTILO & COR",
      icon: <Palette className="w-3.5 h-3.5" />,
      fields: [
        { key: "colorPalette", label: "Paleta de Cores", placeholder: "Tons predominantes, acentos..." },
-       { key: "visualStyle", label: "Estilo Visual", placeholder: "Film grain, cinematic, saturação..." },
+      { key: "visualStyle", label: "Estilo Visual", placeholder: "Granulado de filme, cinematográfico, saturação..." },
      ]
    },
    {
      id: "negative",
-     title: "NEGATIVE INSTRUCTIONS",
+    title: "INSTRUÇÕES NEGATIVAS",
      icon: <Ban className="w-3.5 h-3.5" />,
      fields: [
        { key: "negativePrompt", label: "O Que NÃO Fazer", placeholder: "Não mudar roupa, não alterar cabelo, não adicionar pessoas...", multiline: true },
