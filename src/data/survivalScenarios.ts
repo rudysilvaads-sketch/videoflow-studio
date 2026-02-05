@@ -287,8 +287,9 @@
    },
  ];
  
- // Templates de séries pré-configuradas
- export const seriesTemplates = [
+// Templates de séries pré-configuradas - Variedade para canal ASMR
+export const seriesTemplates = [
+  // === SÉRIES PÓS-APOCALÍPTICAS ===
    {
      id: "first-days",
      title: "Os Primeiros Dias",
@@ -341,6 +342,244 @@
        { title: "Noite Selvagem", scenario: "nature-night-forest", description: "Os sons da floresta" },
      ]
    },
+  
+  // === SÉRIES ASMR RELAXANTES ===
+  {
+    id: "asmr-rain-sessions",
+    title: "Sessões de Chuva",
+    description: "Sons relaxantes de chuva em diferentes ambientes",
+    icon: "🌧️",
+    color: "from-slate-500 to-blue-500",
+    suggestedEpisodes: [
+      { title: "Chuva na Cabana", scenario: "weather-rain-shelter", description: "Gotas batendo no telhado de madeira" },
+      { title: "Tempestade Distante", scenario: "weather-thunderstorm", description: "Trovões suaves ao longe" },
+      { title: "Chuva na Floresta", scenario: "nature-dense-jungle", description: "Gotas nas folhas gigantes" },
+      { title: "Aguaceiro Noturno", scenario: "weather-cold-night", description: "Chuva e fogo crepitando" },
+      { title: "Chuva na Cidade Vazia", scenario: "ruins-abandoned-city", description: "Água escorrendo pelas ruínas" },
+      { title: "Névoa e Garoa", scenario: "weather-morning-mist", description: "Chuva fina ao amanhecer" },
+    ]
+  },
+  {
+    id: "asmr-campfire",
+    title: "Noites à Beira do Fogo",
+    description: "Fogueiras relaxantes em diferentes cenários",
+    icon: "🔥",
+    color: "from-orange-500 to-red-600",
+    suggestedEpisodes: [
+      { title: "Fogueira na Floresta", scenario: "survival-campfire", description: "Fogo crepitando na escuridão" },
+      { title: "Lareira Antiga", scenario: "shelter-abandoned-cabin", description: "Calor reconfortante da cabana" },
+      { title: "Fogo na Caverna", scenario: "shelter-cave", description: "Sombras dançando nas paredes" },
+      { title: "Brasas da Meia-Noite", scenario: "survival-campfire", description: "Brasas brilhando no silêncio" },
+      { title: "Cozinhando no Fogo", scenario: "survival-food-prep", description: "Preparando refeição sobre chamas" },
+      { title: "Fogo e Chuva", scenario: "weather-rain-shelter", description: "Fogo protegido enquanto chove" },
+    ]
+  },
+  {
+    id: "asmr-water-sounds",
+    title: "Águas Tranquilas",
+    description: "Sons de água em diversos ambientes naturais",
+    icon: "💧",
+    color: "from-cyan-500 to-blue-600",
+    suggestedEpisodes: [
+      { title: "Cachoeira Escondida", scenario: "nature-waterfall", description: "Água caindo em piscina natural" },
+      { title: "Riacho Cristalino", scenario: "explore-riverbank", description: "Água corrente sobre pedras" },
+      { title: "Gotejamento na Caverna", scenario: "shelter-cave", description: "Gotas ecoando nas paredes" },
+      { title: "Chuva no Lago", scenario: "explore-riverbank", description: "Gotas tocando superfície calma" },
+      { title: "Rio da Montanha", scenario: "explore-mountain-pass", description: "Correnteza nas pedras" },
+      { title: "Coletando Água", scenario: "survival-water-collect", description: "Água enchendo recipientes" },
+    ]
+  },
+  {
+    id: "asmr-forest-sounds",
+    title: "Sussurros da Floresta",
+    description: "Sons ambientes da natureza para relaxamento",
+    icon: "🌲",
+    color: "from-green-600 to-emerald-700",
+    suggestedEpisodes: [
+      { title: "Amanhecer na Mata", scenario: "weather-morning-mist", description: "Pássaros ao nascer do sol" },
+      { title: "Tarde na Clareira", scenario: "nature-open-meadow", description: "Grilos e vento suave" },
+      { title: "Noite na Floresta", scenario: "nature-night-forest", description: "Corujas e sons noturnos" },
+      { title: "Vento nas Folhas", scenario: "explore-forest-path", description: "Brisa suave nas árvores" },
+      { title: "Após a Chuva", scenario: "nature-dense-jungle", description: "Gotas caindo das folhas" },
+      { title: "Copa das Árvores", scenario: "shelter-treehouse", description: "Sons do alto da floresta" },
+    ]
+  },
+  
+  // === SÉRIES CINEMATOGRÁFICAS ===
+  {
+    id: "cinematic-apocalypse",
+    title: "Apocalipse Cinematográfico",
+    description: "Cenas épicas estilo trailer de filme",
+    icon: "🎬",
+    color: "from-purple-600 to-pink-600",
+    suggestedEpisodes: [
+      { title: "O Último Humano", scenario: "ruins-abandoned-city", description: "Panorâmica épica da cidade" },
+      { title: "Jornada Solitária", scenario: "explore-mountain-pass", description: "Travessia dramática" },
+      { title: "Memórias do Passado", scenario: "ruins-hospital", description: "Flashbacks emocionantes" },
+      { title: "Esperança no Horizonte", scenario: "nature-open-meadow", description: "Nascer do sol épico" },
+      { title: "O Confronto", scenario: "weather-thunderstorm", description: "Tempestade dramática" },
+      { title: "Novo Começo", scenario: "nature-waterfall", description: "Descoberta cinematográfica" },
+    ]
+  },
+  {
+    id: "thriller-exploration",
+    title: "Exploração Sombria",
+    description: "Tensão e suspense em locais abandonados",
+    icon: "🔦",
+    color: "from-gray-700 to-slate-800",
+    suggestedEpisodes: [
+      { title: "Hospital à Meia-Noite", scenario: "ruins-hospital", description: "Corredores escuros e ecos" },
+      { title: "Supermercado Assombrado", scenario: "ruins-supermarket", description: "Sombras entre prateleiras" },
+      { title: "Floresta Noturna", scenario: "nature-night-forest", description: "Olhos na escuridão" },
+      { title: "Cabana Isolada", scenario: "shelter-abandoned-cabin", description: "Sons estranhos lá fora" },
+      { title: "Cidade Fantasma", scenario: "ruins-abandoned-city", description: "Ruas vazias e ecos" },
+      { title: "Caverna Profunda", scenario: "shelter-cave", description: "Escuridão total" },
+    ]
+  },
+  
+  // === SÉRIES DE SOBREVIVÊNCIA DETALHADA ===
+  {
+    id: "survival-skills",
+    title: "Técnicas de Sobrevivência",
+    description: "Foco em habilidades específicas de sobrevivência",
+    icon: "🛠️",
+    color: "from-amber-600 to-yellow-500",
+    suggestedEpisodes: [
+      { title: "Construindo Abrigo", scenario: "shelter-makeshift", description: "Técnicas de construção" },
+      { title: "Fazendo Fogo", scenario: "survival-campfire", description: "Métodos primitivos" },
+      { title: "Purificando Água", scenario: "survival-water-collect", description: "Filtragem e fervura" },
+      { title: "Montando Armadilhas", scenario: "survival-hunting-trap", description: "Captura de alimento" },
+      { title: "Preparando Caça", scenario: "survival-food-prep", description: "Processando alimentos" },
+      { title: "Navegação Natural", scenario: "explore-forest-path", description: "Orientação sem bússola" },
+    ]
+  },
+  {
+    id: "long-journey",
+    title: "A Grande Jornada",
+    description: "Viagem épica através de diferentes biomas",
+    icon: "🗺️",
+    color: "from-indigo-500 to-purple-600",
+    suggestedEpisodes: [
+      { title: "Partida", scenario: "ruins-abandoned-city", description: "Deixando a cidade" },
+      { title: "Através da Floresta", scenario: "explore-forest-path", description: "Primeiro dia na mata" },
+      { title: "O Rio", scenario: "explore-riverbank", description: "Seguindo as águas" },
+      { title: "A Montanha", scenario: "explore-mountain-pass", description: "Subindo ao topo" },
+      { title: "Selva Tropical", scenario: "nature-dense-jungle", description: "Calor e umidade" },
+      { title: "O Destino", scenario: "nature-waterfall", description: "Chegada ao paraíso" },
+      { title: "Novo Lar", scenario: "shelter-treehouse", description: "Construindo futuro" },
+    ]
+  },
+  
+  // === SÉRIES TEMÁTICAS ESPECIAIS ===
+  {
+    id: "seasons-cycle",
+    title: "Ciclo das Estações",
+    description: "Sobrevivência através das quatro estações",
+    icon: "🍂",
+    color: "from-orange-400 to-amber-600",
+    suggestedEpisodes: [
+      { title: "Primavera - Renascimento", scenario: "nature-open-meadow", description: "Flores brotando" },
+      { title: "Verão - Abundância", scenario: "nature-waterfall", description: "Calor e vida" },
+      { title: "Outono - Preparação", scenario: "explore-forest-path", description: "Folhas caindo" },
+      { title: "Inverno - Sobrevivência", scenario: "weather-cold-night", description: "Frio extremo" },
+      { title: "Tempestade de Inverno", scenario: "weather-thunderstorm", description: "Enfrentando o gelo" },
+      { title: "Volta da Primavera", scenario: "weather-morning-mist", description: "Novo ciclo" },
+    ]
+  },
+  {
+    id: "night-chronicles",
+    title: "Crônicas da Noite",
+    description: "Episódios focados em cenas noturnas",
+    icon: "🌙",
+    color: "from-indigo-700 to-violet-800",
+    suggestedEpisodes: [
+      { title: "Lua Cheia", scenario: "nature-night-forest", description: "Floresta iluminada pela lua" },
+      { title: "Céu Estrelado", scenario: "survival-campfire", description: "Contemplando as estrelas" },
+      { title: "Noite Sem Lua", scenario: "shelter-cave", description: "Escuridão total" },
+      { title: "Aurora Boreal", scenario: "weather-cold-night", description: "Luzes no céu gelado" },
+      { title: "Tempestade Noturna", scenario: "weather-thunderstorm", description: "Relâmpagos na escuridão" },
+      { title: "Madrugada Calma", scenario: "weather-morning-mist", description: "Antes do amanhecer" },
+    ]
+  },
+  {
+    id: "solo-meditation",
+    title: "Meditação do Sobrevivente",
+    description: "Momentos de paz e reflexão",
+    icon: "🧘",
+    color: "from-teal-500 to-cyan-600",
+    suggestedEpisodes: [
+      { title: "Amanhecer Silencioso", scenario: "weather-morning-mist", description: "Paz ao nascer do sol" },
+      { title: "Contemplação do Rio", scenario: "explore-riverbank", description: "Observando a água" },
+      { title: "Alto da Montanha", scenario: "explore-mountain-pass", description: "Vista panorâmica" },
+      { title: "Clareira Ensolarada", scenario: "nature-open-meadow", description: "Sol e brisa suave" },
+      { title: "Crepúsculo Dourado", scenario: "shelter-treehouse", description: "Pôr do sol nas árvores" },
+      { title: "Noite Serena", scenario: "survival-campfire", description: "Fogo e silêncio" },
+    ]
+  },
+  
+  // === SÉRIES DE AMBIENTE URBANO ===
+  {
+    id: "urban-decay",
+    title: "Decadência Urbana",
+    description: "Explorando a cidade em ruínas",
+    icon: "🏚️",
+    color: "from-stone-600 to-zinc-700",
+    suggestedEpisodes: [
+      { title: "Centro da Cidade", scenario: "ruins-abandoned-city", description: "Prédios abandonados" },
+      { title: "Shopping Vazio", scenario: "ruins-supermarket", description: "Lojas saqueadas" },
+      { title: "Hospital Escuro", scenario: "ruins-hospital", description: "Corredores vazios" },
+      { title: "Estação de Metrô", scenario: "shelter-cave", description: "Túneis subterrâneos" },
+      { title: "Parque Abandonado", scenario: "nature-open-meadow", description: "Natureza retomando" },
+      { title: "Última Noite na Cidade", scenario: "survival-campfire", description: "Fogueira entre ruínas" },
+    ]
+  },
+  {
+    id: "shelter-building",
+    title: "Construindo o Futuro",
+    description: "Diferentes tipos de abrigos e construções",
+    icon: "🏗️",
+    color: "from-yellow-500 to-orange-500",
+    suggestedEpisodes: [
+      { title: "Abrigo de Emergência", scenario: "shelter-makeshift", description: "Construção rápida" },
+      { title: "Casa na Árvore", scenario: "shelter-treehouse", description: "Refúgio elevado" },
+      { title: "Restaurando a Cabana", scenario: "shelter-abandoned-cabin", description: "Reformas essenciais" },
+      { title: "Caverna como Lar", scenario: "shelter-cave", description: "Adaptando a natureza" },
+      { title: "Base Permanente", scenario: "shelter-makeshift", description: "Construção elaborada" },
+      { title: "Fortaleza Final", scenario: "shelter-abandoned-cabin", description: "Segurança completa" },
+    ]
+  },
+  
+  // === SÉRIES INTENSIVAS ===
+  {
+    id: "extreme-weather",
+    title: "Clima Extremo",
+    description: "Sobrevivendo às piores condições",
+    icon: "⛈️",
+    color: "from-sky-600 to-blue-800",
+    suggestedEpisodes: [
+      { title: "Supertempestade", scenario: "weather-thunderstorm", description: "Raios e trovões" },
+      { title: "Frio Mortal", scenario: "weather-cold-night", description: "Hipotermia iminente" },
+      { title: "Chuva Infinita", scenario: "weather-rain-shelter", description: "Dias de chuva" },
+      { title: "Neblina Densa", scenario: "weather-morning-mist", description: "Visibilidade zero" },
+      { title: "Vento Cortante", scenario: "explore-mountain-pass", description: "Vendaval na montanha" },
+      { title: "Calma Após Tempestade", scenario: "nature-waterfall", description: "O mundo renovado" },
+    ]
+  },
+  {
+    id: "food-water-quest",
+    title: "Busca por Recursos",
+    description: "A luta diária por comida e água",
+    icon: "🍖",
+    color: "from-red-500 to-amber-500",
+    suggestedEpisodes: [
+      { title: "Fome", scenario: "ruins-supermarket", description: "Buscando comida" },
+      { title: "Sede", scenario: "survival-water-collect", description: "Encontrando água" },
+      { title: "A Armadilha", scenario: "survival-hunting-trap", description: "Capturando presas" },
+      { title: "Pescaria", scenario: "explore-riverbank", description: "Peixes do rio" },
+      { title: "O Banquete", scenario: "survival-food-prep", description: "Preparando a refeição" },
+      { title: "Estocando", scenario: "shelter-abandoned-cabin", description: "Guardando suprimentos" },
+    ]
+  },
  ];
  
  // Personagem padrão otimizado para consistência
