@@ -1,4 +1,4 @@
- import { useState, useEffect, useCallback } from "react";
+ import { useState, useEffect, useCallback, useRef } from "react";
  import { 
    ParallelSession, 
    ParallelTab,
@@ -33,6 +33,10 @@
  export function ParallelTabsManager({ session, onBack, onSessionUpdate }: ParallelTabsManagerProps) {
    const [currentSession, setCurrentSession] = useState(session);
    const [isRunning, setIsRunning] = useState(session.isRunning);
+  const [realtimeProgress, setRealtimeProgress] = useState<Record<number, { progress: number; status: string }>>({});
+  
+  // Ref para sendPromptToTab para usar no useEffect sem dependência circular
+  const sendPromptToTabRef = useRef<(tab: ParallelTab) => boolean>(() => false);
  
    const progress = getParallelProgress(currentSession);
  
@@ -50,36 +54,159 @@
      updateSession({ tabs: updatedTabs });
    }, [currentSession, updateSession]);
  
+  // Atualizar aba pelo tabId do Chrome
+  const updateTabByBrowserId = useCallback((browserTabId: number, updates: Partial<ParallelTab>) => {
+    const tab = currentSession.tabs.find(t => t.tabId === browserTabId);
+    if (tab) {
+      updateTab(tab.id, updates);
+    }
+  }, [currentSession.tabs, updateTab]);
+ 
+  // Escutar mensagens do background script para progresso em tempo real
+  useEffect(() => {
+    // @ts-ignore
+    if (typeof chrome === 'undefined' || !chrome.runtime?.onMessage) return;
+    
+    const handleMessage = (message: any) => {
+      console.log('[ParallelManager] Mensagem recebida:', message.type);
+      
+      // Progresso atualizado de uma aba
+      if (message.type === 'PARALLEL_TAB_PROGRESS_UPDATE') {
+        setRealtimeProgress(prev => ({
+          ...prev,
+          [message.tabId]: {
+            progress: message.progress,
+            status: message.status
+          }
+        }));
+        
+        // Atualizar completed count se disponível
+        if (message.completedCount !== undefined) {
+          updateTabByBrowserId(message.tabId, { 
+            completedCount: message.completedCount 
+          });
+        }
+      }
+      
+      // Aba fechada
+      if (message.type === 'PARALLEL_TAB_CLOSED') {
+        updateTabByBrowserId(message.tabId, { 
+          status: 'error',
+          tabId: undefined 
+        });
+        toast.warning(`Uma aba do Flow foi fechada`);
+      }
+      
+      // Vídeo completado em uma aba
+      if (message.type === 'VIDEO_COMPLETED' && message.tabId) {
+        const tab = currentSession.tabs.find(t => t.tabId === message.tabId);
+        if (tab) {
+          const newCompletedCount = tab.completedCount + 1;
+          const newPromptIndex = tab.currentPromptIndex + 1;
+          
+          updateTab(tab.id, {
+            completedCount: newCompletedCount,
+            currentPromptIndex: newPromptIndex,
+            status: newPromptIndex >= tab.promptsAssigned.length ? 'ready' : 'processing'
+          });
+          
+          toast.success(`Aba ${tab.id}: Prompt ${newCompletedCount}/${tab.promptsAssigned.length} concluído`);
+          
+          // Enviar próximo prompt se ainda houver
+          if (isRunning && newPromptIndex < tab.promptsAssigned.length) {
+            setTimeout(() => {
+              sendPromptToTabRef.current({ ...tab, currentPromptIndex: newPromptIndex });
+            }, 1000);
+          }
+        }
+      }
+      
+      // Progresso de 65% atingido
+      if (message.type === 'PROGRESS_THRESHOLD_REACHED' && message.tabId) {
+        setRealtimeProgress(prev => ({
+          ...prev,
+          [message.tabId]: {
+            progress: message.progress,
+            status: 'processing'
+          }
+        }));
+      }
+    };
+    
+    // @ts-ignore
+    chrome.runtime.onMessage.addListener(handleMessage);
+    
+    return () => {
+      // @ts-ignore
+      chrome.runtime.onMessage.removeListener(handleMessage);
+    };
+  }, [currentSession.tabs, isRunning, updateTab, updateTabByBrowserId]);
+ 
+  // Polling para obter estado das abas do background
+  useEffect(() => {
+    if (!isRunning) return;
+    
+    const pollState = () => {
+      // @ts-ignore
+      if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+        // @ts-ignore
+        chrome.runtime.sendMessage({ type: 'GET_PARALLEL_TABS_STATE' }, (response: any) => {
+          if (response?.success && response.state) {
+            const newProgress: Record<number, { progress: number; status: string }> = {};
+            Object.entries(response.state).forEach(([tabId, state]: [string, any]) => {
+              newProgress[parseInt(tabId)] = {
+                progress: state.progress || 0,
+                status: state.status || 'pending'
+              };
+            });
+            setRealtimeProgress(newProgress);
+          }
+        });
+      }
+    };
+    
+    // Poll every 2 seconds
+    const interval = setInterval(pollState, 2000);
+    pollState(); // Initial poll
+    
+    return () => clearInterval(interval);
+  }, [isRunning]);
+ 
    // Open multiple tabs in Google Flow
    const openTabs = useCallback(async () => {
-     const flowUrl = 'https://labs.google/fx/pt/tools/flow';
-     
-     for (let i = 0; i < currentSession.tabs.length; i++) {
-       const tab = currentSession.tabs[i];
-       
-       updateTab(tab.id, { status: 'opening' });
-       
-       // @ts-ignore - chrome is defined only in extension context
-       if (typeof chrome !== 'undefined' && chrome.tabs) {
-         try {
-           // @ts-ignore
-           const newTab = await chrome.tabs.create({ url: flowUrl, active: i === 0 });
-           updateTab(tab.id, { tabId: newTab.id, status: 'ready' });
-           
-           // Small delay between opening tabs
-           await new Promise(resolve => setTimeout(resolve, 500));
-         } catch (error) {
-           console.error('Error opening tab:', error);
-           updateTab(tab.id, { status: 'error' });
+    // @ts-ignore
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage) {
+      // Usar background script para abrir abas
+      const promptsPerTab = currentSession.tabs.map(t => t.promptsAssigned.length);
+      
+      // @ts-ignore
+      chrome.runtime.sendMessage({
+        type: 'OPEN_PARALLEL_TABS',
+        count: currentSession.tabs.length,
+        sessionId: currentSession.id,
+        promptsPerTab
+      }, (response: any) => {
+        if (response?.success && response.tabs) {
+          response.tabs.forEach((openedTab: { tabId: number; index: number }) => {
+            const tab = currentSession.tabs[openedTab.index];
+            if (tab) {
+              updateTab(tab.id, { tabId: openedTab.tabId, status: 'ready' });
+            }
+          });
+          toast.success(`${response.tabs.length} abas abertas no Google Flow!`);
+        } else {
+          toast.error('Erro ao abrir abas');
          }
-       } else {
-         // Fallback: open in new window
-         window.open(flowUrl, `_blank_${i}`);
-         updateTab(tab.id, { status: 'ready' });
-       }
+      });
+    } else {
+      // Fallback: abrir manualmente
+      const flowUrl = 'https://labs.google/fx/pt/tools/flow';
+      currentSession.tabs.forEach((tab, i) => {
+        window.open(flowUrl, `_blank_${i}`);
+        updateTab(tab.id, { status: 'ready' });
+      });
+      toast.success(`${currentSession.tabs.length} abas abertas!`);
      }
-     
-     toast.success(`${currentSession.tabs.length} abas abertas no Google Flow!`);
    }, [currentSession.tabs, updateTab]);
  
    // Send prompt to a specific tab
@@ -93,19 +220,31 @@
      const sceneNumber = promptIndex + 1;
      
      // @ts-ignore
-     if (typeof chrome !== 'undefined' && chrome.tabs && tab.tabId) {
+    if (typeof chrome !== 'undefined' && chrome.runtime?.sendMessage && tab.tabId) {
        // @ts-ignore
-       chrome.tabs.sendMessage(tab.tabId, {
-         type: 'INJECT_BATCH_PROMPT',
+      chrome.runtime.sendMessage({
+        type: 'INJECT_PARALLEL_PROMPT',
+        tabId: tab.tabId,
          prompt,
          folderName: `${currentSession.downloadFolder}/tab-${tab.id.split('-')[1]}`,
          sceneNumber,
+      }, (response: any) => {
+        if (response?.success) {
+          console.log(`[Parallel] Prompt enviado para aba ${tab.id}`);
+        } else {
+          console.error(`[Parallel] Erro ao enviar prompt:`, response?.error);
+        }
        });
        return true;
      }
      
      return false;
    }, [currentSession]);
+ 
+  // Atualizar ref quando sendPromptToTab mudar
+  useEffect(() => {
+    sendPromptToTabRef.current = sendPromptToTab;
+  }, [sendPromptToTab]);
  
    // Start all tabs processing
    const handleStart = async () => {
@@ -178,13 +317,13 @@
        case 'pending':
          return <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />;
        case 'opening':
-         return <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />;
+          return <Loader2 className="w-3 h-3 text-primary animate-spin" />;
        case 'ready':
-         return <Check className="w-3 h-3 text-green-500" />;
+          return <Check className="w-3 h-3 text-accent" />;
        case 'processing':
          return <Loader2 className="w-3 h-3 text-primary animate-spin" />;
        case 'error':
-         return <AlertCircle className="w-3 h-3 text-red-500" />;
+          return <AlertCircle className="w-3 h-3 text-destructive" />;
      }
    };
  
@@ -312,7 +451,11 @@
                </div>
                
                <Progress 
-                 value={(tab.completedCount / tab.promptsAssigned.length) * 100} 
+                 value={
+                   tab.tabId && realtimeProgress[tab.tabId]?.progress 
+                     ? realtimeProgress[tab.tabId].progress 
+                     : (tab.completedCount / tab.promptsAssigned.length) * 100
+                 } 
                  className="h-1.5 mb-2" 
                />
                
