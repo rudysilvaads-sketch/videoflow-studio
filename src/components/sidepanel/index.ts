@@ -16,3 +16,4 @@ export { PromptBuilder } from './PromptBuilder';
  export { ImageGenerator } from './ImageGenerator';
 export { AvatarGenerator } from './AvatarGenerator';
  export { EpisodeManager } from './EpisodeManager';
+ export { EpisodeTimeline } from './EpisodeTimeline';

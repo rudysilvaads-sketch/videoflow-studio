@@ -47,6 +47,7 @@
  } from "@/types/episode";
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
+ import { EpisodeTimeline } from "./EpisodeTimeline";
  
  interface EpisodeManagerProps {
    characterPrompt: string;
@@ -61,6 +62,7 @@
    const [expandedBeats, setExpandedBeats] = useState<string[]>([]);
    const [editingScene, setEditingScene] = useState<string | null>(null);
    const [copiedScene, setCopiedScene] = useState<string | null>(null);
+   const [selectedTimelineBeat, setSelectedTimelineBeat] = useState<string | null>(null);
  
    // Form state para novo episódio
    const [formData, setFormData] = useState({
@@ -256,6 +258,14 @@
      const prompts = beat.scenes.map(s => s.prompt);
      onSendToQueue(prompts);
      toast.success(`${prompts.length} cenas de "${beat.name}" enviadas!`);
+   };
+ 
+   const handleTimelineBeatClick = (beatId: string) => {
+     setSelectedTimelineBeat(prev => prev === beatId ? null : beatId);
+     // Expandir o beat clicado na lista
+     if (!expandedBeats.includes(beatId)) {
+       setExpandedBeats(prev => [...prev, beatId]);
+     }
    };
  
    const totalScenesNeeded = Math.ceil((formData.targetDuration * 60) / formData.sceneDuration);
@@ -483,8 +493,15 @@
            </div>
          )}
  
+         {/* Timeline Visual */}
+         <EpisodeTimeline
+           episode={episode}
+           onBeatClick={handleTimelineBeatClick}
+           selectedBeatId={selectedTimelineBeat || undefined}
+         />
+ 
          {/* Lista de Beats */}
-         <ScrollArea className="h-[280px]">
+         <ScrollArea className="h-[200px]">
            <div className="space-y-2 pr-2">
              {episode.beats.map((beat, beatIndex) => (
                <Collapsible
