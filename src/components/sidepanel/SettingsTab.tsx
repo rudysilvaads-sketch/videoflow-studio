@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
  import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
  
  interface AppSettings {
    videosPerTask: number;
@@ -89,6 +90,8 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
   const [saved, setSaved] = useState(false);
    const [validatingGemini, setValidatingGemini] = useState(false);
    const [geminiValidation, setGeminiValidation] = useState<'idle' | 'valid' | 'invalid'>('idle');
+  const [validatingCookies, setValidatingCookies] = useState(false);
+  const [cookiesValidation, setCookiesValidation] = useState<'idle' | 'valid' | 'invalid'>('idle');
    
    // Validate Gemini API Key
    const validateGeminiKey = async (apiKey: string): Promise<boolean> => {
@@ -136,6 +139,50 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
      }
    };
   
+  // Handle cookies change
+  const handleCookiesChange = (value: string) => {
+    setCredentials(prev => ({ ...prev, imageFxCookies: value }));
+    setCookiesValidation('idle');
+  };
+  
+  // Validate ImageFX Cookies
+  const handleTestCookies = async () => {
+    if (!credentials.imageFxCookies.trim()) {
+      toast.error('Cole os cookies para validar');
+      return;
+    }
+    
+    setValidatingCookies(true);
+    setCookiesValidation('idle');
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-imagefx', {
+        body: {
+          cookies: credentials.imageFxCookies,
+          validateOnly: true,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (data.valid) {
+        setCookiesValidation('valid');
+        toast.success('Cookies válidos! Sessão ativa.');
+      } else {
+        setCookiesValidation('invalid');
+        toast.error(data.error || 'Cookies inválidos ou expirados.');
+      }
+    } catch (err) {
+      console.error('Cookie validation error:', err);
+      setCookiesValidation('invalid');
+      toast.error('Erro ao validar cookies. Tente novamente.');
+    } finally {
+      setValidatingCookies(false);
+    }
+  };
+  
   // Save credentials to localStorage
   useEffect(() => {
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
@@ -155,6 +202,34 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        }
        setGeminiValidation('valid');
      }
+    
+    // Validate cookies if they exist and haven't been validated
+    if (credentials.imageFxCookies.trim() && cookiesValidation !== 'valid') {
+      setValidatingCookies(true);
+      
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-imagefx', {
+          body: {
+            cookies: credentials.imageFxCookies,
+            validateOnly: true,
+          },
+        });
+
+        setValidatingCookies(false);
+        
+        if (error || !data.valid) {
+          setCookiesValidation('invalid');
+          toast.error('Cookies do ImageFX inválidos. Corrija antes de salvar.');
+          return;
+        }
+        setCookiesValidation('valid');
+      } catch (err) {
+        setValidatingCookies(false);
+        setCookiesValidation('invalid');
+        toast.error('Erro ao validar cookies. Tente novamente.');
+        return;
+      }
+    }
      
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
     setSaved(true);
@@ -326,19 +401,32 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                  <Cookie className="w-3 h-3 text-primary" />
                 ImageFX Cookies
                 {hasCookies && (
-                  <Badge variant="outline" className="text-[9px] h-4 text-accent border-accent/30">
-                    <Check className="w-2 h-2 mr-0.5" /> Configurados
+                  <Badge variant="outline" className={cn(
+                    "text-[9px] h-4",
+                    cookiesValidation === 'valid' ? "text-accent border-accent/30" : 
+                    cookiesValidation === 'invalid' ? "text-destructive border-destructive/30" :
+                    "text-accent border-accent/30"
+                  )}>
+                    {cookiesValidation === 'valid' ? (
+                      <><Check className="w-2 h-2 mr-0.5" /> Validados</>
+                    ) : cookiesValidation === 'invalid' ? (
+                      <><XCircle className="w-2 h-2 mr-0.5" /> Inválidos</>
+                    ) : (
+                      <><Check className="w-2 h-2 mr-0.5" /> Configurados</>
+                    )}
                   </Badge>
                 )}
               </Label>
               <div className="relative">
                 <Textarea
                   value={credentials.imageFxCookies}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, imageFxCookies: e.target.value }))}
+                  onChange={(e) => handleCookiesChange(e.target.value)}
                   placeholder="Cole os cookies do ImageFX aqui..."
                   className={cn(
                     "min-h-[80px] font-mono text-xs resize-none",
-                    !showCookies && credentials.imageFxCookies && "text-transparent select-none"
+                    !showCookies && credentials.imageFxCookies && "text-transparent select-none",
+                    cookiesValidation === 'valid' && "border-accent focus-visible:ring-accent",
+                    cookiesValidation === 'invalid' && "border-destructive focus-visible:ring-destructive"
                   )}
                   style={!showCookies && credentials.imageFxCookies ? { 
                     textShadow: "0 0 8px hsl(var(--foreground))" 
@@ -358,12 +446,48 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                   </button>
                 )}
               </div>
-               <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
-                 <p className="text-[10px] text-primary">
+              <div className="flex items-center justify-between mt-1.5">
+                <p className="text-[10px] text-muted-foreground flex-1">
                   <strong>Como obter:</strong> Abra o ImageFX, pressione F12, vá em Application → Cookies, 
-                  e copie todos os cookies como string. Isso permite gerar imagens consistentes dos personagens.
+                  e copie todos os cookies.
                 </p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-[10px]"
+                  onClick={handleTestCookies}
+                  disabled={validatingCookies || !credentials.imageFxCookies.trim()}
+                >
+                  {validatingCookies ? (
+                    <>
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                      Validando...
+                    </>
+                  ) : (
+                    "Testar Sessão"
+                  )}
+                </Button>
               </div>
+              
+              {/* Cookies Validation Status */}
+              {cookiesValidation === 'invalid' && (
+                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
+                  <XCircle className="w-3 h-3 text-destructive" />
+                  <p className="text-[10px] text-destructive">
+                    Cookies inválidos ou expirados. Obtenha novos cookies do ImageFX.
+                  </p>
+                </div>
+              )}
+              
+              {cookiesValidation === 'valid' && (
+                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-accent/10 border border-accent/20 mt-2">
+                  <Check className="w-3 h-3 text-accent" />
+                  <p className="text-[10px] text-accent">
+                    Sessão do ImageFX ativa e funcionando!
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Save Button */}
@@ -372,9 +496,9 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
               size="sm"
               className="w-full gap-2"
               variant={saved ? "outline" : "default"}
-               disabled={validatingGemini}
+              disabled={validatingGemini || validatingCookies}
             >
-               {validatingGemini ? (
+              {validatingGemini || validatingCookies ? (
                  <>
                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                    Validando...
