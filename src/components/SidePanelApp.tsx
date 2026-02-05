@@ -1141,9 +1141,36 @@ export function SidePanelApp() {
               {batchSession && batchSession.items.length > 0 && (
                 <div className="space-y-2">
                   <Progress value={progress.percentage} className="h-2" />
-                  <p className="text-xs text-center text-muted-foreground">
-                    {isRunning ? 'Processing...' : 'Ready'} • {progress.completed}/{progress.total}
-                  </p>
+                  <div className="flex items-center justify-center gap-2">
+                    <p className="text-xs text-muted-foreground">
+                      {isRunning ? 'Processing...' : 'Ready'} • {progress.completed}/{progress.total}
+                    </p>
+                    {/* Reset button when stuck */}
+                    {(isRunning || batchSession.items.some(i => i.status === 'processing' || i.status === 'sending')) && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-5 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                        onClick={() => {
+                          // Reset all processing/sending items to pending
+                          const resetItems = batchSession.items.map(item => 
+                            item.status === 'processing' || item.status === 'sending'
+                              ? { ...item, status: 'pending' as const }
+                              : item
+                          );
+                          const resetSession = { ...batchSession, items: resetItems, isRunning: false };
+                          setBatchSession(resetSession);
+                          saveBatch(resetSession);
+                          setIsRunning(false);
+                          addLog('Queue reset - items stuck in processing returned to pending', 'warning');
+                          toast.info("Fila resetada - itens travados voltaram para pendente");
+                        }}
+                      >
+                        <RotateCcw className="w-3 h-3 mr-1" />
+                        Reset
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
 
