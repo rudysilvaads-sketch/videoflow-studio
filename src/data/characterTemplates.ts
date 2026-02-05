@@ -1,6 +1,7 @@
  export interface CharacterTemplate {
    id: string;
    name: string;
+  category: string;
    description: string;
    basePrompt: string;
    attributes: {
@@ -12,10 +13,28 @@
    thumbnail: string;
  }
  
+ export const templateCategories = [
+   "Todos",
+   "Fantasia",
+   "Sci-Fi",
+   "Horror",
+   "Anime",
+   "Histórico",
+   "Realista",
+ ] as const;
+ 
+ export type TemplateCategory = typeof templateCategories[number];
+ 
+ export const getTemplatesByCategory = (category: TemplateCategory): CharacterTemplate[] => {
+   if (category === "Todos") return characterTemplates;
+   return characterTemplates.filter(t => t.category === category);
+ };
+ 
  export const characterTemplates: CharacterTemplate[] = [
    {
      id: "anime-hero",
      name: "Herói de Anime",
+     category: "Anime",
      description: "Protagonista jovem com cabelos espetados e olhos brilhantes",
      basePrompt: "young anime hero with spiky hair, determined expression, bright eyes, athletic build, wearing a signature outfit, dynamic pose, high quality anime art style",
      attributes: {
@@ -28,6 +47,7 @@
    {
      id: "cyberpunk-woman",
      name: "Mulher Cyberpunk",
+     category: "Sci-Fi",
      description: "Hacker futurista com implantes cibernéticos e cabelo neon",
      basePrompt: "cyberpunk woman hacker, neon hair, cybernetic implants, glowing eyes, futuristic clothing, dark urban background, rain, neon lights reflecting, high detail, cinematic lighting",
      attributes: {
@@ -40,6 +60,7 @@
    {
      id: "fantasy-wizard",
      name: "Mago Anciã",
+     category: "Fantasia",
      description: "Feiticeiro sábio com barba longa e manto místico",
      basePrompt: "wise elderly wizard, long flowing white beard, mystical robes with runes, staff with glowing crystal, magical aura, wise expression, fantasy art style, detailed illustration",
      attributes: {
@@ -52,6 +73,7 @@
    {
      id: "steampunk-inventor",
      name: "Inventora Steampunk",
+     category: "Sci-Fi",
      description: "Engenheira vitoriana com óculos de proteção e engrenagens",
      basePrompt: "steampunk female inventor, brass goggles, Victorian era clothing, mechanical arm, surrounded by gears and gadgets, workshop background, warm lighting, detailed steampunk aesthetic",
      attributes: {
@@ -64,6 +86,7 @@
    {
      id: "noir-detective",
      name: "Detetive Noir",
+     category: "Histórico",
      description: "Investigador misterioso de filme noir clássico",
      basePrompt: "film noir detective, fedora hat, trench coat, cigarette smoke, dramatic shadows, black and white with selective color, 1940s aesthetic, mysterious expression, rain-soaked city background",
      attributes: {
@@ -76,6 +99,7 @@
    {
      id: "kawaii-idol",
      name: "Idol Kawaii",
+     category: "Anime",
      description: "Cantora pop japonesa com visual colorido e fofo",
      basePrompt: "kawaii japanese idol singer, pastel colored outfit, big sparkling eyes, cute pose, heart accessories, stage lighting, confetti, cheerful expression, pop art style, vibrant colors",
      attributes: {
@@ -88,6 +112,7 @@
    {
      id: "medieval-knight",
      name: "Cavaleiro Medieval",
+     category: "Fantasia",
      description: "Guerreiro honrado com armadura completa e espada",
      basePrompt: "medieval knight in full plate armor, noble crest on shield, battle-worn sword, honorable stance, castle background, dramatic lighting, realistic fantasy art, highly detailed armor reflections",
      attributes: {
@@ -100,6 +125,7 @@
    {
      id: "sci-fi-alien",
      name: "Alienígena Sci-Fi",
+     category: "Sci-Fi",
      description: "Ser extraterrestre com características únicas e tecnologia avançada",
      basePrompt: "humanoid alien being, bioluminescent skin patterns, large expressive eyes, advanced alien technology, spaceship interior, otherworldly beauty, sci-fi concept art, detailed creature design",
      attributes: {
@@ -112,6 +138,7 @@
    {
      id: "chibi-mascot",
      name: "Mascote Chibi",
+     category: "Anime",
      description: "Personagem super deformado estilo mascote fofo",
      basePrompt: "chibi mascot character, super deformed proportions, oversized head, tiny body, cute round eyes, simple expressive face, cheerful pose, clean lineart, bright colors, mascot design",
      attributes: {
@@ -124,6 +151,7 @@
    {
      id: "realistic-portrait",
      name: "Retrato Realista",
+     category: "Realista",
      description: "Pessoa fotorrealista com características naturais",
      basePrompt: "photorealistic portrait, natural lighting, detailed skin texture, expressive eyes, professional photography, shallow depth of field, studio quality, high resolution, lifelike details",
      attributes: {
@@ -136,6 +164,7 @@
    {
      id: "watercolor-fairy",
      name: "Fada Aquarela",
+     category: "Fantasia",
      description: "Criatura mágica em estilo aquarela delicado",
      basePrompt: "ethereal fairy creature, delicate watercolor art style, translucent wings, flower crown, soft pastel colors, dreamy atmosphere, nature background, whimsical fantasy illustration",
      attributes: {
@@ -148,6 +177,7 @@
    {
      id: "comic-superhero",
      name: "Super-herói Comics",
+     category: "Anime",
      description: "Herói no estilo clássico de quadrinhos americanos",
      basePrompt: "classic comic book superhero, bold linework, dynamic action pose, cape flowing, muscular build, heroic expression, comic book coloring, halftone dots, vintage comic style",
      attributes: {
@@ -160,6 +190,7 @@
  {
    id: "horror-creature",
    name: "Criatura de Horror",
+   category: "Horror",
    description: "Entidade sombria e aterrorizante das trevas",
    basePrompt: "horror creature, grotesque features, dark atmosphere, glowing eyes in shadows, decaying flesh, elongated limbs, nightmare fuel, horror art style, dramatic lighting, unsettling presence",
    attributes: {
@@ -172,6 +203,7 @@
  {
    id: "western-cowboy",
    name: "Cowboy do Velho Oeste",
+   category: "Histórico",
    description: "Pistoleiro durão do faroeste americano",
    basePrompt: "rugged western cowboy, worn leather hat, dusty poncho, revolver holster, stubble beard, weathered face, desert sunset background, spaghetti western style, cinematic composition",
    attributes: {
@@ -184,6 +216,7 @@
  {
    id: "gothic-vampire",
    name: "Vampiro Gótico",
+   category: "Horror",
    description: "Nobre imortal da era vitoriana com sede de sangue",
    basePrompt: "gothic vampire aristocrat, pale skin, crimson eyes, fangs visible, Victorian era elegant clothing, dark castle background, candlelight, blood red accents, romantic gothic horror aesthetic",
    attributes: {
@@ -196,6 +229,7 @@
  {
    id: "post-apocalyptic-survivor",
    name: "Sobrevivente Pós-Apocalíptico",
+   category: "Sci-Fi",
    description: "Guerreiro endurecido pelo mundo devastado",
    basePrompt: "post-apocalyptic survivor, makeshift armor from scrap, gas mask, scars and dirt, wasteland background, rusted vehicles, orange dust atmosphere, gritty realistic style, survival gear",
    attributes: {
@@ -208,6 +242,7 @@
  {
    id: "samurai-warrior",
    name: "Samurai Guerreiro",
+   category: "Histórico",
    description: "Nobre guerreiro japonês com honra inabalável",
    basePrompt: "traditional samurai warrior, ornate armor with clan crest, katana sword, top knot hairstyle, cherry blossom petals falling, Japanese castle background, ukiyo-e inspired, dramatic pose",
    attributes: {
@@ -220,6 +255,7 @@
  {
    id: "witch-dark",
    name: "Bruxa das Sombras",
+   category: "Horror",
    description: "Feiticeira misteriosa com poderes ocultos",
    basePrompt: "dark witch sorceress, flowing black robes, glowing magical runes, familiar black cat, cauldron with green mist, full moon background, mystical forest, dark fantasy illustration, ethereal lighting",
    attributes: {
@@ -232,6 +268,7 @@
  {
    id: "robot-android",
    name: "Androide Avançado",
+   category: "Sci-Fi",
    description: "Robô humanóide com inteligência artificial",
    basePrompt: "advanced humanoid android, sleek metallic body, glowing blue circuits, partially visible internal mechanisms, neutral expression, futuristic laboratory, clean sci-fi aesthetic, highly detailed mechanical parts",
    attributes: {
@@ -244,6 +281,7 @@
  {
    id: "pirate-captain",
    name: "Capitã Pirata",
+   category: "Histórico",
    description: "Corsária destemida dos sete mares",
    basePrompt: "fierce pirate captain, tricorn hat with feather, ornate coat, cutlass sword, eye patch, ship deck background, stormy sea, golden age of piracy, adventurous expression, dramatic lighting",
    attributes: {
@@ -256,6 +294,7 @@
  {
    id: "lovecraftian-entity",
    name: "Entidade Lovecraftiana",
+   category: "Horror",
    description: "Horror cósmico incompreensível além da realidade",
    basePrompt: "lovecraftian cosmic horror entity, tentacles, impossible geometry, multiple eyes, otherworldly presence, deep space background, eldritch horror, sanity-breaking visage, dark cosmic colors, surreal nightmare",
    attributes: {
@@ -268,6 +307,7 @@
  {
    id: "forest-elf",
    name: "Elfo da Floresta",
+   category: "Fantasia",
    description: "Guardião imortal das florestas ancestrais",
    basePrompt: "forest elf ranger, pointed ears, elegant elven armor with leaf motifs, longbow, flowing hair, ancient forest background, magical sunlight filtering through trees, fantasy art, ethereal beauty",
    attributes: {
@@ -280,6 +320,7 @@
  {
    id: "demon-lord",
    name: "Senhor Demônio",
+   category: "Fantasia",
    description: "Governante infernal com poderes das trevas",
    basePrompt: "demon lord ruler, massive curved horns, burning eyes, dark regal armor, throne of bones, hellfire background, intimidating presence, dark fantasy, ominous red and black color scheme",
    attributes: {
@@ -292,6 +333,7 @@
  {
    id: "1920s-flapper",
    name: "Dançarina dos Anos 20",
+   category: "Histórico",
    description: "Mulher glamourosa da era do jazz",
    basePrompt: "1920s flapper dancer, art deco style, sequined dress with fringe, feather headband, pearl necklace, bob haircut, jazz club background, warm golden lighting, vintage glamour, gatsby era aesthetic",
    attributes: {
@@ -304,6 +346,7 @@
  {
    id: "viking-berserker",
    name: "Viking Berserker",
+   category: "Histórico",
    description: "Guerreiro nórdico feroz em fúria de batalha",
    basePrompt: "viking berserker warrior, braided beard, war paint, fur cloak, battle axe, scarred muscular body, snowy mountain background, northern lights, fierce battle cry expression, nordic runes",
    attributes: {
@@ -316,6 +359,7 @@
  {
    id: "mermaid-queen",
    name: "Rainha Sereia",
+   category: "Fantasia",
    description: "Soberana majestosa dos reinos submarinos",
    basePrompt: "mermaid queen, iridescent tail scales, coral crown, flowing underwater hair, bioluminescent jewelry, deep ocean palace background, magical underwater lighting, ethereal beauty, fantasy illustration",
    attributes: {
@@ -328,6 +372,7 @@
  {
    id: "zombie-survivor",
    name: "Sobrevivente Zumbi",
+   category: "Horror",
    description: "Lutador resiliente em apocalipse zumbi",
    basePrompt: "zombie apocalypse survivor, blood-stained clothing, baseball bat weapon, exhausted but determined expression, abandoned city background, overcast sky, horror survival aesthetic, realistic gritty style",
    attributes: {
