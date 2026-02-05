@@ -234,7 +234,17 @@ async function callLovableAI(apiKey: string, prompt: string, isASMR: boolean): P
     
     try {
       if (GEMINI_API_KEY) {
-       content = await callGeminiDirect(GEMINI_API_KEY, description, isASMR);
+       try {
+         content = await callGeminiDirect(GEMINI_API_KEY, description, isASMR);
+       } catch (geminiError) {
+         // Fallback to Lovable AI if Gemini fails
+         console.log('Gemini API failed, falling back to Lovable AI:', geminiError instanceof Error ? geminiError.message : 'Unknown error');
+         if (LOVABLE_API_KEY) {
+           content = await callLovableAI(LOVABLE_API_KEY, description, isASMR);
+         } else {
+           throw geminiError;
+         }
+       }
       } else if (LOVABLE_API_KEY) {
        content = await callLovableAI(LOVABLE_API_KEY, description, isASMR);
       } else {
