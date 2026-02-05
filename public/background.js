@@ -13,7 +13,8 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   if (!tab.url) return;
   
   const isGoogleFlow = tab.url.includes('aitestkitchen.withgoogle.com') || 
-                       tab.url.includes('labs.google.com');
+                       tab.url.includes('labs.google.com') ||
+                       tab.url.includes('labs.google');
   
   if (isGoogleFlow) {
     await chrome.sidePanel.setOptions({

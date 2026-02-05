@@ -63,6 +63,19 @@ const STORAGE_KEY = 'lacasadark_characters';
 const SETTINGS_KEY = 'lacasadark_settings';
 const LOG_KEY = 'lacasadark_log';
 
+const FLOW_URL = 'https://labs.google/fx/pt/tools/flow';
+
+function isFlowUrl(url: string): boolean {
+  // Requisito: só liberar interface completa quando estiver na página do Flow.
+  // Mantém compatibilidade com URLs antigas.
+  const u = (url || '').toLowerCase();
+  return (
+    (u.includes('labs.google/fx') && u.includes('/tools/flow')) ||
+    u.includes('labs.google.com/veo') ||
+    u.includes('aitestkitchen.withgoogle.com')
+  );
+}
+
 interface AppSettings {
   videosPerTask: number;
   model: string;
@@ -227,8 +240,7 @@ export function SidePanelApp() {
       window.chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any[]) => {
         if (tabs[0]?.url) {
           const url = tabs[0].url;
-          const isFlow = url.includes('labs.google.com') || 
-                        url.includes('aitestkitchen.withgoogle.com');
+            const isFlow = isFlowUrl(url);
           setIsOnFlowPage(isFlow);
           
           if (isFlow) {
@@ -284,9 +296,9 @@ export function SidePanelApp() {
     // @ts-ignore
     if (typeof window !== 'undefined' && window.chrome?.tabs?.create) {
       // @ts-ignore
-      window.chrome.tabs.create({ url: 'https://labs.google.com/veo' });
+      window.chrome.tabs.create({ url: FLOW_URL });
     } else {
-      window.open('https://labs.google.com/veo', '_blank');
+      window.open(FLOW_URL, '_blank');
     }
     addLog('Opened Google Flow in new tab', 'info');
   };
@@ -599,6 +611,47 @@ export function SidePanelApp() {
         onSave={handleSaveCharacter}
         onClose={() => setShowCharacterForm(false)}
       />
+    );
+  }
+
+  // Não mostrar a interface completa fora do Flow — apenas a tela de conexão.
+  if (!checkingPage && !isOnFlowPage) {
+    return (
+      <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+        <div className="flex items-center gap-2 p-3 border-b border-border bg-card/50">
+          <img src={logoDark} alt="LaCasaDark" className="h-8 w-8 rounded-full" />
+          <div>
+            <h1 className="font-bold text-sm">LaCasaDark Flow</h1>
+            <p className="text-xs text-muted-foreground">Character Consistency</p>
+          </div>
+        </div>
+
+        <div className="flex-1 p-4 flex flex-col justify-center gap-3">
+          <div className="rounded-lg border border-border bg-card/50 p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <AlertTriangle className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">Abra o Google Flow para usar</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              A automação só fica disponível em: <span className="font-mono">{FLOW_URL}</span>
+            </p>
+          </div>
+
+          <Button onClick={openGoogleFlow} className="w-full h-10 gap-2">
+            <ExternalLink className="w-4 h-4" />
+            Abrir Google Flow
+          </Button>
+
+          <Button
+            variant="ghost"
+            className="w-full h-9 text-xs gap-2"
+            onClick={checkFlowPage}
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            Verificar conexão
+          </Button>
+        </div>
+      </div>
     );
   }
 
