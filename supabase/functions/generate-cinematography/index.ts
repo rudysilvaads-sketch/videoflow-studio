@@ -5,7 +5,7 @@
    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
  };
  
- const SYSTEM_PROMPT = `Você é um especialista em direção de fotografia e cinematografia para vídeos de IA.
+const SYSTEM_PROMPT_DEFAULT = `Você é um especialista em direção de fotografia e cinematografia para vídeos de IA.
  
  Seu trabalho é gerar configurações cinematográficas detalhadas baseadas na descrição do usuário.
  
@@ -42,11 +42,85 @@
  Seja criativo e detalhado. Use termos técnicos de cinematografia.
  Responda APENAS com o JSON, sem explicações adicionais.`;
  
+const SYSTEM_PROMPT_ASMR = `Você é um especialista em criação de conteúdo ASMR (Autonomous Sensory Meridian Response) e vídeos relaxantes para IA.
+
+Seu foco é criar configurações cinematográficas OTIMIZADAS PARA ASMR, priorizando:
+- Iluminação suave e acolhedora (nunca dura ou fria)
+- Close-ups extremos em mãos, objetos e detalhes
+- Movimentos de câmera lentos ou estáticos
+- Atmosfera íntima e relaxante
+- Sons característicos de ASMR (tapping, scratching, whispering, etc)
+- Cores quentes e neutras que acalmam
+- Ambientes cozy e organizados
+
+Para conteúdo ASMR SURVIVOR/BUSHCRAFT, priorize:
+- Sons da natureza (fogo crepitando, água correndo, pássaros)
+- Atividades manuais detalhadas (cortar madeira, fazer fogo, cozinhar)
+- Iluminação natural ou de fogueira
+- Ambiente de floresta/acampamento
+- Movimentos lentos e metodicos
+
+Você DEVE retornar um JSON válido com os seguintes campos (todos opcionais, inclua apenas os relevantes):
+
+{
+  "physicalDescription": "Descrição física do personagem se mencionado",
+  "hairDescription": "Descrição do cabelo",
+  "accessories": "Acessórios distintivos",
+  "makeup": "Maquiagem (para ASMR: natural/suave)",
+  "outfit": "Roupa (para ASMR: confortável, acolhedora)",
+  "props": "Objetos/props (IMPORTANTE para triggers ASMR)",
+  "bodyLanguage": "Linguagem corporal (movimentos lentos e deliberados)",
+  "shotType": "Tipo de shot (Close-up extremo, macro, overhead são ideais para ASMR)",
+  "lensStyle": "Estilo de lente (shallow DOF, macro, soft focus)",
+  "cameraMovement": "Movimento de câmera (static ou muito lento para ASMR)",
+  "focusDescription": "Descrição do foco (foco seletivo em mãos/objetos)",
+  "lightingSetup": "Setup de iluminação (SEMPRE suave e quente para ASMR)",
+  "keyLight": "Luz principal (soft, warm, wrapped)",
+  "fillLight": "Luz de preenchimento (suave, sem sombras duras)",
+  "backLight": "Contraluz (rim light suave, fairy lights)",
+  "environmentalLighting": "Efeitos de luz ambiente (velas, fairy lights, fogueira)",
+  "locationDescription": "Descrição do cenário (cozy para indoor, natureza para outdoor)",
+  "backgroundElements": "Elementos de fundo (organizados, aesthetic, não distrativos)",
+  "atmosphericEffects": "Efeitos atmosféricos (névoa suave, partículas de luz)",
+  "ambientSound": "Som ambiente (CRUCIAL para ASMR - natureza, silêncio, white noise)",
+  "sfx": "Efeitos sonoros (TRIGGERS ASMR: tapping, scratching, crinkling, water, fire)",
+  "dialogue": "Diálogo (sussurros suaves ou sem fala)",
+  "colorPalette": "Paleta de cores (tons quentes, neutros, pastéis)",
+  "visualStyle": "Estilo visual (soft, dreamy, cozy, intimate)",
+  "negativePrompt": "Instruções negativas (EVITAR: luz dura, cores frias, movimentos rápidos, ruídos altos)"
+}
+
+DICAS ESPECÍFICAS:
+- Para ASMR tradicional: fairy lights, microfone, quarto aconchegante, maquiagem suave
+- Para ASMR Survivor: fogueira, floresta, ferramentas de bushcraft, sons naturais
+- Para ASMR Cooking: overhead shots, ingredientes coloridos, sons de preparo
+- Para ASMR Natureza: macro na natureza, sons de água/vento/pássaros
+
+Seja criativo e detalhado. Priorize a experiência sensorial relaxante.
+Responda APENAS com o JSON, sem explicações adicionais.`;
+
+// Keywords to detect ASMR content
+const ASMR_KEYWORDS = [
+  'asmr', 'sussurro', 'whisper', 'relaxante', 'relaxing', 'tapping', 'scratching',
+  'survivor', 'bushcraft', 'fogueira', 'campfire', 'natureza', 'nature sounds',
+  'cozy', 'aconchegante', 'calming', 'sleep', 'dormir', 'spa', 'massage',
+  'mukbang', 'eating sounds', 'cooking asmr', 'rain sounds', 'chuva',
+  'floresta', 'forest', 'sobrevivência', 'camping', 'acampamento',
+  'meditation', 'meditação', 'triggers', 'tingles', 'satisfying'
+];
+
+function detectASMRContent(description: string): boolean {
+  const lowerDescription = description.toLowerCase();
+  return ASMR_KEYWORDS.some(keyword => lowerDescription.includes(keyword));
+}
+
 // Gemini API direct endpoint
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
-async function callGeminiDirect(apiKey: string, prompt: string): Promise<string> {
-  console.log('Using direct Gemini API');
+async function callGeminiDirect(apiKey: string, prompt: string, isASMR: boolean): Promise<string> {
+  console.log('Using direct Gemini API', isASMR ? '(ASMR mode)' : '');
+  
+  const systemPrompt = isASMR ? SYSTEM_PROMPT_ASMR : SYSTEM_PROMPT_DEFAULT;
   
   const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
     method: 'POST',
@@ -57,8 +131,8 @@ async function callGeminiDirect(apiKey: string, prompt: string): Promise<string>
       contents: [
         {
           parts: [
-            { text: SYSTEM_PROMPT },
-            { text: `\n\nGere configurações cinematográficas para: ${prompt}` }
+            { text: systemPrompt },
+            { text: `\n\nGere configurações cinematográficas${isASMR ? ' ASMR otimizadas' : ''} para: ${prompt}` }
           ]
         }
       ],
@@ -85,8 +159,10 @@ async function callGeminiDirect(apiKey: string, prompt: string): Promise<string>
   return content;
 }
 
-async function callLovableAI(apiKey: string, prompt: string): Promise<string> {
-  console.log('Using Lovable AI Gateway');
+async function callLovableAI(apiKey: string, prompt: string, isASMR: boolean): Promise<string> {
+  console.log('Using Lovable AI Gateway', isASMR ? '(ASMR mode)' : '');
+  
+  const systemPrompt = isASMR ? SYSTEM_PROMPT_ASMR : SYSTEM_PROMPT_DEFAULT;
   
   const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
     method: 'POST',
@@ -97,8 +173,8 @@ async function callLovableAI(apiKey: string, prompt: string): Promise<string> {
     body: JSON.stringify({
       model: 'google/gemini-3-flash-preview',
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Gere configurações cinematográficas para: ${prompt}` }
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Gere configurações cinematográficas${isASMR ? ' ASMR otimizadas' : ''} para: ${prompt}` }
       ],
       temperature: 0.7,
     }),
@@ -146,6 +222,10 @@ async function callLovableAI(apiKey: string, prompt: string): Promise<string> {
  
      console.log('Generating cinematography for:', description);
  
+    // Detect if this is ASMR content
+    const isASMR = detectASMRContent(description);
+    console.log('ASMR content detected:', isASMR);
+
     // Check for custom Gemini API key first, then fallback to Lovable AI
     const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
@@ -154,9 +234,9 @@ async function callLovableAI(apiKey: string, prompt: string): Promise<string> {
     
     try {
       if (GEMINI_API_KEY) {
-        content = await callGeminiDirect(GEMINI_API_KEY, description);
+       content = await callGeminiDirect(GEMINI_API_KEY, description, isASMR);
       } else if (LOVABLE_API_KEY) {
-        content = await callLovableAI(LOVABLE_API_KEY, description);
+       content = await callLovableAI(LOVABLE_API_KEY, description, isASMR);
       } else {
         throw new Error('No API key configured. Please add GEMINI_API_KEY or enable Lovable AI.');
       }
