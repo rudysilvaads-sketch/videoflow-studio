@@ -14,3 +14,4 @@ export { ScenarioLibrary } from './ScenarioLibrary';
 export { SurvivorProfile } from './SurvivorProfile';
 export { PromptBuilder } from './PromptBuilder';
  export { ImageGenerator } from './ImageGenerator';
+export { AvatarGenerator } from './AvatarGenerator';

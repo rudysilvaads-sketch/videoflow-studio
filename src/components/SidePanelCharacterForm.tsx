@@ -7,12 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
  import { Badge } from "@/components/ui/badge";
  import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users, Star, Trash2, Film } from "lucide-react";
+import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users, Star, Trash2, Film, Lock } from "lucide-react";
 import { toast } from "sonner";
  import { visualStyles, styleCategories, getStylesByCategory } from "@/data/visualStyles";
  import { characterTemplates, templateCategories, getTemplatesByCategory, TemplateCategory } from "@/data/characterTemplates";
  import { useCustomTemplates } from "@/hooks/useCustomTemplates";
 import { CinematographySections } from "./CinematographySections";
+import { AvatarGenerator } from "./sidepanel/AvatarGenerator";
 
 interface SidePanelCharacterFormProps {
   character?: Character;
@@ -305,9 +306,9 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
             
             {/* Templates Grid */}
             <ScrollArea className="h-36">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {selectedTemplateCategory === "Favoritos" && customTemplates.length === 0 ? (
-                  <div className="col-span-3 text-center py-6">
+                  <div className="col-span-2 text-center py-6">
                     <Star className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
                     <p className="text-[10px] text-muted-foreground">
                       Nenhum template favorito ainda.
@@ -321,7 +322,7 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
                     key={template.id}
                     type="button"
                     onClick={() => applyTemplate(template)}
-                    className="p-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-center group relative"
+                    className="p-3 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-left group relative flex items-center gap-3"
                   >
                     {"isCustom" in template && (
                       <button
@@ -332,10 +333,27 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
                         <X className="w-2.5 h-2.5" />
                       </button>
                     )}
-                    <span className="text-2xl block mb-1">{template.thumbnail}</span>
-                    <span className="text-[10px] font-medium text-foreground group-hover:text-primary line-clamp-1">
-                      {template.name}
-                    </span>
+                    
+                    {"avatarUrl" in template && template.avatarUrl ? (
+                      <img 
+                        src={template.avatarUrl} 
+                        alt={template.name}
+                        className="w-10 h-10 rounded-lg object-cover ring-1 ring-border shrink-0"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center shrink-0 text-xl">
+                        {template.thumbnail}
+                      </div>
+                    )}
+                    
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium text-foreground group-hover:text-primary block truncate">
+                        {template.name}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground block truncate">
+                        {template.attributes?.style || template.category}
+                      </span>
+                    </div>
                   </button>
                 ))}
               </div>
@@ -585,10 +603,39 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
         </div>
 
         <div className="space-y-1.5">
-          <Label htmlFor="imageUrl" className="text-xs">URL da Imagem</Label>
+          <Label className="text-xs flex items-center gap-2">
+            Imagem do Personagem
+            {formData.imageUrl && (
+              <Badge variant="secondary" className="text-[9px] gap-1">
+                <Lock className="w-2.5 h-2.5" />
+                Travada nas cenas
+              </Badge>
+            )}
+          </Label>
+          
+          {/* Avatar Generator via ImageFX */}
+          <AvatarGenerator
+            characterName={formData.name || "Personagem"}
+            basePrompt={formData.basePrompt}
+            currentImageUrl={imagePreview || undefined}
+            onImageGenerated={(url) => {
+              setImagePreview(url);
+              setFormData(prev => ({ ...prev, imageUrl: url }));
+            }}
+            disabled={!formData.basePrompt}
+          />
+          
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-background px-3 text-muted-foreground">ou use imagem própria</span>
+            </div>
+          </div>
          
-         {/* Image Preview or Upload Area */}
-         {imagePreview ? (
+          {/* Image Preview or Upload Area */}
+          {imagePreview ? (
            <div className="relative group">
              <img 
                src={imagePreview} 
