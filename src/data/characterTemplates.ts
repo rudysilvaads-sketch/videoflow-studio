@@ -386,7 +386,7 @@
   // ASMR Characters
   {
     id: "asmr-artist",
-    name: "ASMR Artist",
+   name: "Artista ASMR",
     category: "ASMR",
     description: "Criadora de conteúdo ASMR com visual suave e acolhedor",
     basePrompt: "young woman ASMR content creator, soft natural makeup, gentle warm expression, cozy sweater, fairy lights background, soft warm lighting, intimate close-up framing, calming presence, whisper-ready pose, microphone nearby",
@@ -399,7 +399,7 @@
   },
   {
     id: "survival-expert",
-    name: "Especialista Survival",
+   name: "Especialista em Sobrevivência",
     category: "ASMR",
     description: "Expert em sobrevivência para canais ASMR Survivor",
     basePrompt: "rugged outdoor survivalist, practical outdoor clothing, weathered hands, calm focused expression, forest background, natural lighting, bushcraft equipment, survival knife on belt, experienced woodsman appearance",
@@ -425,7 +425,7 @@
   },
   {
     id: "nature-guide",
-    name: "Guia da Natureza",
+   name: "Guia de Natureza",
     category: "ASMR",
     description: "Explorador tranquilo da natureza selvagem",
     basePrompt: "calm nature guide, earth-toned hiking clothes, binoculars around neck, gentle observant eyes, forest or meadow background, golden hour natural lighting, peaceful outdoor explorer, connected with nature",
