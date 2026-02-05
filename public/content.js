@@ -121,18 +121,23 @@ async function executeAutomation(prompt, sceneNumber) {
     }
     
     // Passo 2: Clicar no botão "Novo projeto" se necessário
-    await clickNewProjectButton();
-    await delay(1500);
+    // Primeiro, tentar encontrar o campo diretamente (pode já estar disponível)
+    let promptField = await waitForPromptField(3000);
     
-    // Passo 3: Aguardar e encontrar o campo de texto
-    const promptField = await waitForPromptField(5000);
+    // Se não encontrou, tentar criar novo projeto
+    if (!promptField) {
+      console.log('[LaCasaDark] Campo não encontrado, tentando novo projeto...');
+      await clickNewProjectButton();
+      await delay(2000);
+      promptField = await waitForPromptField(8000);
+    }
     
     if (!promptField) {
       showNotification('❌ Campo de prompt não encontrado!', 'error');
       return { success: false, error: 'Prompt field not found' };
     }
     
-    // Passo 4: Inserir o prompt
+    // Passo 3: Inserir o prompt
     await insertPrompt(promptField, prompt);
     showNotification('✅ Prompt inserido!', 'success');
     await delay(500);
