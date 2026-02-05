@@ -146,6 +146,77 @@ export function clearBatch(): void {
   localStorage.removeItem(BATCH_KEY);
 }
 
+export function appendToBatch(
+  text: string,
+  config?: BatchConfig
+): BatchSession {
+  const existingSession = getCurrentBatch();
+  
+  const lines = text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0);
+
+  // Calcular próximo número de cena baseado no batch existente
+  const startingSceneNumber = existingSession 
+    ? existingSession.items.length + 1 
+    : 1;
+
+  const newItems: BatchPromptItem[] = lines.map((line, index) => {
+    const sceneNumber = startingSceneNumber + index;
+    let fullPrompt = '';
+    
+    if (config?.characterBasePrompt) {
+      fullPrompt += config.characterBasePrompt;
+    }
+    
+    if (config?.templatePrompt) {
+      fullPrompt += fullPrompt ? '\n\n' : '';
+      fullPrompt += `[TEMPLATE: ${config.templateName}]\n${config.templatePrompt}`;
+    }
+    
+    fullPrompt += fullPrompt ? '\n\n' : '';
+    fullPrompt += `[SCENE ${sceneNumber}]: ${line}`;
+
+    return {
+      id: crypto.randomUUID(),
+      prompt: fullPrompt,
+      sceneNumber,
+      status: 'pending',
+      createdAt: new Date(),
+    };
+  });
+
+  if (existingSession) {
+    // Append to existing session
+    const updatedSession: BatchSession = {
+      ...existingSession,
+      items: [...existingSession.items, ...newItems],
+    };
+    saveBatch(updatedSession);
+    return updatedSession;
+  } else {
+    // Create new session
+    const session: BatchSession = {
+      id: crypto.randomUUID(),
+      name: `Batch ${new Date().toLocaleString('pt-BR')}`,
+      characterId: config?.characterId,
+      characterName: config?.characterName,
+      characterBasePrompt: config?.characterBasePrompt,
+      templateId: config?.templateId,
+      templateName: config?.templateName,
+      templatePrompt: config?.templatePrompt,
+      items: newItems,
+      currentIndex: 0,
+      isRunning: false,
+      downloadFolder: 'LaCasaDark_Scenes',
+      createdAt: new Date(),
+    };
+    saveBatch(session);
+    return session;
+  }
+}
+
 export function getNextPendingItem(session: BatchSession): BatchPromptItem | null {
   return session.items.find(item => item.status === 'pending') || null;
 }
