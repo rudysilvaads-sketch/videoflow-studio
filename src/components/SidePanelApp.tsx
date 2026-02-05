@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+ import { Reorder, useDragControls } from "framer-motion";
 import { Character } from "@/types/character";
 import { getPromptHistory, clearPromptHistory } from "@/lib/promptHistory";
 import { 
@@ -177,7 +178,6 @@ export function SidePanelApp() {
     return [];
   });
   const [failedTasks, setFailedTasks] = useState<BatchPromptItem[]>([]);
-   const [draggedCharId, setDraggedCharId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
    const processNextItemRef = useRef<() => void>(() => {});
@@ -963,43 +963,35 @@ export function SidePanelApp() {
                  {selectedCharacters.length > 0 && (
                   <div className="p-2 rounded-lg bg-primary/10 border border-primary/30">
                       <p className="text-[10px] text-muted-foreground mb-1.5">Arraste para reordenar (primeiro = principal):</p>
-                      <div className="space-y-1 mb-2">
-                        {selectedCharacterIds.map((charId, index) => {
+                      <Reorder.Group 
+                        axis="y" 
+                        values={selectedCharacterIds} 
+                        onReorder={setSelectedCharacterIds}
+                        className="space-y-1 mb-2"
+                      >
+                        {selectedCharacterIds.map((charId) => {
                           const char = characters.find(c => c.id === charId);
                           if (!char) return null;
                           return (
-                            <div 
+                            <Reorder.Item 
                               key={charId}
-                              draggable
-                              onDragStart={(e) => {
-                                setDraggedCharId(charId);
-                                e.dataTransfer.effectAllowed = 'move';
+                              value={charId}
+                              initial={{ opacity: 0, y: -10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.9 }}
+                              whileDrag={{ 
+                                scale: 1.02, 
+                                boxShadow: "0 8px 20px -5px rgba(0,0,0,0.3)",
+                                zIndex: 50
                               }}
-                              onDragEnd={() => setDraggedCharId(null)}
-                              onDragOver={(e) => {
-                                e.preventDefault();
-                                e.dataTransfer.dropEffect = 'move';
-                              }}
-                              onDrop={(e) => {
-                                e.preventDefault();
-                                if (!draggedCharId || draggedCharId === charId) return;
-                                const fromIndex = selectedCharacterIds.indexOf(draggedCharId);
-                                const toIndex = index;
-                                const newOrder = [...selectedCharacterIds];
-                                newOrder.splice(fromIndex, 1);
-                                newOrder.splice(toIndex, 0, draggedCharId);
-                                setSelectedCharacterIds(newOrder);
-                                setDraggedCharId(null);
-                              }}
-                              className={`flex items-center gap-1.5 p-1.5 rounded bg-muted/50 group cursor-grab active:cursor-grabbing transition-all ${
-                                draggedCharId === charId ? 'opacity-50 scale-95' : ''
-                              } ${draggedCharId && draggedCharId !== charId ? 'hover:bg-primary/20 hover:border-primary/50 border border-transparent' : ''}`}
+                              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                              className="flex items-center gap-1.5 p-1.5 rounded bg-muted/50 group cursor-grab active:cursor-grabbing"
                             >
                               <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                               {char.imageUrl && (
-                                <img src={char.imageUrl} alt="" className="w-4 h-4 rounded-full shrink-0" />
+                                <img src={char.imageUrl} alt="" className="w-4 h-4 rounded-full shrink-0 pointer-events-none" />
                               )}
-                              <span className="text-xs flex-1 truncate">{char.name}</span>
+                              <span className="text-xs flex-1 truncate pointer-events-none">{char.name}</span>
                               <Button
                                 variant="ghost"
                                 size="icon"
@@ -1011,10 +1003,10 @@ export function SidePanelApp() {
                               >
                                 <X className="w-3 h-3" />
                               </Button>
-                            </div>
+                            </Reorder.Item>
                           );
                         })}
-                    </div>
+                      </Reorder.Group>
                       <p className="text-[10px] text-muted-foreground line-clamp-2 font-mono bg-muted/30 p-1.5 rounded">
                         {selectedCharacterIds.map(id => characters.find(c => c.id === id)?.basePrompt || '').join(' [AND] ')}
                     </p>
