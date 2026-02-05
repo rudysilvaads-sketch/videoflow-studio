@@ -13,7 +13,9 @@
   "host_permissions": [
     "https://aitestkitchen.withgoogle.com/*",
     "https://labs.google.com/*",
-    "https://*.labs.google.com/*"
+    "https://*.labs.google.com/*",
+    "https://labs.google/*",
+    "https://*.labs.google/*"
   ],
   "side_panel": {
     "default_path": "index.html"
@@ -39,7 +41,9 @@
       "matches": [
         "https://aitestkitchen.withgoogle.com/*",
         "https://labs.google.com/*",
-        "https://*.labs.google.com/*"
+        "https://*.labs.google.com/*",
+        "https://labs.google/*",
+        "https://*.labs.google/*"
       ],
       "js": ["content.js"],
       "run_at": "document_idle",
