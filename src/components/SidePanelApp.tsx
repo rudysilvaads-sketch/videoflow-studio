@@ -1175,14 +1175,20 @@ export function SidePanelApp() {
                   variant="outline"
                   className="w-full h-10 gap-2 border-primary/50 text-primary hover:bg-primary/10"
                   onClick={() => setShowParallelSetup(true)}
-                  disabled={isRunning}
+                  disabled={isRunning || (batchSession?.items.length || 0) === 0}
                 >
                   <Layers className="w-4 h-4" />
                   Modo Paralelo (Múltiplas Abas)
                 </Button>
-                <p className="text-[10px] text-muted-foreground text-center mt-1.5">
-                  Abre várias abas do Flow para processar prompts simultaneamente
-                </p>
+                {(batchSession?.items.length || 0) === 0 ? (
+                  <p className="text-[10px] text-destructive text-center mt-1.5">
+                    Adicione prompts à fila primeiro para usar o modo paralelo
+                  </p>
+                ) : (
+                  <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+                    Abre várias abas do Flow para processar prompts simultaneamente
+                  </p>
+                )}
               </div>
 
               {/* Queue Items Preview */}
