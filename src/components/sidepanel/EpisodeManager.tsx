@@ -17,7 +17,11 @@
    Save,
    X,
    GripVertical,
-   AlertCircle
+   AlertCircle,
+   Bookmark,
+   Download,
+   Upload,
+   Star
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Input } from "@/components/ui/input";
@@ -50,6 +54,7 @@
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
  import { EpisodeTimeline } from "./EpisodeTimeline";
+ import { useCustomEpisodeTemplates } from "@/hooks/useCustomEpisodeTemplates";
  
  interface EpisodeManagerProps {
    characterPrompt: string;
@@ -66,6 +71,15 @@
    const [copiedScene, setCopiedScene] = useState<string | null>(null);
    const [selectedTimelineBeat, setSelectedTimelineBeat] = useState<string | null>(null);
    const [showTemplates, setShowTemplates] = useState(true);
+   const [templateTab, setTemplateTab] = useState<'builtin' | 'custom'>('builtin');
+ 
+   const { 
+     customTemplates, 
+     saveTemplate, 
+     deleteTemplate,
+     exportTemplates,
+     importTemplates 
+   } = useCustomEpisodeTemplates();
  
    // Form state para novo episódio
    const [formData, setFormData] = useState({
@@ -288,6 +302,59 @@
      setShowTemplates(false);
    };
  
+   const saveCurrentAsTemplate = () => {
+     if (!formData.title.trim() || selectedBeats.length === 0) {
+       toast.error("Preencha título e adicione beats antes de salvar");
+       return;
+     }
+ 
+     const icons = ["📺", "🎬", "🎥", "📽️", "🎞️", "🎭", "🎪", "🎯"];
+     const colors = [
+       "from-violet-500 to-purple-600",
+       "from-pink-500 to-rose-600", 
+       "from-teal-500 to-cyan-600",
+       "from-amber-500 to-orange-600",
+     ];
+ 
+     saveTemplate({
+       title: formData.title,
+       description: formData.description || "Template personalizado",
+       icon: icons[Math.floor(Math.random() * icons.length)],
+       color: colors[Math.floor(Math.random() * colors.length)],
+       targetDuration: formData.targetDuration,
+       beats: selectedBeats.map(b => ({
+         name: b.name,
+         description: b.description,
+         emotionalTone: b.emotionalTone,
+         sceneCount: b.sceneCount,
+         location: b.location,
+       })),
+     });
+ 
+     toast.success("Template salvo com sucesso!");
+   };
+ 
+   const handleImportTemplates = () => {
+     const input = document.createElement("input");
+     input.type = "file";
+     input.accept = ".json";
+     input.onchange = (e) => {
+       const file = (e.target as HTMLInputElement).files?.[0];
+       if (!file) return;
+       const reader = new FileReader();
+       reader.onload = (ev) => {
+         const count = importTemplates(ev.target?.result as string);
+         if (count > 0) {
+           toast.success(`${count} templates importados!`);
+         } else {
+           toast.error("Erro ao importar templates");
+         }
+       };
+       reader.readAsText(file);
+     };
+     input.click();
+   };
+ 
    const totalScenesNeeded = Math.ceil((formData.targetDuration * 60) / formData.sceneDuration);
    const currentScenesPlanned = selectedBeats.reduce((acc, b) => acc + b.sceneCount, 0);
  
@@ -313,19 +380,64 @@
          {showTemplates && (
            <div className="space-y-2">
              <div className="flex items-center justify-between">
-               <Label className="text-xs flex items-center gap-1">
-                 <Sparkles className="w-3 h-3 text-primary" />
-                 Templates de Episódio
-               </Label>
-               <Button 
-                 variant="ghost" 
-                 size="sm" 
-                 className="h-5 text-[10px]"
-                 onClick={() => setShowTemplates(false)}
-               >
-                 Criar do zero
-               </Button>
+               <div className="flex items-center gap-1">
+                 <Button
+                   variant={templateTab === 'builtin' ? 'default' : 'ghost'}
+                   size="sm"
+                   className="h-6 text-[10px] px-2"
+                   onClick={() => setTemplateTab('builtin')}
+                 >
+                   <Sparkles className="w-3 h-3 mr-1" />
+                   Padrão ({EPISODE_TEMPLATES.length})
+                 </Button>
+                 <Button
+                   variant={templateTab === 'custom' ? 'default' : 'ghost'}
+                   size="sm"
+                   className="h-6 text-[10px] px-2"
+                   onClick={() => setTemplateTab('custom')}
+                 >
+                   <Star className="w-3 h-3 mr-1" />
+                   Meus ({customTemplates.length})
+                 </Button>
+               </div>
+               <div className="flex items-center gap-1">
+                 {templateTab === 'custom' && (
+                   <>
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       className="h-5 w-5 p-0"
+                       onClick={handleImportTemplates}
+                       title="Importar"
+                     >
+                       <Upload className="w-3 h-3" />
+                     </Button>
+                     {customTemplates.length > 0 && (
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         className="h-5 w-5 p-0"
+                         onClick={exportTemplates}
+                         title="Exportar"
+                       >
+                         <Download className="w-3 h-3" />
+                       </Button>
+                     )}
+                   </>
+                 )}
+                 <Button
+                   variant="ghost"
+                   size="sm"
+                   className="h-5 text-[10px]"
+                   onClick={() => setShowTemplates(false)}
+                 >
+                   <X className="w-3 h-3" />
+                 </Button>
+               </div>
              </div>
+            
+             {/* Templates Padrão */}
+             {templateTab === 'builtin' && (
              <ScrollArea className="h-[180px]">
                <div className="grid grid-cols-2 gap-1.5 pr-2">
                  {EPISODE_TEMPLATES.map((template) => (
@@ -355,6 +467,64 @@
                  ))}
                </div>
              </ScrollArea>
+             )}
+ 
+             {/* Templates Personalizados */}
+             {templateTab === 'custom' && (
+               <ScrollArea className="h-[180px]">
+                 {customTemplates.length === 0 ? (
+                   <div className="flex flex-col items-center justify-center h-full py-8 text-center">
+                     <Bookmark className="w-8 h-8 text-muted-foreground/30 mb-2" />
+                     <p className="text-[10px] text-muted-foreground">Nenhum template personalizado</p>
+                     <p className="text-[9px] text-muted-foreground/70">Configure um episódio e clique em "Salvar como Template"</p>
+                   </div>
+                 ) : (
+                   <div className="grid grid-cols-2 gap-1.5 pr-2">
+                     {customTemplates.map((template) => (
+                       <motion.div
+                         key={template.id}
+                         whileHover={{ scale: 1.02 }}
+                         className="relative group"
+                       >
+                         <button
+                           onClick={() => loadFromTemplate(template)}
+                           className="w-full p-2 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                         >
+                           <div className="flex items-center gap-1.5 mb-1">
+                             <div className={`w-6 h-6 rounded-md flex items-center justify-center text-sm bg-gradient-to-br ${template.color}`}>
+                               {template.icon}
+                             </div>
+                             <span className="text-[10px] font-medium truncate flex-1">{template.title}</span>
+                           </div>
+                           <p className="text-[9px] text-muted-foreground line-clamp-2">{template.description}</p>
+                           <div className="flex items-center gap-1 mt-1">
+                             <Badge variant="outline" className="text-[8px] h-4 px-1">
+                               {template.targetDuration}min
+                             </Badge>
+                             <Badge variant="outline" className="text-[8px] h-4 px-1">
+                               {template.beats.length} beats
+                             </Badge>
+                           </div>
+                         </button>
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           className="absolute top-1 right-1 h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80"
+                           onClick={(e) => {
+                             e.stopPropagation();
+                             deleteTemplate(template.id);
+                             toast.success("Template excluído");
+                           }}
+                         >
+                           <Trash2 className="w-3 h-3 text-destructive" />
+                         </Button>
+                       </motion.div>
+                     ))}
+                   </div>
+                 )}
+               </ScrollArea>
+             )}
+            
              <Separator />
            </div>
          )}
@@ -499,9 +669,20 @@
            </ScrollArea>
          )}
  
-         <Button onClick={createEpisode} className="w-full" disabled={selectedBeats.length === 0}>
-           Criar Episódio
-         </Button>
+         <div className="flex gap-2">
+           <Button onClick={createEpisode} className="flex-1" disabled={selectedBeats.length === 0}>
+             Criar Episódio
+           </Button>
+           <Button 
+             variant="outline" 
+             size="icon"
+             onClick={saveCurrentAsTemplate}
+             disabled={!formData.title.trim() || selectedBeats.length === 0}
+             title="Salvar como Template"
+           >
+             <Bookmark className="w-4 h-4" />
+           </Button>
+         </div>
        </motion.div>
      );
    }
