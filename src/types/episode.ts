@@ -19,6 +19,7 @@
    location?: string;
    scenes: EpisodeScene[];
    order: number;
+   targetSceneCount?: number;
  }
  
  export interface EpisodeScene {

@@ -156,6 +156,7 @@
          location: b.location,
          scenes: [],
          order: i,
+         targetSceneCount: b.sceneCount,
        })),
        createdAt: new Date(),
        updatedAt: new Date(),
@@ -180,8 +181,10 @@
          description: b.description,
          emotionalTone: b.emotionalTone,
          location: b.location,
-         sceneCount: selectedBeats.find(sb => sb.name === b.name)?.sceneCount || 8,
+         sceneCount: b.targetSceneCount || 8,
        }));
+       
+       console.log("Sending beats data:", beatsData);
  
        const { data, error } = await supabase.functions.invoke('generate-episode-scenes', {
          body: {
@@ -197,10 +200,17 @@
        if (error) throw error;
        if (data.error) throw new Error(data.error);
  
+       console.log("Received data from edge function:", data);
+ 
        // Atualizar beats com as cenas geradas
        const updatedBeats = episode.beats.map((beat, beatIndex) => {
          const generatedBeat = data.beats?.[beatIndex];
-         if (!generatedBeat) return beat;
+         if (!generatedBeat) {
+           console.log(`No generated beat for index ${beatIndex}`);
+           return beat;
+         }
+ 
+         console.log(`Beat ${beatIndex} has ${generatedBeat.scenes?.length || 0} scenes`);
  
          return {
            ...beat,
@@ -215,7 +225,10 @@
          };
        });
  
-       setEpisode(prev => prev ? { ...prev, beats: updatedBeats, updatedAt: new Date() } : null);
+       console.log("Updated beats:", updatedBeats.map(b => ({ name: b.name, sceneCount: b.scenes.length })));
+       
+       const updatedEpisode = { ...episode, beats: updatedBeats, updatedAt: new Date() };
+       setEpisode(updatedEpisode);
        toast.success("Cenas geradas com sucesso!");
      } catch (err) {
        console.error("Error generating scenes:", err);
