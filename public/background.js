@@ -2,11 +2,29 @@
 // Gerencia comunicação entre side panel e content scripts
 
  console.log('[La Casa Dark CORE] Background service worker v3.0 carregando...');
+ 
+ // Estado das abas paralelas para sincronização
+ const parallelTabsState = new Map(); // tabId -> { sessionId, status, progress, completedCount, totalCount }
 
 // Abrir side panel quando clicar no ícone da extensão
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId });
 });
+ 
+ // Limpar estado quando aba é fechada
+ chrome.tabs.onRemoved.addListener((tabId) => {
+   if (parallelTabsState.has(tabId)) {
+     const tabState = parallelTabsState.get(tabId);
+     parallelTabsState.delete(tabId);
+     
+     // Notificar side panel que uma aba foi fechada
+     chrome.runtime.sendMessage({
+       type: 'PARALLEL_TAB_CLOSED',
+       tabId,
+       sessionId: tabState?.sessionId
+     }).catch(() => {}); // Ignorar erro se side panel não estiver aberto
+   }
+ });
 
 // Configurar side panel para abrir automaticamente em sites do Google Flow
 chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
@@ -146,9 +164,138 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // Mensagens de status do content script - retransmitir para side panel
   if (message.type === 'VIDEO_COMPLETED' || message.type === 'VIDEO_ERROR') {
     console.log('[Background] Retransmitindo evento:', message.type);
-    // Enviar para o side panel via postMessage
-    // O side panel escuta eventos do window
+    
+    // Atualizar estado da aba paralela se aplicável
+    if (sender.tab?.id && parallelTabsState.has(sender.tab.id)) {
+      const tabState = parallelTabsState.get(sender.tab.id);
+      if (message.type === 'VIDEO_COMPLETED') {
+        tabState.completedCount = (tabState.completedCount || 0) + 1;
+        tabState.status = 'ready';
+      }
+      parallelTabsState.set(sender.tab.id, tabState);
+    }
+    
+    // Retransmitir para side panel com info da aba
+    chrome.runtime.sendMessage({
+      ...message,
+      tabId: sender.tab?.id
+    }).catch(() => {});
+    
     sendResponse({ received: true });
+    return true;
+  }
+  
+  // Registrar aba para sessão paralela
+  if (message.type === 'REGISTER_PARALLEL_TAB') {
+    parallelTabsState.set(message.tabId, {
+      sessionId: message.sessionId,
+      status: 'ready',
+      progress: 0,
+      completedCount: 0,
+      totalCount: message.totalCount || 0
+    });
+    console.log('[Background] Aba registrada para sessão paralela:', message.tabId);
+    sendResponse({ success: true });
+    return true;
+  }
+  
+  // Atualizar progresso de aba paralela
+  if (message.type === 'PARALLEL_TAB_PROGRESS') {
+    const tabId = sender.tab?.id || message.tabId;
+    if (tabId && parallelTabsState.has(tabId)) {
+      const tabState = parallelTabsState.get(tabId);
+      tabState.progress = message.progress;
+      tabState.status = message.status || tabState.status;
+      if (message.completedCount !== undefined) {
+        tabState.completedCount = message.completedCount;
+      }
+      parallelTabsState.set(tabId, tabState);
+      
+      // Retransmitir para side panel
+      chrome.runtime.sendMessage({
+        type: 'PARALLEL_TAB_PROGRESS_UPDATE',
+        tabId,
+        ...tabState
+      }).catch(() => {});
+    }
+    sendResponse({ received: true });
+    return true;
+  }
+  
+  // Enviar prompt para aba específica (modo paralelo)
+  if (message.type === 'INJECT_PARALLEL_PROMPT') {
+    const targetTabId = message.tabId;
+    
+    if (targetTabId) {
+      chrome.tabs.sendMessage(targetTabId, {
+        type: 'INJECT_BATCH_PROMPT',
+        prompt: message.prompt,
+        folderName: message.folderName,
+        sceneNumber: message.sceneNumber,
+        settings: message.settings
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        } else {
+          // Atualizar estado
+          if (parallelTabsState.has(targetTabId)) {
+            const tabState = parallelTabsState.get(targetTabId);
+            tabState.status = 'processing';
+            parallelTabsState.set(targetTabId, tabState);
+          }
+          sendResponse(response || { success: true });
+        }
+      });
+    } else {
+      sendResponse({ success: false, error: 'Tab ID não especificado' });
+    }
+    return true;
+  }
+  
+  // Obter estado de todas as abas paralelas
+  if (message.type === 'GET_PARALLEL_TABS_STATE') {
+    const state = {};
+    parallelTabsState.forEach((value, key) => {
+      state[key] = value;
+    });
+    sendResponse({ success: true, state });
+    return true;
+  }
+  
+  // Abrir múltiplas abas para sessão paralela
+  if (message.type === 'OPEN_PARALLEL_TABS') {
+    const { count, sessionId, promptsPerTab } = message;
+    const flowUrl = 'https://labs.google/fx/pt/tools/flow';
+    const openedTabs = [];
+    
+    const openTab = async (index) => {
+      return new Promise((resolve) => {
+        chrome.tabs.create({ url: flowUrl, active: index === 0 }, (tab) => {
+          if (tab?.id) {
+            parallelTabsState.set(tab.id, {
+              sessionId,
+              status: 'opening',
+              progress: 0,
+              completedCount: 0,
+              totalCount: promptsPerTab[index] || 0,
+              tabIndex: index
+            });
+            openedTabs.push({ tabId: tab.id, index });
+          }
+          resolve(tab);
+        });
+      });
+    };
+    
+    (async () => {
+      for (let i = 0; i < count; i++) {
+        await openTab(i);
+        // Pequeno delay entre aberturas
+        await new Promise(r => setTimeout(r, 300));
+      }
+      sendResponse({ success: true, tabs: openedTabs });
+    })();
+    
     return true;
   }
   
