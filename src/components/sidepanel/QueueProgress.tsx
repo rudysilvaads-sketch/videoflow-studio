@@ -9,12 +9,14 @@
    Download,
    RotateCcw,
    Layers,
-   FolderOpen
+  FolderOpen,
+  Copy
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Progress } from "@/components/ui/progress";
  import { Badge } from "@/components/ui/badge";
  import { BatchSession, BatchPromptItem } from "@/lib/batchQueue";
+import { toast } from "sonner";
  
  interface QueueProgressProps {
    batchSession: BatchSession | null;
@@ -197,16 +199,35 @@
                      <p className="text-destructive text-[10px] mt-1">{item.errorMessage}</p>
                    )}
                  </div>
-                 {item.status === 'error' && (
+                
+                <div className="flex items-center gap-1 shrink-0">
+                  {/* Copy Button */}
                    <Button 
                      variant="ghost" 
                      size="icon" 
-                     className="h-6 w-6 shrink-0 hover:bg-destructive/10"
-                     onClick={() => onRetryItem(item)}
-                   >
-                     <RotateCcw className="w-3 h-3" />
-                   </Button>
-                 )}
+                    className="h-6 w-6 hover:bg-primary/10"
+                    onClick={() => {
+                      navigator.clipboard.writeText(item.prompt);
+                      toast.success("Prompt copiado!");
+                    }}
+                    title="Copiar prompt"
+                  >
+                    <Copy className="w-3 h-3" />
+                  </Button>
+                  
+                  {/* Retry Button */}
+                  {item.status === 'error' && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6 hover:bg-destructive/10"
+                      onClick={() => onRetryItem(item)}
+                      title="Tentar novamente"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </Button>
+                  )}
+                </div>
                </motion.div>
              ))}
            </AnimatePresence>
