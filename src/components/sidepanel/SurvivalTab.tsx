@@ -104,7 +104,7 @@
    };
  
    return (
-     <div className="h-full flex flex-col">
+      <div className="h-full flex flex-col min-h-0">
        <AnimatePresence mode="wait">
          {activeView === "main" ? (
            <motion.div
@@ -112,16 +112,16 @@
              initial={{ opacity: 0, x: -20 }}
              animate={{ opacity: 1, x: 0 }}
              exit={{ opacity: 0, x: -20 }}
-             className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
            >
              {/* Header */}
-             <div className="p-4 border-b border-border">
-               <div className="flex items-center gap-2 mb-3">
-                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                     <Compass className="w-4 h-4 text-primary-foreground" />
+              <div className="px-3 py-2 border-b border-border shrink-0">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                    <Compass className="w-3.5 h-3.5 text-primary-foreground" />
                  </div>
                  <div>
-                   <h2 className="text-sm font-bold">Canal de Sobrevivência</h2>
+                    <h2 className="text-xs font-bold">Canal de Sobrevivência</h2>
                    <p className="text-[10px] text-muted-foreground">
                      O Último Humano • ASMR Pós-Apocalíptico
                    </p>
@@ -130,24 +130,24 @@
  
                {/* Sub Navigation */}
                <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as typeof activeSubTab)}>
-                 <TabsList className="w-full h-8 p-0.5 bg-muted/50">
+                  <TabsList className="w-full h-7 p-0.5 bg-muted/50">
                    <TabsTrigger 
                      value="scenarios" 
-                     className="flex-1 h-7 text-[10px] gap-1 data-[state=active]:bg-background"
+                      className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
                    >
                      <MapPin className="w-3 h-3" />
                      Cenários
                    </TabsTrigger>
                    <TabsTrigger 
                      value="series" 
-                     className="flex-1 h-7 text-[10px] gap-1 data-[state=active]:bg-background"
+                      className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
                    >
                      <Layers className="w-3 h-3" />
                      Séries
                    </TabsTrigger>
                    <TabsTrigger 
                      value="character" 
-                     className="flex-1 h-7 text-[10px] gap-1 data-[state=active]:bg-background"
+                      className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
                    >
                      <User className="w-3 h-3" />
                      Personagem
@@ -157,8 +157,8 @@
              </div>
  
              {/* Content */}
-             <ScrollArea className="flex-1">
-               <div className="p-4">
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-3">
                  <AnimatePresence mode="wait">
                    {activeSubTab === "scenarios" && (
                      <motion.div
@@ -214,21 +214,21 @@
              initial={{ opacity: 0, x: 20 }}
              animate={{ opacity: 1, x: 0 }}
              exit={{ opacity: 0, x: 20 }}
-             className="flex-1 flex flex-col"
+              className="flex-1 flex flex-col min-h-0"
            >
              {/* Build Header */}
-             <div className="p-4 border-b border-border">
+              <div className="px-3 py-2 border-b border-border shrink-0">
                <div className="flex items-center gap-2">
                  <Button
                    variant="ghost"
                    size="sm"
-                   className="h-7 w-7 p-0"
+                    className="h-6 w-6 p-0"
                    onClick={() => setActiveView("main")}
                  >
                    <ChevronLeft className="w-4 h-4" />
                  </Button>
                  <div>
-                   <h2 className="text-sm font-bold flex items-center gap-1">
+                    <h2 className="text-xs font-bold flex items-center gap-1">
                      <Wand2 className="w-4 h-4 text-primary" />
                      Construir Prompt
                    </h2>
@@ -240,8 +240,8 @@
              </div>
  
              {/* Build Content */}
-             <ScrollArea className="flex-1">
-               <div className="p-4">
+              <ScrollArea className="flex-1 min-h-0">
+                <div className="p-3">
                  <PromptBuilder
                    characterPrompt={survivor.basePrompt}
                    isCharacterLocked={survivor.isLocked}
