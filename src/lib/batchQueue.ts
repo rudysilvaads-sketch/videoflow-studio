@@ -65,13 +65,15 @@ export function createBatchFromText(
   text: string, 
   config?: BatchConfig
 ): BatchSession {
-  const lines = text
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
+  // Separar por linhas em branco duplas (parágrafos) ao invés de cada linha
+  // Isso permite prompts multi-linha
+  const prompts = text
+    .split(/\n\s*\n/) // Divide por uma ou mais linhas em branco
+    .map(prompt => prompt.trim())
+    .filter(prompt => prompt.length > 0);
 
   // Build full prompt for each line combining character + template + user input
-  const items: BatchPromptItem[] = lines.map((line, index) => {
+  const items: BatchPromptItem[] = prompts.map((promptText, index) => {
     let fullPrompt = '';
     
     // Add character base prompt if provided
@@ -87,7 +89,7 @@ export function createBatchFromText(
     
     // Add user's scene description
     fullPrompt += fullPrompt ? '\n\n' : '';
-    fullPrompt += `[SCENE ${index + 1}]: ${line}`;
+    fullPrompt += `[SCENE ${index + 1}]: ${promptText}`;
 
     return {
       id: crypto.randomUUID(),
@@ -152,17 +154,18 @@ export function appendToBatch(
 ): BatchSession {
   const existingSession = getCurrentBatch();
   
-  const lines = text
-    .split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0);
+  // Separar por linhas em branco duplas (parágrafos)
+  const prompts = text
+    .split(/\n\s*\n/)
+    .map(prompt => prompt.trim())
+    .filter(prompt => prompt.length > 0);
 
   // Calcular próximo número de cena baseado no batch existente
   const startingSceneNumber = existingSession 
     ? existingSession.items.length + 1 
     : 1;
 
-  const newItems: BatchPromptItem[] = lines.map((line, index) => {
+  const newItems: BatchPromptItem[] = prompts.map((promptText, index) => {
     const sceneNumber = startingSceneNumber + index;
     let fullPrompt = '';
     
@@ -176,7 +179,7 @@ export function appendToBatch(
     }
     
     fullPrompt += fullPrompt ? '\n\n' : '';
-    fullPrompt += `[SCENE ${sceneNumber}]: ${line}`;
+    fullPrompt += `[SCENE ${sceneNumber}]: ${promptText}`;
 
     return {
       id: crypto.randomUUID(),
