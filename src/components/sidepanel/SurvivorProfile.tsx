@@ -37,6 +37,8 @@ import { cn } from "@/lib/utils";
 import { useImageFxGeneration } from "@/hooks/useImageFxGeneration";
 import { useCredentials } from "@/hooks/useCredentials";
 import { Separator } from "@/components/ui/separator";
+ import { supabase } from "@/integrations/supabase/client";
+ import { toast } from "sonner";
 import {
   Accordion,
   AccordionContent,
@@ -219,6 +221,8 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   const [showImageGenerator, setShowImageGenerator] = useState(false);
   const [useStructuredMode, setUseStructuredMode] = useState(false);
   const [localDetails, setLocalDetails] = useState<CharacterDetails>(profile.details || {});
+   const [isGeneratingWithAI, setIsGeneratingWithAI] = useState(false);
+   const [aiDescription, setAiDescription] = useState("");
 
   const { generate, isGenerating, lastResult } = useImageFxGeneration();
   const { hasImageFxCookies } = useCredentials();
@@ -226,6 +230,33 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   const updateDetail = (key: keyof CharacterDetails, value: string) => {
     setLocalDetails(prev => ({ ...prev, [key]: value }));
   };
+ 
+   const fillWithAI = async () => {
+     if (!aiDescription.trim()) {
+       toast.error("Digite uma descrição básica do personagem");
+       return;
+     }
+     
+     setIsGeneratingWithAI(true);
+     try {
+       const { data, error } = await supabase.functions.invoke('generate-character-details', {
+         body: { description: aiDescription, name: profile.name }
+       });
+       
+       if (error) throw error;
+       if (data.error) throw new Error(data.error);
+       
+       if (data.details) {
+         setLocalDetails(data.details);
+         toast.success("Detalhes preenchidos com IA!");
+       }
+     } catch (err) {
+       console.error("Error generating with AI:", err);
+       toast.error(err instanceof Error ? err.message : "Erro ao gerar com IA");
+     } finally {
+       setIsGeneratingWithAI(false);
+     }
+   };
 
   const applyStructuredDetails = () => {
      const generatedPrompt = buildPromptFromDetails(
@@ -518,13 +549,41 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
             ) : (
               <>
                 {/* Modo Estruturado — campos detalhados */}
-                <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
-                  <p className="text-[10px] text-primary font-medium mb-1">
-                    ✨ Preencha cada detalhe para consistência máxima entre cenas
-                  </p>
-                  <p className="text-[9px] text-muted-foreground">
-                    Quanto mais detalhes, mais o personagem sairá igual em todos os vídeos.
-                  </p>
+                 <div className="p-2.5 rounded-lg bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 space-y-2">
+                   <div className="flex items-center gap-2">
+                     <Sparkles className="w-3.5 h-3.5 text-primary" />
+                     <p className="text-[10px] text-primary font-medium">
+                       Preencher com IA
+                     </p>
+                   </div>
+                   <div className="flex gap-2">
+                     <Input
+                       value={aiDescription}
+                       onChange={(e) => setAiDescription(e.target.value)}
+                       placeholder="Ex: homem latino, 35 anos, sobrevivente, visual desgastado..."
+                       className="h-7 text-xs flex-1"
+                       disabled={isGeneratingWithAI}
+                     />
+                     <Button
+                       size="sm"
+                       variant="default"
+                       className="h-7 px-3 text-[10px]"
+                       onClick={fillWithAI}
+                       disabled={isGeneratingWithAI || !aiDescription.trim()}
+                     >
+                       {isGeneratingWithAI ? (
+                         <Loader2 className="w-3 h-3 animate-spin" />
+                       ) : (
+                         <>
+                           <Sparkles className="w-3 h-3 mr-1" />
+                           Gerar
+                         </>
+                       )}
+                     </Button>
+                   </div>
+                   <p className="text-[9px] text-muted-foreground">
+                     Digite uma descrição simples e a IA preencherá todos os campos automaticamente.
+                   </p>
                 </div>
 
                 <Accordion type="multiple" className="w-full" defaultValue={["face", "hair", "clothes"]}>
