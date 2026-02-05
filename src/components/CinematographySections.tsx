@@ -16,10 +16,13 @@
    Eye
  } from "lucide-react";
  import { CinematographySettings } from "@/types/character";
+import { CinematographyPreview } from "./CinematographyPreview";
  
  interface CinematographySectionsProps {
    settings: CinematographySettings;
    onChange: (settings: CinematographySettings) => void;
+  characterName?: string;
+  basePrompt?: string;
  }
  
  interface SectionConfig {
@@ -120,7 +123,7 @@
    },
  ];
  
- export function CinematographySections({ settings, onChange }: CinematographySectionsProps) {
+export function CinematographySections({ settings, onChange, characterName = "", basePrompt = "" }: CinematographySectionsProps) {
    const [expandedSections, setExpandedSections] = useState<string[]>(["character"]);
  
    const toggleSection = (sectionId: string) => {
@@ -216,6 +219,13 @@
            </div>
          );
        })}
+      
+      {/* Generated Prompt Preview */}
+      <CinematographyPreview
+        characterName={characterName}
+        basePrompt={basePrompt}
+        settings={settings}
+      />
      </div>
    );
  }

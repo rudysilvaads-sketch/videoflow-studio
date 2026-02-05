@@ -678,6 +678,8 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
               <CinematographySections
                 settings={formData.cinematography}
                 onChange={handleCinematographyChange}
+                characterName={formData.name}
+                basePrompt={formData.basePrompt}
               />
             </motion.div>
           )}
