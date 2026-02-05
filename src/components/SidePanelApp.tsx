@@ -926,7 +926,7 @@ export function SidePanelApp() {
   }
 
   return (
-    <div className="h-screen w-full bg-background flex flex-col overflow-hidden extension-panel">
+    <div className="h-full w-full bg-background flex flex-col overflow-hidden extension-panel">
       {/* Hidden input for JSON import */}
       <input
         ref={jsonInputRef}
@@ -1114,7 +1114,8 @@ export function SidePanelApp() {
 
         {/* Control Tab */}
         <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0">
-          <ScrollArea className="flex-1 min-h-0 scrollbar-thin">
+          {/* Sem ScrollArea: a aba Controle deve caber inteira (no-scroll) */}
+          <div className="flex-1 overflow-hidden">
             <div className="p-3 space-y-3">
               {/* Character Selection */}
               <motion.div 
@@ -1532,7 +1533,7 @@ Com detalhes visuais e cinematográficos.
                 </motion.div>
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
         {/* Settings Tab */}
