@@ -32,6 +32,22 @@
      visualStyle: string;
      avatarUrl?: string;
      avatarSeed?: number;
+    details?: {
+      faceShape?: string;
+      skinTone?: string;
+      eyeColor?: string;
+      hairStyle?: string;
+      hairColor?: string;
+      bodyType?: string;
+      height?: string;
+      age?: string;
+      topClothing?: string;
+      bottomClothing?: string;
+      footwear?: string;
+      accessories?: string;
+    };
+    lockClothing?: boolean;
+    lockPhysicalOnly?: boolean;
    };
  }
  
@@ -55,6 +71,9 @@
      visualStyle: string;
      avatarUrl?: string;
      avatarSeed?: number;
+    details?: StoredData['survivor']['details'];
+    lockClothing?: boolean;
+    lockPhysicalOnly?: boolean;
    }>({
      name: survivorCharacterTemplate.name,
      basePrompt: survivorCharacterTemplate.basePrompt,
@@ -62,6 +81,9 @@
      visualStyle: survivorCharacterTemplate.visualStyle || "",
      avatarUrl: undefined,
      avatarSeed: undefined,
+    details: undefined,
+    lockClothing: true,
+    lockPhysicalOnly: false,
    });
  
    // Load from storage
@@ -110,6 +132,41 @@
      const joinedPrompts = prompts.join('\n\n');
      onPromptReady(joinedPrompts);
    };
+
+  // Construir prompt do personagem incluindo instruções de lock
+  const buildCharacterPromptWithLock = (profile: typeof survivor): string => {
+    let prompt = profile.basePrompt;
+    
+    // Adicionar instruções de consistência
+    const lockInstructions: string[] = [];
+    
+    if (profile.lockClothing !== false) {
+      lockInstructions.push(
+        "⚠️ MANTER ROUPA IDÊNTICA EM TODAS AS CENAS - não alterar nenhuma peça de vestuário"
+      );
+    }
+    
+    if (profile.lockPhysicalOnly) {
+      lockInstructions.push(
+        "🔒 TRAVAR CARACTERÍSTICAS FÍSICAS - manter rosto, corpo e idade idênticos, mas roupa pode variar conforme a cena"
+      );
+    } else {
+      lockInstructions.push(
+        "🔒 CONSISTÊNCIA TOTAL - copiar LITERALMENTE esta descrição física e vestuário em cada cena"
+      );
+    }
+    
+    if (lockInstructions.length > 0) {
+      prompt = `${prompt}\n\n[INSTRUÇÕES DE CONSISTÊNCIA]\n${lockInstructions.join('\n')}`;
+    }
+    
+    // Adicionar estilo visual se existir
+    if (profile.visualStyle) {
+      prompt = `${prompt}\n\n[ESTILO VISUAL]: ${profile.visualStyle}`;
+    }
+    
+    return prompt;
+  };
  
    return (
       <div className="h-full flex flex-col min-h-0">
@@ -176,7 +233,7 @@
                        exit={{ opacity: 0, y: -10 }}
                      >
                        <EpisodeManager
-                         characterPrompt={survivor.basePrompt}
+                        characterPrompt={buildCharacterPromptWithLock(survivor)}
                          visualStyle={survivor.visualStyle}
                          onSendToQueue={handleSendToQueue}
                        />

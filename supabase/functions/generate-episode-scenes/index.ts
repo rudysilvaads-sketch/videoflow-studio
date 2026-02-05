@@ -39,16 +39,31 @@
      const systemPrompt = `Você é um roteirista especializado em criar cenas cinematográficas para vídeos de ${sceneDuration} segundos.
  
  REGRAS CRÍTICAS:
- 1. Cada cena deve ser UMA ÚNICA AÇÃO ou momento visual que funciona em ${sceneDuration} segundos
- 2. NUNCA inclua múltiplas ações numa cena - apenas uma
- 3. Mantenha CONSISTÊNCIA TOTAL do personagem entre cenas (mesma aparência, roupas, características)
- 4. Descreva ações lentas e cinematográficas (apropriadas para ASMR/atmosfera)
- 5. Inclua detalhes sensoriais: texturas, iluminação, sons ambiente
- 6. Cada prompt deve ser autocontido mas conectado narrativamente
- 7. Use movimentos de câmera suaves: slow push-in, gentle pan, static contemplative shot
- 
- FORMATO DO PROMPT DE CENA:
- [PERSONAGEM fazendo AÇÃO ÚNICA no AMBIENTE]. [Detalhes visuais e atmosféricos]. [Movimento de câmera]. [${sceneDuration}s]`;
+1. CONSISTÊNCIA ABSOLUTA DO PERSONAGEM:
+   - Copie EXATAMENTE a descrição física do personagem em TODAS as cenas
+   - Mesma roupa, mesmos acessórios, mesmas características faciais
+   - Se o personagem tem "jaqueta marrom surrada", TODAS as cenas devem mencionar "jaqueta marrom surrada"
+   - NUNCA altere idade, cor de cabelo, tipo físico ou vestimenta entre cenas
+
+2. CONTINUIDADE CINEMATOGRÁFICA (MATCH-CUT):
+   - Se a Cena 1 termina com o personagem olhando para a direita, a Cena 2 começa com ele ainda olhando para a direita
+   - Mantenha continuidade de iluminação: se é noite na Cena 3, continua noite até indicar amanhecer
+   - Objetos introduzidos devem permanecer (se pegou uma mochila, ela aparece nas cenas seguintes)
+   - Use transições naturais: mesmo enquadramento expandindo, câmera seguindo movimento
+
+3. ESTRUTURA DA CENA (${sceneDuration} segundos):
+   - UMA ÚNICA AÇÃO simples e lenta
+   - Movimento de câmera suave: slow push-in, gentle pan, static contemplative shot
+   - Descreva texturas, iluminação, atmosfera
+   - Ações apropriadas para ASMR/contemplativo
+
+4. TRANSIÇÕES ENTRE CENAS:
+   - Termine cada cena em um ponto que conecta naturalmente à próxima
+   - Evite cortes bruscos - prefira continuidade espacial e temporal
+   - Se mudar de local, descreva o personagem CHEGANDO ao novo local na primeira cena
+
+FORMATO OBRIGATÓRIO DO PROMPT:
+[DESCRIÇÃO FÍSICA COMPLETA DO PERSONAGEM conforme fornecido], [AÇÃO ÚNICA E LENTA], [AMBIENTE E ATMOSFERA], [ILUMINAÇÃO], [MOVIMENTO DE CÂMERA]. [${sceneDuration}s cinematic shot]`;
  
      const beatsDescription = beats.map((b: Beat, i: number) => 
        `Beat ${i + 1}: "${b.name}" (${b.sceneCount} cenas)
@@ -61,19 +76,24 @@
  
  SINOPSE: ${episodeDescription}
  
- PERSONAGEM (usar EXATAMENTE esta descrição em TODAS as cenas):
+PERSONAGEM - COPIAR LITERALMENTE EM CADA CENA SEM ALTERAÇÕES:
  ${characterPrompt}
  
+⚠️ IMPORTANTE: A descrição acima deve aparecer IDÊNTICA no início de CADA prompt de cena.
+Isso inclui: aparência física, roupa, acessórios, idade, etc.
+
  ESTILO VISUAL: ${visualStyle || 'Cinematográfico, tons dessaturados, atmosfera pós-apocalíptica'}
  
  ESTRUTURA DO EPISÓDIO:
  ${beatsDescription}
  
  Gere os prompts para TODAS as cenas de TODOS os beats, mantendo:
- - Consistência visual do personagem
- - Progressão emocional entre beats
- - Conexão narrativa entre cenas
- - Detalhes sensoriais para cada ambiente
+- DESCRIÇÃO FÍSICA IDÊNTICA do personagem em cada prompt (copie literalmente)
+- Mesma roupa e acessórios em todas as cenas
+- Progressão emocional natural entre beats
+- Transições suaves entre cenas (match-cut visual)
+- Continuidade de objetos (o que o personagem pega, carrega nas cenas seguintes)
+- Iluminação consistente dentro de cada beat
  
  Responda em JSON:
  {
@@ -81,8 +101,8 @@
      {
        "name": "nome do beat",
        "scenes": [
-         {"prompt": "prompt completo da cena 1", "notes": "nota sobre a cena"},
-         {"prompt": "prompt completo da cena 2", "notes": "nota sobre a cena"}
+        {"prompt": "[PERSONAGEM COMPLETO], [ação], [ambiente], [iluminação], [câmera]. 8s cinematic shot", "notes": "nota sobre transição para próxima"},
+        {"prompt": "[PERSONAGEM COMPLETO], [ação continuando], [mesmo ambiente], [mesma iluminação], [câmera]. 8s cinematic shot", "notes": "nota sobre continuidade"}
        ]
      }
    ]
