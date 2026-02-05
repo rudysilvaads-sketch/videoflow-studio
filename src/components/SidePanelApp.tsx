@@ -262,8 +262,6 @@ export function SidePanelApp() {
 
   // Verificar se está na página do Flow
   const checkFlowPage = useCallback(() => {
-    setCheckingPage(true);
-    
      // Tentar ping direto ao content script primeiro
      // @ts-ignore
      if (typeof window !== 'undefined' && window.chrome?.runtime?.sendMessage) {
@@ -271,12 +269,16 @@ export function SidePanelApp() {
        window.chrome.runtime.sendMessage({ type: 'PING_CONTENT_SCRIPT' }, (response: any) => {
          if (response?.active && response?.url) {
            const isFlow = isFlowUrl(response.url);
-           if (isFlow) {
+           if (isFlow && !isOnFlowPage) {
              setIsOnFlowPage(true);
              setFlowPageReady(true);
              setCheckingPage(false);
-             return;
+           } else if (!isFlow && isOnFlowPage) {
+             setIsOnFlowPage(false);
+             setFlowPageReady(false);
+             setCheckingPage(false);
            }
+           return;
          }
        });
      }
@@ -288,37 +290,52 @@ export function SidePanelApp() {
         if (tabs[0]?.url) {
           const url = tabs[0].url;
             const isFlow = isFlowUrl(url);
-          setIsOnFlowPage(isFlow);
+          
+          // Só atualizar se mudou para evitar re-renders
+          if (isFlow !== isOnFlowPage) {
+            setIsOnFlowPage(isFlow);
+          }
           
           if (isFlow) {
             // Verificar se o campo está pronto
             // @ts-ignore
             window.chrome.runtime.sendMessage({ type: 'CHECK_PAGE_READY' }, (response: any) => {
-              setFlowPageReady(response?.ready || false);
-              setCheckingPage(false);
+              const ready = response?.ready || false;
+              if (ready !== flowPageReady) {
+                setFlowPageReady(ready);
+              }
+              if (checkingPage) {
+                setCheckingPage(false);
+              }
             });
           } else {
-            setFlowPageReady(false);
-            setCheckingPage(false);
+            if (flowPageReady) setFlowPageReady(false);
+            if (checkingPage) setCheckingPage(false);
           }
         } else {
-          setCheckingPage(false);
+          if (checkingPage) setCheckingPage(false);
         }
       });
     } else {
       // Fallback para contexto preview
-      setIsOnFlowPage(true);
-      setFlowPageReady(true);
-      setCheckingPage(false);
+      if (!isOnFlowPage) setIsOnFlowPage(true);
+      if (!flowPageReady) setFlowPageReady(true);
+      if (checkingPage) setCheckingPage(false);
     }
-  }, []);
+  }, [isOnFlowPage, flowPageReady, checkingPage]);
 
   // Verificar página ao montar e periodicamente
   useEffect(() => {
     checkFlowPage();
-     const interval = setInterval(checkFlowPage, 3000);
+     // Verificar menos frequentemente (10s) e só se necessário
+     const interval = setInterval(() => {
+       // Só checar se ainda não conectou ou se está em dúvida
+       if (!isOnFlowPage || !flowPageReady) {
+         checkFlowPage();
+       }
+     }, 10000);
     return () => clearInterval(interval);
-  }, [checkFlowPage]);
+  }, [checkFlowPage, isOnFlowPage, flowPageReady]);
  
    // Escutar mensagens do background (FLOW_PAGE_READY, PROGRESS_THRESHOLD_REACHED)
    useEffect(() => {
