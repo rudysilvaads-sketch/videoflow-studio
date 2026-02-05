@@ -43,7 +43,9 @@
    NarrativeBeat, 
    EpisodeScene, 
    BEAT_TEMPLATES,
-   EpisodeStats 
+   EpisodeStats,
+   EPISODE_TEMPLATES,
+   EpisodeTemplate
  } from "@/types/episode";
  import { supabase } from "@/integrations/supabase/client";
  import { toast } from "sonner";
@@ -63,6 +65,7 @@
    const [editingScene, setEditingScene] = useState<string | null>(null);
    const [copiedScene, setCopiedScene] = useState<string | null>(null);
    const [selectedTimelineBeat, setSelectedTimelineBeat] = useState<string | null>(null);
+   const [showTemplates, setShowTemplates] = useState(true);
  
    // Form state para novo episódio
    const [formData, setFormData] = useState({
@@ -268,6 +271,23 @@
      }
    };
  
+   const loadFromTemplate = (template: EpisodeTemplate) => {
+     setFormData({
+       title: template.title,
+       description: template.description,
+       targetDuration: template.targetDuration,
+       sceneDuration: 8,
+     });
+     setSelectedBeats(template.beats.map(b => ({
+       name: b.name,
+       description: b.description,
+       emotionalTone: b.emotionalTone,
+       location: b.location || "",
+       sceneCount: b.sceneCount,
+     })));
+     setShowTemplates(false);
+   };
+ 
    const totalScenesNeeded = Math.ceil((formData.targetDuration * 60) / formData.sceneDuration);
    const currentScenesPlanned = selectedBeats.reduce((acc, b) => acc + b.sceneCount, 0);
  
@@ -288,6 +308,68 @@
              <X className="w-4 h-4" />
            </Button>
          </div>
+ 
+         {/* Templates de Episódio */}
+         {showTemplates && (
+           <div className="space-y-2">
+             <div className="flex items-center justify-between">
+               <Label className="text-xs flex items-center gap-1">
+                 <Sparkles className="w-3 h-3 text-primary" />
+                 Templates de Episódio
+               </Label>
+               <Button 
+                 variant="ghost" 
+                 size="sm" 
+                 className="h-5 text-[10px]"
+                 onClick={() => setShowTemplates(false)}
+               >
+                 Criar do zero
+               </Button>
+             </div>
+             <ScrollArea className="h-[180px]">
+               <div className="grid grid-cols-2 gap-1.5 pr-2">
+                 {EPISODE_TEMPLATES.map((template) => (
+                   <motion.button
+                     key={template.id}
+                     whileHover={{ scale: 1.02 }}
+                     whileTap={{ scale: 0.98 }}
+                     onClick={() => loadFromTemplate(template)}
+                     className="p-2 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                   >
+                     <div className="flex items-center gap-1.5 mb-1">
+                       <div className={`w-6 h-6 rounded-md flex items-center justify-center text-sm bg-gradient-to-br ${template.color}`}>
+                         {template.icon}
+                       </div>
+                       <span className="text-[10px] font-medium truncate flex-1">{template.title}</span>
+                     </div>
+                     <p className="text-[9px] text-muted-foreground line-clamp-2">{template.description}</p>
+                     <div className="flex items-center gap-1 mt-1">
+                       <Badge variant="outline" className="text-[8px] h-4 px-1">
+                         {template.targetDuration}min
+                       </Badge>
+                       <Badge variant="outline" className="text-[8px] h-4 px-1">
+                         {template.beats.length} beats
+                       </Badge>
+                     </div>
+                   </motion.button>
+                 ))}
+               </div>
+             </ScrollArea>
+             <Separator />
+           </div>
+         )}
+ 
+         {!showTemplates && (
+           <Button 
+             variant="ghost" 
+             size="sm" 
+             className="h-6 text-[10px] w-full"
+             onClick={() => setShowTemplates(true)}
+           >
+             <Sparkles className="w-3 h-3 mr-1" />
+             Ver templates de episódio
+           </Button>
+         )}
  
          <div className="space-y-2">
            <Label className="text-xs">Título do Episódio</Label>
