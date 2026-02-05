@@ -13,7 +13,9 @@ import { useState, useEffect } from "react";
   Eye,
   EyeOff,
   Check,
-  AlertCircle
+   AlertCircle,
+   Loader2,
+   XCircle
  } from "lucide-react";
  import { Label } from "@/components/ui/label";
  import { Input } from "@/components/ui/input";
@@ -36,6 +38,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+ import { toast } from "sonner";
  
  interface AppSettings {
    videosPerTask: number;
@@ -84,15 +87,78 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
   const [showCookies, setShowCookies] = useState(false);
   const [apiSectionOpen, setApiSectionOpen] = useState(false);
   const [saved, setSaved] = useState(false);
+   const [validatingGemini, setValidatingGemini] = useState(false);
+   const [geminiValidation, setGeminiValidation] = useState<'idle' | 'valid' | 'invalid'>('idle');
+   
+   // Validate Gemini API Key
+   const validateGeminiKey = async (apiKey: string): Promise<boolean> => {
+     if (!apiKey.trim()) return false;
+     
+     try {
+       // Make a simple request to list models - this validates the API key
+       const response = await fetch(
+         `https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`,
+         { method: 'GET' }
+       );
+       
+       return response.ok;
+     } catch (error) {
+       console.error('Gemini validation error:', error);
+       return false;
+     }
+   };
+   
+   // Handle Gemini key change with debounced validation
+   const handleGeminiKeyChange = (value: string) => {
+     setCredentials(prev => ({ ...prev, geminiApiKey: value }));
+     setGeminiValidation('idle');
+   };
+   
+   // Validate on blur or explicit test
+   const handleTestGeminiKey = async () => {
+     if (!credentials.geminiApiKey.trim()) {
+       toast.error('Digite uma API key para validar');
+       return;
+     }
+     
+     setValidatingGemini(true);
+     setGeminiValidation('idle');
+     
+     const isValid = await validateGeminiKey(credentials.geminiApiKey);
+     
+     setValidatingGemini(false);
+     setGeminiValidation(isValid ? 'valid' : 'invalid');
+     
+     if (isValid) {
+       toast.success('API Key válida! Conexão estabelecida.');
+     } else {
+       toast.error('API Key inválida. Verifique e tente novamente.');
+     }
+   };
   
   // Save credentials to localStorage
   useEffect(() => {
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
   }, [credentials]);
   
-  const handleSaveCredentials = () => {
+   const handleSaveCredentials = async () => {
+     // Validate Gemini key if it exists and hasn't been validated
+     if (credentials.geminiApiKey.trim() && geminiValidation !== 'valid') {
+       setValidatingGemini(true);
+       const isValid = await validateGeminiKey(credentials.geminiApiKey);
+       setValidatingGemini(false);
+       
+       if (!isValid) {
+         setGeminiValidation('invalid');
+         toast.error('API Key do Gemini inválida. Corrija antes de salvar.');
+         return;
+       }
+       setGeminiValidation('valid');
+     }
+     
     localStorage.setItem(CREDENTIALS_KEY, JSON.stringify(credentials));
     setSaved(true);
+     toast.success('Credenciais salvas com sucesso!');
     setTimeout(() => setSaved(false), 2000);
   };
   
@@ -126,8 +192,8 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
         <CollapsibleTrigger asChild>
           <button className="w-full flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-md bg-amber-500/10">
-                <Key className="w-3.5 h-3.5 text-amber-500" />
+               <div className="p-1.5 rounded-md bg-accent/10">
+                 <Key className="w-3.5 h-3.5 text-accent" />
               </div>
               <div className="text-left">
                 <Label className="text-xs font-medium cursor-pointer">APIs & Credenciais</Label>
@@ -163,7 +229,7 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
             {/* Gemini API Key */}
             <div className="space-y-2">
               <Label className="text-xs font-medium flex items-center gap-2">
-                <Key className="w-3 h-3 text-amber-500" />
+                 <Key className="w-3 h-3 text-accent" />
                 Gemini API Key
                 {hasGeminiKey && (
                   <Badge variant="outline" className="text-[9px] h-4 text-accent border-accent/30">
@@ -175,39 +241,89 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                 <Input
                   type={showGeminiKey ? "text" : "password"}
                   value={credentials.geminiApiKey}
-                  onChange={(e) => setCredentials(prev => ({ ...prev, geminiApiKey: e.target.value }))}
+                   onChange={(e) => handleGeminiKeyChange(e.target.value)}
                   placeholder="AIzaSy..."
-                  className="h-9 pr-10 font-mono text-xs"
+                   className={cn(
+                     "h-9 pr-20 font-mono text-xs",
+                     geminiValidation === 'valid' && "border-accent focus-visible:ring-accent",
+                     geminiValidation === 'invalid' && "border-destructive focus-visible:ring-destructive"
+                   )}
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowGeminiKey(!showGeminiKey)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
-                >
-                  {showGeminiKey ? (
-                    <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
-                  ) : (
-                    <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                   {geminiValidation === 'valid' && (
+                     <Check className="w-3.5 h-3.5 text-accent" />
+                   )}
+                   {geminiValidation === 'invalid' && (
+                     <XCircle className="w-3.5 h-3.5 text-destructive" />
                   )}
-                </button>
+                   <button
+                     type="button"
+                     onClick={() => setShowGeminiKey(!showGeminiKey)}
+                     className="p-1 hover:bg-muted rounded"
+                   >
+                     {showGeminiKey ? (
+                       <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+                     ) : (
+                       <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                     )}
+                   </button>
+                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">
-                Obtenha em{" "}
-                <a 
-                  href="https://aistudio.google.com/app/apikey" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="text-primary hover:underline"
-                >
-                  Google AI Studio
-                </a>
-              </p>
+               <div className="flex items-center justify-between mt-1.5">
+                 <p className="text-[10px] text-muted-foreground">
+                   Obtenha em{" "}
+                   <a 
+                     href="https://aistudio.google.com/app/apikey" 
+                     target="_blank" 
+                     rel="noopener noreferrer"
+                     className="text-primary hover:underline"
+                   >
+                     Google AI Studio
+                   </a>
+                 </p>
+                 <Button
+                   type="button"
+                   variant="ghost"
+                   size="sm"
+                   className="h-6 px-2 text-[10px]"
+                   onClick={handleTestGeminiKey}
+                   disabled={validatingGemini || !credentials.geminiApiKey.trim()}
+                 >
+                   {validatingGemini ? (
+                     <>
+                       <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                       Validando...
+                     </>
+                   ) : (
+                     "Testar Conexão"
+                   )}
+                 </Button>
+               </div>
+               
+               {/* Validation Status Message */}
+               {geminiValidation === 'invalid' && (
+                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
+                   <XCircle className="w-3 h-3 text-destructive" />
+                   <p className="text-[10px] text-destructive">
+                     API Key inválida. Verifique se copiou corretamente.
+                   </p>
+                 </div>
+               )}
+               
+               {geminiValidation === 'valid' && (
+                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-accent/10 border border-accent/20 mt-2">
+                   <Check className="w-3 h-3 text-accent" />
+                   <p className="text-[10px] text-accent">
+                     Conexão validada com sucesso!
+                   </p>
+                 </div>
+               )}
             </div>
 
             {/* ImageFX Cookies */}
             <div className="space-y-2">
               <Label className="text-xs font-medium flex items-center gap-2">
-                <Cookie className="w-3 h-3 text-orange-500" />
+                 <Cookie className="w-3 h-3 text-primary" />
                 ImageFX Cookies
                 {hasCookies && (
                   <Badge variant="outline" className="text-[9px] h-4 text-accent border-accent/30">
@@ -242,8 +358,8 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                   </button>
                 )}
               </div>
-              <div className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                <p className="text-[10px] text-amber-600 dark:text-amber-400">
+               <div className="p-2 rounded-lg bg-primary/10 border border-primary/20">
+                 <p className="text-[10px] text-primary">
                   <strong>Como obter:</strong> Abra o ImageFX, pressione F12, vá em Application → Cookies, 
                   e copie todos os cookies como string. Isso permite gerar imagens consistentes dos personagens.
                 </p>
@@ -256,8 +372,14 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
               size="sm"
               className="w-full gap-2"
               variant={saved ? "outline" : "default"}
+               disabled={validatingGemini}
             >
-              {saved ? (
+               {validatingGemini ? (
+                 <>
+                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                   Validando...
+                 </>
+               ) : saved ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
                   Credenciais Salvas!
