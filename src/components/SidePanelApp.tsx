@@ -1073,7 +1073,7 @@ export function SidePanelApp() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
         <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-12">
           <TabsTrigger 
             value="control" 
@@ -1743,7 +1743,7 @@ Com detalhes visuais e cinematográficos.
         </TabsContent>
 
         {/* Survival Tab */}
-        <TabsContent value="survival" className="flex-1 overflow-hidden mt-0 p-0">
+        <TabsContent value="survival" className="flex-1 overflow-hidden mt-0 p-0 min-h-0 flex flex-col">
           <SurvivalTab 
             onPromptReady={(prompt) => {
               // Add the generated prompt to the batch text
