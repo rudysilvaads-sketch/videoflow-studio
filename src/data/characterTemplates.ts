@@ -10,7 +10,8 @@
      style?: string;
      features?: string[];
    };
-   thumbnail: string;
+  thumbnail: string;
+  avatarUrl?: string;
  }
  
  export const templateCategories = [
@@ -44,6 +45,7 @@
        style: "Anime Clássico, Shonen",
      },
      thumbnail: "🦸",
+    avatarUrl: "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=200&h=200&fit=crop",
    },
    {
      id: "cyberpunk-woman",
@@ -57,6 +59,7 @@
        style: "Cyberpunk, Neon Noir",
      },
      thumbnail: "🤖",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop",
    },
    {
      id: "fantasy-wizard",
@@ -70,6 +73,7 @@
        style: "Fantasia Épica, Pintura Digital",
      },
      thumbnail: "🧙",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
    },
    {
      id: "steampunk-inventor",
@@ -83,6 +87,7 @@
        style: "Steampunk, Vitoriano",
      },
      thumbnail: "⚙️",
+    avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop",
    },
    {
      id: "noir-detective",
@@ -96,6 +101,7 @@
        style: "Film Noir, Preto e Branco",
      },
      thumbnail: "🕵️",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
    },
    {
      id: "kawaii-idol",
@@ -109,6 +115,7 @@
        style: "Kawaii, Pop Art",
      },
      thumbnail: "🎤",
+    avatarUrl: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop",
    },
    {
      id: "medieval-knight",
@@ -122,6 +129,7 @@
        style: "Realismo, Fantasia Medieval",
      },
      thumbnail: "⚔️",
+    avatarUrl: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
    },
    {
      id: "sci-fi-alien",
@@ -135,6 +143,7 @@
        style: "Sci-Fi, Concept Art",
      },
      thumbnail: "👽",
+    avatarUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=200&h=200&fit=crop",
    },
    {
      id: "chibi-mascot",
@@ -148,6 +157,7 @@
        style: "Chibi, Kawaii",
      },
      thumbnail: "🐱",
+    avatarUrl: "https://images.unsplash.com/photo-1518020382113-a7e8fc38eac9?w=200&h=200&fit=crop",
    },
    {
      id: "realistic-portrait",
@@ -161,6 +171,7 @@
        style: "Fotorrealista, Retrato",
      },
      thumbnail: "📷",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
    },
    {
      id: "watercolor-fairy",
@@ -174,6 +185,7 @@
        style: "Aquarela, Fantasia",
      },
      thumbnail: "🧚",
+    avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop",
    },
    {
      id: "comic-superhero",
@@ -187,8 +199,9 @@
        style: "Comics Americano, Pop Art",
      },
      thumbnail: "💪",
+    avatarUrl: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200&h=200&fit=crop",
    },
- {
+  {
    id: "horror-creature",
    name: "Criatura de Horror",
    category: "Horror",
@@ -200,6 +213,7 @@
      style: "Horror, Dark Fantasy",
    },
    thumbnail: "👹",
+    avatarUrl: "https://images.unsplash.com/photo-1509248961895-e8ae67a09875?w=200&h=200&fit=crop",
  },
  {
    id: "western-cowboy",
@@ -213,6 +227,7 @@
      style: "Western, Cinematográfico",
    },
    thumbnail: "🤠",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
  },
  {
    id: "gothic-vampire",
@@ -226,6 +241,7 @@
      style: "Gótico, Vitoriano",
    },
    thumbnail: "🧛",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
  },
  {
    id: "post-apocalyptic-survivor",
@@ -239,6 +255,7 @@
      style: "Pós-Apocalíptico, Grunge",
    },
    thumbnail: "☢️",
+    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop",
  },
  {
    id: "samurai-warrior",
@@ -252,6 +269,7 @@
      style: "Arte Japonesa, Ukiyo-e",
    },
    thumbnail: "⚔️",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
  },
  {
    id: "witch-dark",
@@ -265,6 +283,7 @@
      style: "Dark Fantasy, Gótico",
    },
    thumbnail: "🧙‍♀️",
+    avatarUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=200&h=200&fit=crop",
  },
  {
    id: "robot-android",
@@ -278,6 +297,7 @@
      style: "Sci-Fi, Hard Surface",
    },
    thumbnail: "🤖",
+    avatarUrl: "https://images.unsplash.com/photo-1535378620166-273708d44e4c?w=200&h=200&fit=crop",
  },
  {
    id: "pirate-captain",
@@ -291,6 +311,7 @@
      style: "Aventura, Histórico",
    },
    thumbnail: "🏴‍☠️",
+    avatarUrl: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=200&h=200&fit=crop",
  },
  {
    id: "lovecraftian-entity",
@@ -304,6 +325,7 @@
      style: "Horror Cósmico, Surreal",
    },
    thumbnail: "🐙",
+    avatarUrl: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=200&h=200&fit=crop",
  },
  {
    id: "forest-elf",
@@ -317,6 +339,7 @@
      style: "Alta Fantasia, Élfico",
    },
    thumbnail: "🧝",
+    avatarUrl: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
  },
  {
    id: "demon-lord",
@@ -330,6 +353,7 @@
      style: "Dark Fantasy, Infernal",
    },
    thumbnail: "😈",
+    avatarUrl: "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=200&h=200&fit=crop",
  },
  {
    id: "1920s-flapper",
@@ -343,6 +367,7 @@
      style: "Art Deco, Vintage",
    },
    thumbnail: "💃",
+    avatarUrl: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop",
  },
  {
    id: "viking-berserker",
@@ -356,6 +381,7 @@
      style: "Nórdico, Histórico",
    },
    thumbnail: "🪓",
+    avatarUrl: "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?w=200&h=200&fit=crop",
  },
  {
    id: "mermaid-queen",
@@ -369,6 +395,7 @@
      style: "Fantasia Aquática, Etéreo",
    },
    thumbnail: "🧜‍♀️",
+    avatarUrl: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=200&h=200&fit=crop",
  },
  {
    id: "zombie-survivor",
@@ -382,11 +409,12 @@
      style: "Horror, Sobrevivência",
    },
    thumbnail: "🧟",
+    avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop",
  },
-  // ASMR Characters
+   // ASMR Characters
   {
     id: "asmr-artist",
-   name: "Artista ASMR",
+    name: "Artista ASMR",
     category: "ASMR",
     description: "Criadora de conteúdo ASMR com visual suave e acolhedor",
     basePrompt: "young woman ASMR content creator, soft natural makeup, gentle warm expression, cozy sweater, fairy lights background, soft warm lighting, intimate close-up framing, calming presence, whisper-ready pose, microphone nearby",
@@ -396,10 +424,11 @@
       style: "ASMR, Cozy Aesthetic",
     },
     thumbnail: "🎧",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&h=200&fit=crop",
   },
   {
     id: "survival-expert",
-   name: "Especialista em Sobrevivência",
+    name: "Especialista em Sobrevivência",
     category: "ASMR",
     description: "Expert em sobrevivência para canais ASMR Survivor",
     basePrompt: "rugged outdoor survivalist, practical outdoor clothing, weathered hands, calm focused expression, forest background, natural lighting, bushcraft equipment, survival knife on belt, experienced woodsman appearance",
@@ -409,6 +438,7 @@
       style: "Bushcraft, Outdoor",
     },
     thumbnail: "🏕️",
+    avatarUrl: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
   },
   {
     id: "cozy-host",
@@ -422,10 +452,11 @@
       style: "Cozy, Comfort",
     },
     thumbnail: "☕",
+    avatarUrl: "https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?w=200&h=200&fit=crop",
   },
   {
     id: "nature-guide",
-   name: "Guia de Natureza",
+    name: "Guia de Natureza",
     category: "ASMR",
     description: "Explorador tranquilo da natureza selvagem",
     basePrompt: "calm nature guide, earth-toned hiking clothes, binoculars around neck, gentle observant eyes, forest or meadow background, golden hour natural lighting, peaceful outdoor explorer, connected with nature",
@@ -435,6 +466,7 @@
       style: "Nature, Documentary",
     },
     thumbnail: "🌲",
+    avatarUrl: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=200&h=200&fit=crop",
   },
   {
     id: "spa-therapist",
@@ -448,6 +480,7 @@
       style: "Spa, Wellness",
     },
     thumbnail: "🧘",
+    avatarUrl: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&h=200&fit=crop",
   },
   {
     id: "campfire-chef",
@@ -461,5 +494,6 @@
       style: "Outdoor Cooking, Bushcraft",
     },
     thumbnail: "🍳",
+    avatarUrl: "https://images.unsplash.com/photo-1552058544-f2b08422138a?w=200&h=200&fit=crop",
   },
  ];
