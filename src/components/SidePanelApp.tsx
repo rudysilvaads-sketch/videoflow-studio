@@ -14,6 +14,14 @@ import {
   getBatchProgress
 } from "@/lib/batchQueue";
 import { SidePanelCharacterForm } from "@/components/SidePanelCharacterForm";
+ import { ParallelModeSetup } from "@/components/ParallelModeSetup";
+ import { ParallelTabsManager } from "@/components/ParallelTabsManager";
+ import { 
+   ParallelSession, 
+   getParallelSession, 
+   saveParallelSession,
+   clearParallelSession 
+ } from "@/lib/parallelTabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,7 +64,8 @@ import {
   AlertTriangle,
   CheckCircle2,
    RefreshCw,
-   GripVertical
+   GripVertical,
+   Layers
 } from "lucide-react";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
@@ -155,6 +164,8 @@ export function SidePanelApp() {
    const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [showQueueManager, setShowQueueManager] = useState(false);
+  const [showParallelSetup, setShowParallelSetup] = useState(false);
+  const [parallelSession, setParallelSession] = useState<ParallelSession | null>(() => getParallelSession());
   const [batchText, setBatchText] = useState("");
   const [folderName, setFolderName] = useState("LaCasaDark_Scenes");
   const [batchSession, setBatchSession] = useState<BatchSession | null>(null);
@@ -225,6 +236,12 @@ export function SidePanelApp() {
       setBatchSession(existingBatch);
       setIsRunning(existingBatch.isRunning);
       addLog('log_config_loaded_successfully', 'success');
+    }
+    
+    // Load parallel session if exists
+    const existingParallel = getParallelSession();
+    if (existingParallel) {
+      setParallelSession(existingParallel);
     }
   }, []);
 
@@ -690,6 +707,36 @@ export function SidePanelApp() {
       />
     );
   }
+ 
+  // Parallel Mode Setup Screen
+  if (showParallelSetup) {
+    return (
+      <ParallelModeSetup
+        onBack={() => setShowParallelSetup(false)}
+        onSessionCreated={(session) => {
+          setParallelSession(session);
+          setShowParallelSetup(false);
+        }}
+      />
+    );
+  }
+ 
+  // Parallel Tabs Manager Screen
+  if (parallelSession) {
+    return (
+      <ParallelTabsManager
+        session={parallelSession}
+        onBack={() => {
+          clearParallelSession();
+          setParallelSession(null);
+        }}
+        onSessionUpdate={(session) => {
+          setParallelSession(session);
+          saveParallelSession(session);
+        }}
+      />
+    );
+  }
 
   // Não mostrar a interface completa fora do Flow — apenas a tela de conexão.
   if (!checkingPage && !isOnFlowPage) {
@@ -1117,6 +1164,22 @@ export function SidePanelApp() {
                   <Square className="w-4 h-4" />
                   Stop
                 </Button>
+              </div>
+ 
+              {/* Parallel Mode Button */}
+              <div className="pt-2 border-t border-border">
+                <Button 
+                  variant="outline"
+                  className="w-full h-10 gap-2 border-primary/50 text-primary hover:bg-primary/10"
+                  onClick={() => setShowParallelSetup(true)}
+                  disabled={isRunning}
+                >
+                  <Layers className="w-4 h-4" />
+                  Modo Paralelo (Múltiplas Abas)
+                </Button>
+                <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+                  Abre várias abas do Flow para processar prompts simultaneamente
+                </p>
               </div>
 
               {/* Queue Items Preview */}
