@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+ import { Badge } from "@/components/ui/badge";
  import { ScrollArea } from "@/components/ui/scroll-area";
  import { X, Sparkles, Upload, ChevronDown, Search, Check } from "lucide-react";
 import { toast } from "sonner";
@@ -38,7 +39,38 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
      s.category.toLowerCase().includes(styleSearch.toLowerCase())
    );
  
-   const selectedStyle = visualStyles.find(s => s.value === formData.attributes.style || s.label === formData.attributes.style);
+   // Parse selected styles from comma-separated string
+   const selectedStyles = formData.attributes.style
+     ? formData.attributes.style.split(', ').filter(Boolean)
+     : [];
+ 
+   const toggleStyle = (styleLabel: string) => {
+     const isSelected = selectedStyles.includes(styleLabel);
+     let newStyles: string[];
+     
+     if (isSelected) {
+       newStyles = selectedStyles.filter(s => s !== styleLabel);
+     } else {
+       if (selectedStyles.length >= 5) {
+         toast.warning("Máximo de 5 estilos permitido");
+         return;
+       }
+       newStyles = [...selectedStyles, styleLabel];
+     }
+     
+     setFormData(prev => ({
+       ...prev,
+       attributes: { ...prev.attributes, style: newStyles.join(', ') }
+     }));
+   };
+ 
+   const removeStyle = (styleLabel: string) => {
+     const newStyles = selectedStyles.filter(s => s !== styleLabel);
+     setFormData(prev => ({
+       ...prev,
+       attributes: { ...prev.attributes, style: newStyles.join(', ') }
+     }));
+   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,15 +118,43 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
         </div>
         
         <div className="space-y-1.5">
-          <Label htmlFor="style" className="text-xs">Estilo Visual</Label>
+          <Label htmlFor="style" className="text-xs flex items-center justify-between">
+            <span>Estilo Visual</span>
+            {selectedStyles.length > 0 && (
+              <span className="text-[10px] text-muted-foreground">{selectedStyles.length}/5 selecionados</span>
+            )}
+          </Label>
+          
+          {/* Selected Styles Tags */}
+          {selectedStyles.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-1.5">
+              {selectedStyles.map((style) => (
+                <Badge 
+                  key={style} 
+                  variant="secondary" 
+                  className="text-[10px] gap-1 pr-1 bg-primary/20 text-primary border-primary/30"
+                >
+                  {style}
+                  <button
+                    type="button"
+                    onClick={() => removeStyle(style)}
+                    className="ml-0.5 hover:bg-primary/30 rounded-full p-0.5"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          )}
+          
           <div className="relative">
             <button
               type="button"
               onClick={() => setStyleDropdownOpen(!styleDropdownOpen)}
-              className="w-full h-9 px-3 text-sm text-left bg-background border border-input rounded-md flex items-center justify-between hover:bg-accent/50 transition-colors"
+              className="w-full min-h-9 px-3 py-2 text-sm text-left bg-background border border-input rounded-md flex items-center justify-between hover:bg-accent/50 transition-colors"
             >
-              <span className={selectedStyle ? "text-foreground" : "text-muted-foreground"}>
-                {selectedStyle?.label || formData.attributes.style || "Selecione um estilo..."}
+              <span className="text-muted-foreground">
+                {selectedStyles.length === 0 ? "Selecione até 5 estilos..." : "Adicionar mais estilos..."}
               </span>
               <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${styleDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
@@ -136,18 +196,25 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
                                 key={style.value}
                                 type="button"
                                 onClick={() => {
-                                  setFormData(prev => ({
-                                    ...prev,
-                                    attributes: { ...prev.attributes, style: style.label }
-                                  }));
-                                  setStyleDropdownOpen(false);
+                                  toggleStyle(style.label);
                                   setStyleSearch("");
                                 }}
                                 className={`w-full px-2 py-1.5 text-xs text-left rounded flex items-center justify-between hover:bg-accent transition-colors ${
-                                  formData.attributes.style === style.label ? 'bg-primary/20 text-primary' : ''
+                                  selectedStyles.includes(style.label) ? 'bg-primary/20 text-primary' : ''
                                 }`}
                               >
-                                <span>{style.label}</span>
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
+                                    selectedStyles.includes(style.label) 
+                                      ? 'bg-primary border-primary' 
+                                      : 'border-muted-foreground/40'
+                                  }`}>
+                                    {selectedStyles.includes(style.label) && (
+                                      <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                    )}
+                                  </div>
+                                  <span>{style.label}</span>
+                                </div>
                                 <span className="text-[10px] text-muted-foreground">{style.category}</span>
                               </button>
                             ))}
@@ -164,21 +231,24 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
                                   key={style.value}
                                   type="button"
                                   onClick={() => {
-                                    setFormData(prev => ({
-                                      ...prev,
-                                      attributes: { ...prev.attributes, style: style.label }
-                                    }));
-                                    setStyleDropdownOpen(false);
-                                    setStyleSearch("");
+                                    toggleStyle(style.label);
                                   }}
                                   className={`w-full px-2 py-1.5 text-xs text-left rounded flex items-center justify-between hover:bg-accent transition-colors ${
-                                    formData.attributes.style === style.label ? 'bg-primary/20 text-primary' : ''
+                                    selectedStyles.includes(style.label) ? 'bg-primary/20 text-primary' : ''
                                   }`}
                                 >
-                                  <span>{style.label}</span>
-                                  {formData.attributes.style === style.label && (
-                                    <Check className="w-3 h-3 text-primary" />
-                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-3.5 h-3.5 rounded border flex items-center justify-center ${
+                                      selectedStyles.includes(style.label) 
+                                        ? 'bg-primary border-primary' 
+                                        : 'border-muted-foreground/40'
+                                    }`}>
+                                      {selectedStyles.includes(style.label) && (
+                                        <Check className="w-2.5 h-2.5 text-primary-foreground" />
+                                      )}
+                                    </div>
+                                    <span>{style.label}</span>
+                                  </div>
                                 </button>
                               ))}
                             </div>
@@ -189,10 +259,22 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
                   </ScrollArea>
                   
                   {/* Footer with count */}
-                  <div className="p-2 border-t border-border bg-muted/30">
-                    <p className="text-[10px] text-muted-foreground text-center">
-                      {visualStyles.length} estilos disponíveis
+                  <div className="p-2 border-t border-border bg-muted/30 flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground">
+                      {selectedStyles.length}/5 selecionados
                     </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-6 text-[10px] px-2"
+                      onClick={() => {
+                        setStyleDropdownOpen(false);
+                        setStyleSearch("");
+                      }}
+                    >
+                      Fechar
+                    </Button>
                   </div>
                 </motion.div>
               )}
