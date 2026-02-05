@@ -65,3 +65,7 @@ export function clearHistory(): void {
   const favorites = history.filter(item => item.isFavorite);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(favorites));
 }
+
+export function clearPromptHistory(): void {
+  localStorage.removeItem(HISTORY_KEY);
+}
