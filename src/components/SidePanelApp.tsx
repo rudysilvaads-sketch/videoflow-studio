@@ -171,6 +171,8 @@ export function SidePanelApp() {
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("none");
    const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
+  const [showCharactersPicker, setShowCharactersPicker] = useState(false);
+  const [showPromptEditor, setShowPromptEditor] = useState(false);
   const [showQueueManager, setShowQueueManager] = useState(false);
   const [showParallelSetup, setShowParallelSetup] = useState(false);
   const [parallelSession, setParallelSession] = useState<ParallelSession | null>(() => getParallelSession());
@@ -1008,6 +1010,94 @@ export function SidePanelApp() {
         </DialogContent>
       </Dialog>
 
+      {/* Characters Picker Dialog (pode rolar aqui; painel principal não) */}
+      <Dialog open={showCharactersPicker} onOpenChange={setShowCharactersPicker}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Selecionar Personagens</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-64 pr-2">
+            <div className="space-y-1">
+              {characters.map((char) => (
+                <label
+                  key={char.id}
+                  className={
+                    "flex items-center gap-2 p-2 rounded-lg border transition-colors cursor-pointer " +
+                    (selectedCharacterIds.includes(char.id)
+                      ? "bg-primary/10 border-primary/30"
+                      : "bg-card border-border hover:bg-muted/30")
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedCharacterIds.includes(char.id)}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedCharacterIds((prev) => [...prev, char.id]);
+                      } else {
+                        setSelectedCharacterIds((prev) => prev.filter((id) => id !== char.id));
+                      }
+                    }}
+                    className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                  />
+                  {char.imageUrl ? (
+                    <img
+                      src={char.imageUrl}
+                      alt=""
+                      className="w-7 h-7 rounded-md object-cover ring-1 ring-border"
+                    />
+                  ) : (
+                    <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
+                      <User className="w-3.5 h-3.5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-medium truncate">{char.name}</p>
+                    {char.attributes?.style && (
+                      <p className="text-[10px] text-muted-foreground truncate">{char.attributes.style}</p>
+                    )}
+                  </div>
+                </label>
+              ))}
+            </div>
+          </ScrollArea>
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => setSelectedCharacterIds([])}
+              disabled={selectedCharacterIds.length === 0}
+            >
+              Limpar
+            </Button>
+            <Button size="sm" className="flex-1" onClick={() => setShowCharactersPicker(false)}>
+              Concluir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Prompt Editor Dialog */}
+      <Dialog open={showPromptEditor} onOpenChange={setShowPromptEditor}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Editar Prompts</DialogTitle>
+          </DialogHeader>
+          <Textarea
+            value={batchText}
+            onChange={(e) => setBatchText(e.target.value)}
+            placeholder="Cole/edite sua lista aqui. Linha em branco separa cenas."
+            className="min-h-[320px] text-xs font-mono rounded-lg bg-card/50 border-border/50 focus:border-primary/50"
+          />
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <Button variant="outline" size="sm" className="flex-1" onClick={() => setShowPromptEditor(false)}>
+              Fechar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
@@ -1117,96 +1207,53 @@ export function SidePanelApp() {
           {/* Sem ScrollArea: a aba Controle deve caber inteira (no-scroll) */}
           <div className="flex-1 overflow-hidden">
             <div className="p-3 space-y-3">
-              {/* Character Selection */}
+              {/* Character Selection (sem scroll) */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="space-y-2"
               >
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
-                    <div className="p-1.5 rounded-md bg-primary/10">
-                      <User className="w-3.5 h-3.5 text-primary" />
-                    </div>
-                    Personagens
-                    {selectedCharacterIds.length > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
-                        {selectedCharacterIds.length} selecionado{selectedCharacterIds.length > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                  </Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
-                    onClick={() => setSelectedCharacterIds([])}
-                    disabled={selectedCharacterIds.length === 0}
-                  >
-                    Limpar
-                  </Button>
-                </div>
-                 <div className="rounded-lg border border-border bg-card/50 overflow-hidden">
-                   <div className="max-h-24 overflow-y-auto scrollbar-thin p-2 space-y-1">
-                   {characters.length === 0 ? (
-                     <div className="text-center py-2">
-                       <Sparkles className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
-                       <p className="text-xs text-muted-foreground">Nenhum personagem criado</p>
+                 <div className="flex items-center justify-between">
+                   <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
+                     <div className="p-1.5 rounded-md bg-primary/10">
+                       <User className="w-3.5 h-3.5 text-primary" />
                      </div>
-                   ) : (
-                     characters.map(char => (
-                       <motion.label 
-                         key={char.id} 
-                         whileHover={{ scale: 1.01 }}
-                         whileTap={{ scale: 0.99 }}
-                         className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
-                           selectedCharacterIds.includes(char.id) 
-                             ? 'bg-primary/15 border border-primary/40 shadow-sm' 
-                             : 'hover:bg-muted/50 border border-transparent'
-                         }`}
-                       >
-                         <input
-                           type="checkbox"
-                           checked={selectedCharacterIds.includes(char.id)}
-                           onChange={(e) => {
-                             if (e.target.checked) {
-                               setSelectedCharacterIds(prev => [...prev, char.id]);
-                             } else {
-                               setSelectedCharacterIds(prev => prev.filter(id => id !== char.id));
-                             }
-                           }}
-                           className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
-                         />
-                         {char.imageUrl ? (
-                           <img src={char.imageUrl} alt="" className="w-7 h-7 rounded-md object-cover ring-1 ring-border" />
-                         ) : (
-                           <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
-                             <User className="w-3.5 h-3.5 text-muted-foreground" />
-                           </div>
-                         )}
-                         <div className="flex-1 min-w-0">
-                           <span className="text-xs font-medium truncate block">{char.name}</span>
-                           {char.attributes?.style && (
-                             <span className="text-[10px] text-muted-foreground">{char.attributes.style}</span>
-                           )}
-                         </div>
-                       </motion.label>
-                     ))
-                   )}
-                   </div>
-                   
-                   {/* Create New Button */}
-                   <div className="p-2 border-t border-border bg-muted/30">
-                     <Button 
-                       variant="ghost" 
+                     Personagens
+                     <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                       {selectedCharacterIds.length}/{characters.length}
+                     </Badge>
+                   </Label>
+                   <div className="flex items-center gap-2">
+                     <Button
+                       variant="outline"
                        size="sm"
-                       className="w-full h-7 text-xs gap-1.5 justify-center hover:bg-primary/10 hover:text-primary"
+                       className="h-6 px-2 text-[10px]"
+                       onClick={() => setShowCharactersPicker(true)}
+                     >
+                       Selecionar
+                     </Button>
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
                        onClick={() => setShowCharacterForm(true)}
                      >
-                       <Plus className="w-3.5 h-3.5" />
-                       Criar Novo Personagem
+                       Novo
                      </Button>
                    </div>
+                 </div>
+
+                 {/* Resumo sem scroll */}
+                 <div className="rounded-lg border border-border bg-card/50 px-3 py-2">
+                   {selectedCharacters.length === 0 ? (
+                     <p className="text-[10px] text-muted-foreground">Nenhum personagem selecionado</p>
+                   ) : (
+                     <p className="text-[10px] text-muted-foreground">
+                       {selectedCharacters.slice(0, 2).map((c) => c.name).join(", ")}
+                       {selectedCharacters.length > 2 ? ` +${selectedCharacters.length - 2}` : ""}
+                     </p>
+                   )}
                  </div>
                  
                  {selectedCharacters.length > 1 && (
@@ -1266,7 +1313,7 @@ export function SidePanelApp() {
                 )}
               </motion.div>
 
-              {/* Prompt List */}
+               {/* Prompt List (sem scroll no painel) */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -1302,9 +1349,9 @@ export function SidePanelApp() {
                     Importar .txt
                   </Button>
                 </div>
-                <Textarea
-                  value={batchText}
-                  onChange={(e) => setBatchText(e.target.value)}
+                 <Textarea
+                   value={batchText}
+                   onChange={(e) => setBatchText(e.target.value)}
                   placeholder={`🎬 Primeira cena - descrição detalhada...
 Continue descrevendo a mesma cena aqui.
 
@@ -1314,12 +1361,22 @@ Com detalhes visuais e cinematográficos.
 🎬 Terceira cena - e assim por diante...
 
 💡 Dica: Linhas em branco separam as cenas!`}
-                  className="min-h-[100px] text-xs font-mono resize-none rounded-lg bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
+                   className="h-[76px] overflow-hidden text-xs font-mono resize-none rounded-lg bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
                 />
-                <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-accent/50" />
-                  Cada bloco separado por linha em branco = uma cena
-                </p>
+                 <div className="flex items-center justify-between">
+                   <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
+                     <span className="w-2 h-2 rounded-full bg-accent/50" />
+                     Linha em branco = nova cena
+                   </p>
+                   <Button
+                     variant="ghost"
+                     size="sm"
+                     className="h-6 px-2 text-[10px]"
+                     onClick={() => setShowPromptEditor(true)}
+                   >
+                     Tela cheia
+                   </Button>
+                 </div>
               </motion.div>
 
               {/* Download Folder */}
@@ -1466,70 +1523,77 @@ Com detalhes visuais e cinematográficos.
                 )}
               </div>
 
-              {/* Queue Items Preview */}
+              {/* Queue Summary (sem scroll) */}
               {batchSession && batchSession.items.length > 0 && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="space-y-1.5"
                 >
                   <div className="flex items-center justify-between">
-                    <Label className="text-[10px] font-semibold text-muted-foreground">
-                      Fila de Processamento
-                    </Label>
+                    <Label className="text-[10px] font-semibold text-muted-foreground">Fila</Label>
                     <Badge variant="outline" className="text-[9px]">
-                      {batchSession.items.length} itens
+                      {progress.completed}/{progress.total}
                     </Badge>
                   </div>
-                  <div className="space-y-1 max-h-28 overflow-y-auto scrollbar-thin pr-1">
-                    <AnimatePresence mode="popLayout">
-                      {batchSession.items.map((item) => (
-                        <motion.div 
-                        key={item.id}
-                        layout
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 10 }}
-                        className={`p-1.5 rounded-md border text-[10px] flex items-start gap-2 transition-colors ${
-                          item.status === 'processing' ? 'bg-primary/10 border-primary/30' :
-                          item.status === 'downloading' ? 'bg-accent/10 border-accent/30' :
-                        item.status === 'completed' ? 'bg-accent/20 border-accent/40' :
-                        item.status === 'error' ? 'bg-destructive/10 border-destructive/30' :
-                          'bg-card border-border'
-                        }`}
+                  {(() => {
+                    const current = batchSession.items.find(
+                      (i) => i.status === "processing" || i.status === "sending" || i.status === "downloading",
+                    );
+                    const last = batchSession.items[batchSession.items.length - 1];
+                    const show = current || last;
+                    if (!show) return null;
+                    return (
+                      <div
+                        className={
+                          "p-2 rounded-lg border text-[10px] flex items-start gap-2 " +
+                          (show.status === "processing"
+                            ? "bg-primary/10 border-primary/30"
+                            : show.status === "downloading"
+                              ? "bg-accent/10 border-accent/30"
+                              : show.status === "completed"
+                                ? "bg-accent/20 border-accent/40"
+                                : show.status === "error"
+                                  ? "bg-destructive/10 border-destructive/30"
+                                  : "bg-card border-border")
+                        }
                       >
-                        <div className="mt-0.5 shrink-0">{getStatusIcon(item.status)}</div>
-                        <div className="flex-1 min-w-0">
+                        <div className="mt-0.5 shrink-0">{getStatusIcon(show.status)}</div>
+                        <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-1">
                             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-mono">
-                              {String(item.sceneNumber).padStart(2, '0')}
+                              {String(show.sceneNumber).padStart(2, "0")}
                             </Badge>
-                             {item.status === 'completed' && (
-                               <span className="text-accent text-[9px]">✓</span>
-                             )}
-                             {item.status === 'processing' && (
-                               <span className="text-primary text-[9px]">Gerando...</span>
-                             )}
+                            <span className="text-muted-foreground text-[9px] truncate">
+                              {show.status === "processing"
+                                ? "Gerando"
+                                : show.status === "downloading"
+                                  ? "Baixando"
+                                  : show.status === "sending"
+                                    ? "Enviando"
+                                    : show.status === "completed"
+                                      ? "Concluído"
+                                      : show.status === "error"
+                                        ? "Erro"
+                                        : "Pendente"}
+                            </span>
                           </div>
-                          <p className="text-muted-foreground line-clamp-1 mt-0.5 text-[9px]">{item.prompt}</p>
-                          {item.errorMessage && (
-                            <p className="text-destructive text-[9px] mt-0.5">{item.errorMessage}</p>
-                          )}
+                          <p className="text-muted-foreground line-clamp-1 mt-0.5 text-[9px]">{show.prompt}</p>
                         </div>
-                        {item.status === 'error' && (
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-5 w-5 shrink-0 hover:bg-destructive/10"
-                            onClick={() => handleRetryItem(item)}
+                        {show.status === "error" && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0 hover:bg-destructive/10"
+                            onClick={() => handleRetryItem(show)}
+                            title="Tentar novamente"
                           >
-                            <RotateCcw className="w-2.5 h-2.5" />
+                            <RotateCcw className="w-3 h-3" />
                           </Button>
                         )}
-                        </motion.div>
-                      ))}
-                    </AnimatePresence>
-                  </div>
+                      </div>
+                    );
+                  })()}
                 </motion.div>
               )}
             </div>
