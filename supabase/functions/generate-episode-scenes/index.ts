@@ -40,10 +40,10 @@
  
  REGRAS CRÍTICAS:
 1. CONSISTÊNCIA ABSOLUTA DO PERSONAGEM:
-   - Copie EXATAMENTE a descrição física do personagem em TODAS as cenas
-   - Mesma roupa, mesmos acessórios, mesmas características faciais
-   - Se o personagem tem "jaqueta marrom surrada", TODAS as cenas devem mencionar "jaqueta marrom surrada"
-   - NUNCA altere idade, cor de cabelo, tipo físico ou vestimenta entre cenas
+   - NUNCA use placeholders como [PERSONAGEM], [THE LAST HUMAN SURVIVOR], [SURVIVOR]
+   - COPIE A DESCRIÇÃO FÍSICA COMPLETA literalmente no início de cada prompt
+   - Se a descrição é "Homem asiático, 28 anos, cabelo preto, jaqueta marrom", CADA cena começa com isso
+   - NUNCA abrevie, resuma ou use nomes - copie a descrição inteira
 
 2. CONTINUIDADE CINEMATOGRÁFICA (MATCH-CUT):
    - Se a Cena 1 termina com o personagem olhando para a direita, a Cena 2 começa com ele ainda olhando para a direita
@@ -63,7 +63,17 @@
    - Se mudar de local, descreva o personagem CHEGANDO ao novo local na primeira cena
 
 FORMATO OBRIGATÓRIO DO PROMPT:
-[DESCRIÇÃO FÍSICA COMPLETA DO PERSONAGEM conforme fornecido], [AÇÃO ÚNICA E LENTA], [AMBIENTE E ATMOSFERA], [ILUMINAÇÃO], [MOVIMENTO DE CÂMERA]. [${sceneDuration}s cinematic shot]`;
+A descrição física completa do personagem, seguida da ação, ambiente, iluminação e movimento de câmera. ${sceneDuration}s cinematic shot
+
+EXEMPLO CORRETO DE PROMPT:
+"Homem asiático de 28 anos, cabelo preto curto bagunçado, rosto angular com cicatriz no queixo, olhos castanhos cansados, vestindo jaqueta de couro marrom surrada sobre camiseta cinza, calça cargo verde escuro, botas militares gastas, abre lentamente os olhos deitado sobre escombros, poeira flutuando, luz dourada do amanhecer, close-up com slow push-in. 8s cinematic shot"
+
+EXEMPLO INCORRETO (NUNCA FAZER):
+"[THE LAST HUMAN SURVIVOR] abre os olhos..." 
+"O sobrevivente caminha..."
+"Ele olha para o horizonte..."
+
+Cada prompt DEVE começar com a descrição física completa, não com pronomes ou nomes.`;
  
      const beatsDescription = beats.map((b: Beat, i: number) => 
        `Beat ${i + 1}: "${b.name}" (${b.sceneCount} cenas)
@@ -79,8 +89,10 @@ FORMATO OBRIGATÓRIO DO PROMPT:
 PERSONAGEM - COPIAR LITERALMENTE EM CADA CENA SEM ALTERAÇÕES:
  ${characterPrompt}
  
-⚠️ IMPORTANTE: A descrição acima deve aparecer IDÊNTICA no início de CADA prompt de cena.
-Isso inclui: aparência física, roupa, acessórios, idade, etc.
+⚠️ REGRA OBRIGATÓRIA:
+- Copie o texto acima LITERALMENTE no início de cada prompt
+- NÃO use nomes, pronomes (ele, ela) ou placeholders
+- Cada prompt COMEÇA com a descrição física completa do personagem
 
  ESTILO VISUAL: ${visualStyle || 'Cinematográfico, tons dessaturados, atmosfera pós-apocalíptica'}
  
@@ -164,6 +176,56 @@ Isso inclui: aparência física, roupa, acessórios, idade, etc.
      }
  
      console.log(`Generated ${result.beats?.length || 0} beats with scenes`);
+
+    // Pós-processamento: garantir que cada prompt contém a descrição do personagem
+    if (result.beats && characterPrompt) {
+      const placeholderPatterns = [
+        /\[THE LAST HUMAN SURVIVOR\]/gi,
+        /\[PERSONAGEM\]/gi,
+        /\[CHARACTER\]/gi,
+        /\[SURVIVOR\]/gi,
+        /\[O ÚLTIMO SOBREVIVENTE\]/gi,
+        /\[PROTAGONISTA\]/gi,
+        /THE LAST HUMAN SURVIVOR,?\s*/gi,
+        /O ÚLTIMO SOBREVIVENTE HUMANO,?\s*/gi,
+        /O sobrevivente\s*/gi,
+        /O personagem\s*/gi,
+        /^Ele\s+/i,
+        /^Ela\s+/i,
+      ];
+      
+      result.beats = result.beats.map((beat: { name: string; scenes: { prompt: string; notes?: string }[] }) => ({
+        ...beat,
+        scenes: beat.scenes.map((scene: { prompt: string; notes?: string }) => {
+          let processedPrompt = scene.prompt;
+          
+          // Remover prefixos de cena
+          processedPrompt = processedPrompt.replace(/^\[SCENE \d+\]:\s*/i, '');
+          processedPrompt = processedPrompt.replace(/^\[CENA \d+\]:\s*/i, '');
+          
+          // Substituir todos os placeholders pela descrição do personagem
+          for (const pattern of placeholderPatterns) {
+            processedPrompt = processedPrompt.replace(pattern, '');
+          }
+          
+          // Limpar espaços extras
+          processedPrompt = processedPrompt.trim();
+          
+          // Garantir que começa com a descrição do personagem
+          const charStart = characterPrompt.substring(0, 30).toLowerCase();
+          if (!processedPrompt.toLowerCase().startsWith(charStart.substring(0, 15))) {
+            processedPrompt = `${characterPrompt}, ${processedPrompt}`;
+          }
+          
+          return {
+            ...scene,
+            prompt: processedPrompt,
+          };
+        }),
+      }));
+      
+      console.log('Post-processed: character description injected into all prompts');
+    }
  
      return new Response(JSON.stringify(result), {
        headers: { ...corsHeaders, "Content-Type": "application/json" },
