@@ -1091,7 +1091,7 @@ export function SidePanelApp() {
                 <Textarea
                   value={batchText}
                   onChange={(e) => setBatchText(e.target.value)}
-                  placeholder={`First prompt.\nCan span multiple lines or be a JSON prompt.\n\nSecond prompt starts after a blank line.\n\nThird prompt is similar...`}
+                  placeholder={`Primeiro prompt (pode ter várias linhas).\nContinua aqui na mesma cena...\n\n[linha em branco separa]\n\nSegundo prompt começa aqui.\nTambém pode ter múltiplas linhas.\n\n[outra linha em branco]\n\nTerceiro prompt...`}
                   className="min-h-[120px] text-sm font-mono resize-none"
                 />
               </div>
