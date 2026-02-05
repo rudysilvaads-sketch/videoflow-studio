@@ -37,11 +37,35 @@ import confetti from "canvas-confetti";
    const [currentSession, setCurrentSession] = useState(session);
    const [isRunning, setIsRunning] = useState(session.isRunning);
   const [realtimeProgress, setRealtimeProgress] = useState<Record<number, { progress: number; status: string }>>({});
+  const [completionTimes, setCompletionTimes] = useState<number[]>([]);
+  const [lastPromptStartTime, setLastPromptStartTime] = useState<Record<string, number>>({});
   
   // Ref para sendPromptToTab para usar no useEffect sem dependência circular
   const sendPromptToTabRef = useRef<(tab: ParallelTab) => boolean>(() => false);
  
    const progress = getParallelProgress(currentSession);
+
+  // Calcular tempo médio e estimativa
+  const averageTime = completionTimes.length > 0 
+    ? completionTimes.reduce((a, b) => a + b, 0) / completionTimes.length 
+    : 0;
+  
+  const remainingPrompts = progress.total - progress.completed;
+  const estimatedTimeRemaining = averageTime > 0 ? (remainingPrompts * averageTime) / currentSession.tabs.filter(t => !t.isPaused).length : 0;
+
+  // Formatar tempo em minutos e segundos
+  const formatTime = (ms: number): string => {
+    if (ms <= 0) return '--:--';
+    const totalSeconds = Math.ceil(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    if (minutes > 60) {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return `${hours}h ${mins}m`;
+    }
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
  
    const updateSession = useCallback((updates: Partial<ParallelSession>) => {
      const updated = { ...currentSession, ...updates };
@@ -104,6 +128,13 @@ import confetti from "canvas-confetti";
       if (message.type === 'VIDEO_COMPLETED' && message.tabId) {
         const tab = currentSession.tabs.find(t => t.tabId === message.tabId);
         if (tab) {
+          // Calcular tempo de conclusão
+          const startTime = lastPromptStartTime[tab.id];
+          if (startTime) {
+            const completionTime = Date.now() - startTime;
+            setCompletionTimes(prev => [...prev.slice(-19), completionTime]); // Manter últimos 20
+          }
+
           const newCompletedCount = tab.completedCount + 1;
           const newPromptIndex = tab.currentPromptIndex + 1;
           
@@ -120,6 +151,8 @@ import confetti from "canvas-confetti";
             // Verificar se a aba não está pausada antes de enviar próximo prompt
             const currentTab = currentSession.tabs.find(t => t.id === tab.id);
             if (currentTab && !currentTab.isPaused) {
+              // Registrar tempo de início do próximo prompt
+              setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
             setTimeout(() => {
               sendPromptToTabRef.current({ ...tab, currentPromptIndex: newPromptIndex });
             }, 1000);
@@ -302,6 +335,8 @@ import confetti from "canvas-confetti";
      // Send first prompt to each tab
      currentSession.tabs.forEach(tab => {
       if (tab.status === 'ready' && !tab.isPaused) {
+        // Registrar tempo de início
+        setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
          sendPromptToTab(tab);
          updateTab(tab.id, { status: 'processing' });
        }
@@ -355,6 +390,7 @@ import confetti from "canvas-confetti";
       toast.success(`Aba ${tab.id.split('-')[1]} retomada`);
       // Se estava processando e foi retomada, enviar próximo prompt
       if (isRunning && tab.status === 'processing' && tab.currentPromptIndex < tab.promptsAssigned.length) {
+        setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
         setTimeout(() => sendPromptToTab(tab), 500);
       }
     }
@@ -413,6 +449,25 @@ import confetti from "canvas-confetti";
            <span className="font-medium">{progress.completed}/{progress.total} prompts</span>
          </div>
          <Progress value={progress.percentage} className="h-2" />
+        
+        {/* Estatísticas de tempo */}
+        <div className="flex justify-between text-[10px] text-muted-foreground pt-1">
+          <div className="flex items-center gap-3">
+            <span>
+              ⏱️ Média: <span className="font-medium text-foreground">{averageTime > 0 ? formatTime(averageTime) : '--:--'}</span>
+            </span>
+            {completionTimes.length > 0 && (
+              <span>
+                ({completionTimes.length} amostras)
+              </span>
+            )}
+          </div>
+          {isRunning && remainingPrompts > 0 && averageTime > 0 && (
+            <span className="text-primary font-medium">
+              🕐 Restante: ~{formatTime(estimatedTimeRemaining)}
+            </span>
+          )}
+        </div>
        </div>
  
        {/* Controls */}
