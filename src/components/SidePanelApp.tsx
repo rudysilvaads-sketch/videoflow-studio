@@ -1113,8 +1113,8 @@ export function SidePanelApp() {
         </TabsList>
 
         {/* Control Tab */}
-        <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0">
-          <ScrollArea className="flex-1 scrollbar-thin">
+        <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0">
+          <ScrollArea className="flex-1 min-h-0 scrollbar-thin">
             <div className="p-5 space-y-6">
               {/* Character Selection */}
               <motion.div 
