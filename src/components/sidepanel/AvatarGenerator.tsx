@@ -39,7 +39,8 @@
        const stored = localStorage.getItem('lacasadark_credentials');
        if (stored) {
          const creds = JSON.parse(stored);
-         return creds.imagefxCookies || '';
+        // Prefer the canonical key used by SettingsTab/useCredentials
+        return creds.imageFxCookies || creds.imagefxCookies || '';
        }
      } catch {
        return '';

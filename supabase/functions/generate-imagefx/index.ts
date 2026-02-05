@@ -25,7 +25,29 @@
  
  // Format cookies string
  function formatCookies(rawCookies: string): string {
-   return rawCookies.trim().replace(/\s+/g, ' ');
+    const trimmed = rawCookies.trim();
+
+    // If user pasted a JSON array of cookies (e.g., from an extension export)
+    if (trimmed.startsWith('[')) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          const pairs = parsed
+            .map((c: any) => {
+              const name = typeof c?.name === 'string' ? c.name : '';
+              const value = typeof c?.value === 'string' ? c.value : '';
+              return name && value ? `${name}=${value}` : '';
+            })
+            .filter(Boolean);
+          return pairs.join('; ');
+        }
+      } catch {
+        // fallthrough
+      }
+    }
+
+    // Normalize whitespace/newlines
+    return trimmed.replace(/[\r\n\t]+/g, ' ').replace(/\s+/g, ' ');
  }
  
  serve(async (req) => {
