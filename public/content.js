@@ -580,6 +580,13 @@ function startVideoMonitor(sceneNumber) {
              sceneNumber: currentSceneNumber,
              progress: progressValue
            });
+               
+               // Também enviar via postMessage para o side panel
+               window.postMessage({
+                 type: 'PROGRESS_THRESHOLD_REACHED',
+                 sceneNumber: currentSceneNumber,
+                 progress: progressValue
+               }, '*');
          }
        }
      }
@@ -604,6 +611,13 @@ function startVideoMonitor(sceneNumber) {
                  sceneNumber: currentSceneNumber,
                  progress: value
                });
+               
+               // Também enviar via postMessage para o side panel
+               window.postMessage({
+                 type: 'PROGRESS_THRESHOLD_REACHED',
+                 sceneNumber: currentSceneNumber,
+                 progress: value
+               }, '*');
              }
            }
          }

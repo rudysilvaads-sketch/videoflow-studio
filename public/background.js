@@ -78,11 +78,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
    // Progresso atingiu 65%
    if (message.type === 'PROGRESS_THRESHOLD_REACHED') {
      console.log('[Background] Progresso 65% atingido, cena:', message.sceneNumber);
+     
+     // Retransmitir para todas as janelas/side panels
      chrome.runtime.sendMessage({
        type: 'PROGRESS_THRESHOLD_REACHED',
        sceneNumber: message.sceneNumber,
-       progress: message.progress
-     });
+       progress: message.progress,
+       tabId: sender.tab?.id
+     }).catch(() => {}); // Ignorar erro se side panel não estiver aberto
+     
      sendResponse({ received: true });
      return true;
    }
