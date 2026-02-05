@@ -600,50 +600,75 @@ export function SidePanelApp() {
 
   // Listen for completion messages
   useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (!batchSession) return;
+    // Handler para mensagens do Chrome extension
+    const handleChromeMessage = (message: any) => {
+      console.log('[SidePanel] Mensagem Chrome recebida:', message.type);
       
-      if (event.data.type === 'VIDEO_COMPLETED') {
-        const processingItem = batchSession.items.find(item => item.status === 'processing');
-        if (processingItem) {
-          const updated = updateBatchItem(batchSession, processingItem.id, { 
-            status: 'completed',
-            videoUrl: event.data.videoUrl,
-            downloadedAt: new Date(),
-          });
-          setBatchSession(updated);
-          saveBatch(updated);
-          addLog(`Scene ${processingItem.sceneNumber} completed and downloaded`, 'success');
-          toast.success(`✅ Cena ${processingItem.sceneNumber} concluída!`);
-          
-          if (isRunning) {
-            setTimeout(processNextItem, 1000);
+      if (message.type === 'VIDEO_COMPLETED') {
+        if (batchSession) {
+          const processingItem = batchSession.items.find(item => item.status === 'processing');
+          if (processingItem) {
+            const updated = updateBatchItem(batchSession, processingItem.id, { 
+              status: 'completed',
+              videoUrl: message.videoUrl,
+              downloadedAt: new Date(),
+            });
+            setBatchSession(updated);
+            saveBatch(updated);
+            addLog(`Scene ${processingItem.sceneNumber} completed and downloaded`, 'success');
+            toast.success(`✅ Cena ${processingItem.sceneNumber} concluída!`);
+            
+            if (isRunning) {
+              setTimeout(() => processNextItemRef.current(), 1000);
+            }
           }
         }
       }
       
-      if (event.data.type === 'VIDEO_ERROR') {
-        const processingItem = batchSession.items.find(item => item.status === 'processing');
-        if (processingItem) {
-          const updated = updateBatchItem(batchSession, processingItem.id, { 
-            status: 'error',
-            errorMessage: event.data.error,
-          });
-          setBatchSession(updated);
-          saveBatch(updated);
-          setFailedTasks(prev => [...prev, { ...processingItem, status: 'error', errorMessage: event.data.error }]);
-          addLog(`Scene ${processingItem.sceneNumber} failed: ${event.data.error}`, 'error');
-          
-          if (isRunning) {
-            setTimeout(processNextItem, 2000);
+      if (message.type === 'VIDEO_ERROR') {
+        if (batchSession) {
+          const processingItem = batchSession.items.find(item => item.status === 'processing');
+          if (processingItem) {
+            const updated = updateBatchItem(batchSession, processingItem.id, { 
+              status: 'error',
+              errorMessage: message.error,
+            });
+            setBatchSession(updated);
+            saveBatch(updated);
+            setFailedTasks(prev => [...prev, { ...processingItem, status: 'error', errorMessage: message.error }]);
+            addLog(`Scene ${processingItem.sceneNumber} failed: ${message.error}`, 'error');
+            
+            if (isRunning) {
+              setTimeout(() => processNextItemRef.current(), 2000);
+            }
           }
         }
       }
     };
 
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [batchSession, isRunning, processNextItem]);
+    // @ts-ignore - chrome is defined only in extension context
+    if (typeof window !== 'undefined' && window.chrome?.runtime?.onMessage) {
+      // @ts-ignore
+      window.chrome.runtime.onMessage.addListener(handleChromeMessage);
+    }
+    
+    // Também escutar window messages como fallback
+    const handleWindowMessage = (event: MessageEvent) => {
+      if (event.data?.type) {
+        handleChromeMessage(event.data);
+      }
+    };
+    window.addEventListener('message', handleWindowMessage);
+    
+    return () => {
+      // @ts-ignore
+      if (typeof window !== 'undefined' && window.chrome?.runtime?.onMessage) {
+        // @ts-ignore
+        window.chrome.runtime.onMessage.removeListener(handleChromeMessage);
+      }
+      window.removeEventListener('message', handleWindowMessage);
+    };
+  }, [batchSession, isRunning, addLog]);
 
   const handleStartQueue = () => {
     if (!batchSession || batchSession.items.length === 0) {
