@@ -149,170 +149,154 @@ import { Badge } from "@/components/ui/badge";
                Nova Série
              </Button>
            </DialogTrigger>
-           <DialogContent className="max-w-md">
+            <DialogContent className="max-w-2xl p-0 gap-0 overflow-hidden">
              <DialogHeader>
-               <DialogTitle>Criar Nova Série</DialogTitle>
+                <DialogTitle className="px-6 pt-6 pb-4">Criar Nova Série</DialogTitle>
              </DialogHeader>
              
-          <ScrollArea className="max-h-[70vh]">
-            <div className="space-y-4 pt-2 pr-4">
-              {/* Templates Grid */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <Label className="text-sm font-medium">
-                    Templates Disponíveis ({seriesTemplates.length})
-                  </Label>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-3">
+          <div className="flex h-[65vh]">
+            {/* Left: Template Grid */}
+            <div className="flex-1 flex flex-col border-r border-border">
+              <div className="px-4 py-2 border-b border-border bg-muted/30">
+                <Label className="text-xs font-medium text-muted-foreground">
+                  Templates Disponíveis ({seriesTemplates.length})
+                </Label>
+              </div>
+              <ScrollArea className="flex-1">
+                <div className="p-3 grid grid-cols-2 gap-2">
                   {seriesTemplates.map(template => (
-                    <motion.div
+                    <motion.button
                       key={template.id}
                       whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                       className={cn(
-                        "relative p-4 rounded-xl border-2 transition-all cursor-pointer group",
-                        "bg-gradient-to-br from-card to-muted/30",
+                        "relative p-3 rounded-lg border text-left transition-all",
+                        "hover:bg-muted/50",
                         previewTemplate === template.id 
-                          ? "border-primary shadow-lg shadow-primary/20" 
-                          : "border-border hover:border-primary/50"
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/30" 
+                          : "border-border"
                       )}
-                      onClick={() => setPreviewTemplate(
-                        previewTemplate === template.id ? null : template.id
-                      )}
+                      onClick={() => setPreviewTemplate(template.id)}
                     >
-                      {/* Header */}
-                      <div className="flex items-start gap-3 mb-3">
+                      <div className="flex items-center gap-2 mb-2">
                         <div className={cn(
-                          "w-10 h-10 rounded-lg flex items-center justify-center text-xl",
+                          "w-8 h-8 rounded-md flex items-center justify-center text-base shrink-0",
                           `bg-gradient-to-br ${template.color}`
                         )}>
                           {template.icon}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-sm font-semibold truncate">
+                          <h4 className="text-xs font-medium truncate">
                             {template.title}
                           </h4>
-                          <p className="text-xs text-muted-foreground line-clamp-1">
-                            {template.description}
+                          <p className="text-[10px] text-muted-foreground truncate">
+                            {template.suggestedEpisodes.length} episódios
                           </p>
                         </div>
                       </div>
-                      
-                      {/* Episode Count Badge */}
-                      <div className="flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {template.suggestedEpisodes.length} episódios
-                        </Badge>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-6 px-2 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setPreviewTemplate(template.id);
-                          }}
-                        >
-                          <Eye className="w-3 h-3 mr-1" />
-                          Preview
-                        </Button>
-                      </div>
-                      
-                      {/* Mini Episode Preview */}
-                      <div className="mt-3 pt-3 border-t border-border/50">
-                        <div className="flex flex-wrap gap-1">
-                          {template.suggestedEpisodes.slice(0, 4).map((ep, i) => (
-                            <span 
-                              key={i}
-                              className="text-[9px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground truncate max-w-[80px]"
-                              title={ep.title}
-                            >
-                              {ep.title}
-                            </span>
-                          ))}
-                          {template.suggestedEpisodes.length > 4 && (
-                            <span className="text-[9px] px-1.5 py-0.5 bg-primary/20 text-primary rounded">
-                              +{template.suggestedEpisodes.length - 4}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Expand indicator */}
-                      <ChevronDown className={cn(
-                        "absolute bottom-2 right-2 w-4 h-4 text-muted-foreground transition-transform",
-                        previewTemplate === template.id && "rotate-180 text-primary"
-                      )} />
-                    </motion.div>
+                    </motion.button>
                   ))}
                 </div>
-              </div>
-              
-              {/* Template Preview Panel */}
-              <AnimatePresence>
-                {selectedPreviewTemplate && (
+                
+                {/* Custom Series Section */}
+                <div className="p-3 border-t border-border">
+                  <div className="relative py-2 mb-3">
+                    <div className="absolute inset-0 flex items-center">
+                      <span className="w-full border-t border-border" />
+                    </div>
+                    <div className="relative flex justify-center text-[10px]">
+                      <span className="bg-background px-2 text-muted-foreground">ou crie do zero</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Input 
+                      value={newSeriesTitle}
+                      onChange={(e) => setNewSeriesTitle(e.target.value)}
+                      placeholder="Título da série..."
+                      className="h-8 text-xs"
+                    />
+                    <Input 
+                      value={newSeriesDesc}
+                      onChange={(e) => setNewSeriesDesc(e.target.value)}
+                      placeholder="Descrição..."
+                      className="h-8 text-xs"
+                    />
+                    <Button 
+                      onClick={createCustomSeries}
+                      disabled={!newSeriesTitle.trim()}
+                      className="w-full h-8 text-xs"
+                      variant="outline"
+                    >
+                      <Plus className="w-3 h-3 mr-1" />
+                      Criar Personalizada
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
+            </div>
+            
+            {/* Right: Preview Panel */}
+            <div className="w-[280px] flex flex-col bg-muted/20">
+              <AnimatePresence mode="wait">
+                {selectedPreviewTemplate ? (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="overflow-hidden"
+                    key={selectedPreviewTemplate.id}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    className="flex flex-col h-full"
                   >
-                    <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-lg flex items-center justify-center text-lg",
-                            `bg-gradient-to-br ${selectedPreviewTemplate.color}`
-                          )}>
-                            {selectedPreviewTemplate.icon}
-                          </div>
-                          <div>
-                            <h4 className="text-sm font-semibold">{selectedPreviewTemplate.title}</h4>
-                            <p className="text-xs text-muted-foreground">{selectedPreviewTemplate.description}</p>
-                          </div>
+                    {/* Preview Header */}
+                    <div className="p-4 border-b border-border">
+                      <div className="flex items-start gap-3">
+                        <div className={cn(
+                          "w-12 h-12 rounded-xl flex items-center justify-center text-2xl shrink-0",
+                          `bg-gradient-to-br ${selectedPreviewTemplate.color}`
+                        )}>
+                          {selectedPreviewTemplate.icon}
                         </div>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 w-7 p-0"
-                          onClick={() => setPreviewTemplate(null)}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-sm font-semibold">{selectedPreviewTemplate.title}</h3>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            {selectedPreviewTemplate.description}
+                          </p>
+                          <Badge variant="secondary" className="mt-2 text-[10px]">
+                            {selectedPreviewTemplate.suggestedEpisodes.length} episódios
+                          </Badge>
+                        </div>
                       </div>
-                      
-                      {/* Full Episode List */}
-                      <div className="space-y-2 mb-4">
-                        <Label className="text-xs text-muted-foreground">
-                          Episódios incluídos:
-                        </Label>
-                        <div className="grid gap-2">
-                          {selectedPreviewTemplate.suggestedEpisodes.map((ep, index) => (
-                            <motion.div
-                              key={index}
-                              initial={{ x: -10, opacity: 0 }}
-                              animate={{ x: 0, opacity: 1 }}
-                              transition={{ delay: index * 0.05 }}
-                              className="flex items-center gap-3 p-2 rounded-lg bg-background/50 border border-border/50"
-                            >
-                              <span className="text-xs font-mono text-muted-foreground w-6">
-                                {String(index + 1).padStart(2, '0')}
+                    </div>
+                    
+                    {/* Episode List */}
+                    <ScrollArea className="flex-1">
+                      <div className="p-3 space-y-1.5">
+                        {selectedPreviewTemplate.suggestedEpisodes.map((ep, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ x: 10, opacity: 0 }}
+                            animate={{ x: 0, opacity: 1 }}
+                            transition={{ delay: index * 0.03 }}
+                            className="flex items-start gap-2 p-2 rounded-lg bg-background/60 border border-border/50"
+                          >
+                            <span className="text-[10px] font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded shrink-0">
+                              {String(index + 1).padStart(2, '0')}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <span className="text-xs font-medium block truncate">
+                                {ep.title}
                               </span>
-                              <div className="flex-1 min-w-0">
-                                <span className="text-sm font-medium block truncate">
-                                  {ep.title}
-                                </span>
-                                <span className="text-xs text-muted-foreground block truncate">
-                                  {ep.description}
-                                </span>
-                              </div>
-                              <Badge variant="outline" className="text-[9px] shrink-0">
-                                {ep.scenario}
-                              </Badge>
-                            </motion.div>
-                          ))}
-                        </div>
+                              <span className="text-[10px] text-muted-foreground block truncate">
+                                {ep.description}
+                              </span>
+                            </div>
+                          </motion.div>
+                        ))}
                       </div>
-                      
+                    </ScrollArea>
+                    
+                    {/* Create Button */}
+                    <div className="p-4 border-t border-border bg-background">
                       <Button 
                         onClick={() => {
                           createFromTemplate(selectedPreviewTemplate.id);
@@ -322,54 +306,30 @@ import { Badge } from "@/components/ui/badge";
                         className="w-full"
                       >
                         <Plus className="w-4 h-4 mr-2" />
-                        Criar "{selectedPreviewTemplate.title}"
+                        Criar Série
                       </Button>
                     </div>
                   </motion.div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col items-center justify-center p-6 text-center"
+                  >
+                    <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                      <Eye className="w-8 h-8 text-muted-foreground/40" />
+                    </div>
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
+                      Selecione um template
+                    </h4>
+                    <p className="text-xs text-muted-foreground/60">
+                      Clique em um template para ver os episódios
+                    </p>
+                  </motion.div>
                 )}
               </AnimatePresence>
-
-              <div className="relative py-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="bg-background px-3 text-muted-foreground">ou crie do zero</span>
-                </div>
-              </div>
-
-              {/* Custom Series */}
-              <div className="space-y-3 pb-2">
-                <div>
-                  <Label className="text-sm">Título da Série</Label>
-                  <Input 
-                    value={newSeriesTitle}
-                    onChange={(e) => setNewSeriesTitle(e.target.value)}
-                    placeholder="Ex: A Jornada para o Norte"
-                    className="mt-1.5 h-10"
-                  />
-                </div>
-                <div>
-                  <Label className="text-sm">Descrição</Label>
-                  <Input 
-                    value={newSeriesDesc}
-                    onChange={(e) => setNewSeriesDesc(e.target.value)}
-                    placeholder="Breve descrição do arco narrativo"
-                    className="mt-1.5 h-10"
-                  />
-                </div>
-                <Button 
-                  onClick={createCustomSeries}
-                  disabled={!newSeriesTitle.trim()}
-                  className="w-full h-10"
-                  variant="outline"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Criar Série Personalizada
-                </Button>
-              </div>
             </div>
-          </ScrollArea>
+          </div>
            </DialogContent>
          </Dialog>
        </div>
