@@ -135,6 +135,20 @@
    { value: "cinema4d", label: "Cinema 4D", category: "3D" },
    { value: "vray", label: "V-Ray Render", category: "3D" },
    { value: "arnold", label: "Arnold Render", category: "3D" },
+  
+  // ASMR & Relaxation
+  { value: "asmr-cozy", label: "ASMR Cozy", category: "ASMR" },
+  { value: "asmr-intimate", label: "ASMR Intimate", category: "ASMR" },
+  { value: "asmr-nature", label: "ASMR Nature", category: "ASMR" },
+  { value: "asmr-survivor", label: "ASMR Survivor", category: "ASMR" },
+  { value: "bushcraft", label: "Bushcraft", category: "ASMR" },
+  { value: "wilderness", label: "Wilderness", category: "ASMR" },
+  { value: "campfire", label: "Campfire Aesthetic", category: "ASMR" },
+  { value: "cozy-aesthetic", label: "Cozy Aesthetic", category: "ASMR" },
+  { value: "soft-lighting", label: "Soft Lighting", category: "ASMR" },
+  { value: "macro-detail", label: "Macro Detail", category: "ASMR" },
+  { value: "relaxation", label: "Relaxation", category: "ASMR" },
+  { value: "meditation", label: "Meditation", category: "ASMR" },
  ] as const;
  
  export type VisualStyleValue = typeof visualStyles[number]['value'];

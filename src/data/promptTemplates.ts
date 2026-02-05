@@ -1,7 +1,7 @@
 export interface PromptTemplate {
   id: string;
   name: string;
-  category: 'horror' | 'mystery' | 'thriller' | 'paranormal' | 'crime' | 'conspiracy';
+  category: 'horror' | 'mystery' | 'thriller' | 'paranormal' | 'crime' | 'conspiracy' | 'asmr' | 'asmr-survivor';
   description: string;
   prompt: string;
   tags: string[];
@@ -163,6 +163,122 @@ export const promptTemplates: PromptTemplate[] = [
     prompt: "secret meeting with informant, parking garage at night, single overhead light, exchanging documents, spy thriller atmosphere, paranoid glances around",
     tags: ["encontro", "informante", "espionagem"],
   },
+  
+  // ASMR
+  {
+    id: "asmr-1",
+    name: "Sussurros Íntimos",
+    category: "asmr",
+    description: "Close-up com sussurros suaves e relaxantes",
+    prompt: "extreme close-up face shot, soft warm lighting, whispering softly, intimate eye contact, cozy bedroom background with fairy lights, shallow depth of field, warm color grade, ASMR aesthetic, calming atmosphere, soft smile",
+    tags: ["sussurro", "íntimo", "relaxante"],
+  },
+  {
+    id: "asmr-2",
+    name: "Tapping Suave",
+    category: "asmr",
+    description: "Mãos fazendo tapping em objetos variados",
+    prompt: "close-up of hands gently tapping on objects, soft lighting, macro detail on fingernails, wooden surface, glass, plastic items, satisfying repetitive motion, ASMR trigger sounds implied, calm ambient lighting",
+    tags: ["tapping", "mãos", "sons"],
+  },
+  {
+    id: "asmr-3",
+    name: "Preparação para Dormir",
+    category: "asmr",
+    description: "Rotina relaxante de preparação para dormir",
+    prompt: "cozy bedroom setting, soft pajamas, warm dim lighting, brushing hair slowly, skincare routine, gentle movements, fairy lights background, calm peaceful expression, bedtime ASMR aesthetic, warm neutral tones",
+    tags: ["dormir", "rotina", "relaxante"],
+  },
+  {
+    id: "asmr-4",
+    name: "Escovando Microfone",
+    category: "asmr",
+    description: "Close-up de escovação de microfone",
+    prompt: "extreme close-up of fluffy microphone being brushed gently, soft makeup brush, slow deliberate movements, blurred cozy background, warm lighting, satisfying texture, ASMR equipment, intimate framing",
+    tags: ["microfone", "escova", "textura"],
+  },
+  {
+    id: "asmr-5",
+    name: "Unboxing Relaxante",
+    category: "asmr",
+    description: "Abrindo pacotes de forma lenta e satisfatória",
+    prompt: "hands slowly opening package, crisp paper sounds implied, gentle movements, close-up on fingers peeling tape, revealing items inside, soft overhead lighting, clean organized space, satisfying unboxing ASMR",
+    tags: ["unboxing", "pacote", "satisfatório"],
+  },
+  {
+    id: "asmr-6",
+    name: "Comendo Suavemente",
+    category: "asmr",
+    description: "Mukbang ASMR com sons de comida",
+    prompt: "close-up eating shot, crunchy food, soft chewing sounds implied, variety of textures, clean aesthetic, bright soft lighting, organized food presentation, ASMR eating style, satisfying food textures",
+    tags: ["comida", "mukbang", "crunchy"],
+  },
+  
+  // ASMR SURVIVOR
+  {
+    id: "survivor-1",
+    name: "Acendendo Fogueira",
+    category: "asmr-survivor",
+    description: "Processo relaxante de fazer fogo na natureza",
+    prompt: "hands making fire with friction, close-up on wood shavings, smoke starting to rise, forest background, golden hour lighting, survival camping scene, detailed hand work, natural environment, crackling sounds implied",
+    tags: ["fogo", "sobrevivência", "natureza"],
+  },
+  {
+    id: "survivor-2",
+    name: "Cortando Madeira",
+    category: "asmr-survivor",
+    description: "Som satisfatório de cortar lenha",
+    prompt: "close-up of hands using knife to carve wood, wood shavings curling, forest campsite background, natural daylight through trees, bushcraft activity, detailed texture of wood grain, survival knife technique, calming repetitive motion",
+    tags: ["madeira", "cortar", "bushcraft"],
+  },
+  {
+    id: "survivor-3",
+    name: "Cozinhando na Fogueira",
+    category: "asmr-survivor",
+    description: "Preparando comida ao ar livre",
+    prompt: "cooking over campfire, close-up on sizzling food in cast iron pan, flames dancing, smoke rising gently, wilderness background, evening golden light, outdoor cooking, survival meal preparation, satisfying cooking sounds",
+    tags: ["cozinhar", "fogueira", "comida"],
+  },
+  {
+    id: "survivor-4",
+    name: "Construindo Abrigo",
+    category: "asmr-survivor",
+    description: "Montando abrigo na floresta",
+    prompt: "hands tying rope around branches, building shelter in forest, close-up on knot work, natural materials, dappled sunlight, survival shelter construction, bushcraft skills, green forest environment, methodical careful movements",
+    tags: ["abrigo", "construção", "corda"],
+  },
+  {
+    id: "survivor-5",
+    name: "Purificando Água",
+    category: "asmr-survivor",
+    description: "Coletando e purificando água do rio",
+    prompt: "hands collecting water from stream, pouring water through filter, close-up on clear water flowing, forest stream setting, natural lighting, survival water purification, pristine wilderness, calming water sounds implied",
+    tags: ["água", "rio", "purificação"],
+  },
+  {
+    id: "survivor-6",
+    name: "Noite na Floresta",
+    category: "asmr-survivor",
+    description: "Ambiente noturno relaxante na natureza",
+    prompt: "nighttime campsite scene, crackling fire illuminating, stars visible through trees, person relaxing by fire, warm orange glow, peaceful wilderness night, distant owl sounds implied, cozy survival camp, ambient nature night",
+    tags: ["noite", "floresta", "relaxante"],
+  },
+  {
+    id: "survivor-7",
+    name: "Pescando no Rio",
+    category: "asmr-survivor",
+    description: "Pescaria tranquila em ambiente natural",
+    prompt: "hands preparing fishing line, close-up on tying hooks, river flowing in background, peaceful fishing spot, natural daylight, calm water reflections, survival fishing technique, serene wilderness activity",
+    tags: ["pesca", "rio", "tranquilo"],
+  },
+  {
+    id: "survivor-8",
+    name: "Caminhada na Trilha",
+    category: "asmr-survivor",
+    description: "POV caminhando pela natureza",
+    prompt: "POV walking through forest trail, feet on leaves and twigs, dappled sunlight through canopy, peaceful hiking path, nature sounds implied, crunch of footsteps, wilderness exploration, calming nature walk",
+    tags: ["trilha", "caminhada", "pov"],
+  },
 ];
 
 export const categoryLabels: Record<PromptTemplate['category'], string> = {
@@ -172,6 +288,8 @@ export const categoryLabels: Record<PromptTemplate['category'], string> = {
   paranormal: "👻 Paranormal",
   crime: "🔪 Crime",
   conspiracy: "🕵️ Conspiração",
+  asmr: "🎧 ASMR",
+  "asmr-survivor": "🏕️ ASMR Survivor",
 };
 
 export const categoryColors: Record<PromptTemplate['category'], string> = {
@@ -181,4 +299,6 @@ export const categoryColors: Record<PromptTemplate['category'], string> = {
   paranormal: "bg-purple-500/20 text-purple-400 border-purple-500/30",
   crime: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   conspiracy: "bg-green-500/20 text-green-400 border-green-500/30",
+  asmr: "bg-pink-500/20 text-pink-400 border-pink-500/30",
+  "asmr-survivor": "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
 };

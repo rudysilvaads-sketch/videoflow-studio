@@ -21,6 +21,7 @@
    "Anime",
    "Histórico",
    "Realista",
+  "ASMR",
  ] as const;
  
  export type TemplateCategory = typeof templateCategories[number];
@@ -382,4 +383,83 @@
    },
    thumbnail: "🧟",
  },
+  // ASMR Characters
+  {
+    id: "asmr-artist",
+    name: "ASMR Artist",
+    category: "ASMR",
+    description: "Criadora de conteúdo ASMR com visual suave e acolhedor",
+    basePrompt: "young woman ASMR content creator, soft natural makeup, gentle warm expression, cozy sweater, fairy lights background, soft warm lighting, intimate close-up framing, calming presence, whisper-ready pose, microphone nearby",
+    attributes: {
+      age: "25 anos",
+      gender: "Feminino",
+      style: "ASMR, Cozy Aesthetic",
+    },
+    thumbnail: "🎧",
+  },
+  {
+    id: "survival-expert",
+    name: "Especialista Survival",
+    category: "ASMR",
+    description: "Expert em sobrevivência para canais ASMR Survivor",
+    basePrompt: "rugged outdoor survivalist, practical outdoor clothing, weathered hands, calm focused expression, forest background, natural lighting, bushcraft equipment, survival knife on belt, experienced woodsman appearance",
+    attributes: {
+      age: "35 anos",
+      gender: "Masculino",
+      style: "Bushcraft, Outdoor",
+    },
+    thumbnail: "🏕️",
+  },
+  {
+    id: "cozy-host",
+    name: "Host Aconchegante",
+    category: "ASMR",
+    description: "Apresentador(a) de vídeos relaxantes e aconchegantes",
+    basePrompt: "gentle person in comfortable home setting, soft cardigan, warm cup of tea, reading glasses, calm knowing smile, bookshelf background, soft lamp lighting, cozy home aesthetic, approachable friendly demeanor",
+    attributes: {
+      age: "30 anos",
+      gender: "Neutro",
+      style: "Cozy, Comfort",
+    },
+    thumbnail: "☕",
+  },
+  {
+    id: "nature-guide",
+    name: "Guia da Natureza",
+    category: "ASMR",
+    description: "Explorador tranquilo da natureza selvagem",
+    basePrompt: "calm nature guide, earth-toned hiking clothes, binoculars around neck, gentle observant eyes, forest or meadow background, golden hour natural lighting, peaceful outdoor explorer, connected with nature",
+    attributes: {
+      age: "40 anos",
+      gender: "Masculino",
+      style: "Nature, Documentary",
+    },
+    thumbnail: "🌲",
+  },
+  {
+    id: "spa-therapist",
+    name: "Terapeuta de Spa",
+    category: "ASMR",
+    description: "Profissional de bem-estar e relaxamento",
+    basePrompt: "serene spa therapist, clean white uniform, gentle healing hands, peaceful calming expression, zen spa background, soft diffused lighting, candles and plants, wellness aesthetic, soothing presence",
+    attributes: {
+      age: "32 anos",
+      gender: "Feminino",
+      style: "Spa, Wellness",
+    },
+    thumbnail: "🧘",
+  },
+  {
+    id: "campfire-chef",
+    name: "Chef de Fogueira",
+    category: "ASMR",
+    description: "Cozinheiro especialista em culinária outdoor",
+    basePrompt: "outdoor cooking enthusiast, casual camping attire, skilled hands preparing food, warm friendly expression, campfire and forest background, evening golden light, cast iron cookware, rustic outdoor chef",
+    attributes: {
+      age: "38 anos",
+      gender: "Masculino",
+      style: "Outdoor Cooking, Bushcraft",
+    },
+    thumbnail: "🍳",
+  },
  ];
