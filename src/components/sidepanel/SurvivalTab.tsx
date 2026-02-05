@@ -6,7 +6,8 @@
    Layers, 
    Wand2,
    ChevronLeft,
-   Compass
+   Compass,
+   Film
  } from "lucide-react";
  import { Button } from "@/components/ui/button";
  import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@
  import { ScenarioLibrary } from "./ScenarioLibrary";
  import { SurvivorProfile } from "./SurvivorProfile";
  import { PromptBuilder } from "./PromptBuilder";
+ import { EpisodeManager } from "./EpisodeManager";
  import { Series, Episode, Scenario } from "@/types/series";
  import { survivorCharacterTemplate, survivalScenarios } from "@/data/survivalScenarios";
  import { cn } from "@/lib/utils";
@@ -39,7 +41,7 @@
  
  export function SurvivalTab({ onPromptReady }: SurvivalTabProps) {
    const [activeView, setActiveView] = useState<"main" | "build">("main");
-   const [activeSubTab, setActiveSubTab] = useState<"series" | "scenarios" | "character">("scenarios");
+   const [activeSubTab, setActiveSubTab] = useState<"episodes" | "scenarios" | "character">("episodes");
    const [selectedScenario, setSelectedScenario] = useState<Scenario | null>(null);
    const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null);
    const [activeSeries, setActiveSeries] = useState<string | undefined>();
@@ -103,6 +105,12 @@
      onPromptReady(prompt);
    };
  
+   const handleSendToQueue = (prompts: string[]) => {
+     // Envia todos os prompts separados por linha em branco para o prompt principal
+     const joinedPrompts = prompts.join('\n\n');
+     onPromptReady(joinedPrompts);
+   };
+ 
    return (
       <div className="h-full flex flex-col min-h-0">
        <AnimatePresence mode="wait">
@@ -132,18 +140,18 @@
                <Tabs value={activeSubTab} onValueChange={(v) => setActiveSubTab(v as typeof activeSubTab)}>
                   <TabsList className="w-full h-7 p-0.5 bg-muted/50">
                    <TabsTrigger 
+                     value="episodes" 
+                      className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
+                   >
+                     <Film className="w-3 h-3" />
+                     Episódios
+                   </TabsTrigger>
+                   <TabsTrigger 
                      value="scenarios" 
                       className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
                    >
                      <MapPin className="w-3 h-3" />
                      Cenários
-                   </TabsTrigger>
-                   <TabsTrigger 
-                     value="series" 
-                      className="flex-1 h-6 text-[10px] gap-1 data-[state=active]:bg-background"
-                   >
-                     <Layers className="w-3 h-3" />
-                     Séries
                    </TabsTrigger>
                    <TabsTrigger 
                      value="character" 
@@ -160,6 +168,21 @@
               <ScrollArea className="flex-1 min-h-0">
                 <div className="p-3">
                  <AnimatePresence mode="wait">
+                   {activeSubTab === "episodes" && (
+                     <motion.div
+                       key="episodes"
+                       initial={{ opacity: 0, y: 10 }}
+                       animate={{ opacity: 1, y: 0 }}
+                       exit={{ opacity: 0, y: -10 }}
+                     >
+                       <EpisodeManager
+                         characterPrompt={survivor.basePrompt}
+                         visualStyle={survivor.visualStyle}
+                         onSendToQueue={handleSendToQueue}
+                       />
+                     </motion.div>
+                   )}
+ 
                    {activeSubTab === "scenarios" && (
                      <motion.div
                        key="scenarios"
@@ -170,23 +193,6 @@
                        <ScenarioLibrary
                          onSelectScenario={handleSelectScenario}
                          selectedScenarioId={selectedScenario?.id}
-                       />
-                     </motion.div>
-                   )}
- 
-                   {activeSubTab === "series" && (
-                     <motion.div
-                       key="series"
-                       initial={{ opacity: 0, y: 10 }}
-                       animate={{ opacity: 1, y: 0 }}
-                       exit={{ opacity: 0, y: -10 }}
-                     >
-                       <SeriesManager
-                         series={series}
-                         onSeriesChange={setSeries}
-                         onSelectEpisode={handleSelectEpisode}
-                         activeSeries={activeSeries}
-                         activeEpisode={selectedEpisode?.id}
                        />
                      </motion.div>
                    )}
