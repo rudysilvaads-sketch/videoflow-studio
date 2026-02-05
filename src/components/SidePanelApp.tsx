@@ -1012,18 +1012,18 @@ export function SidePanelApp() {
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-5 border-b border-border gradient-header"
+        className="flex items-center justify-between px-3 py-2 border-b border-border gradient-header"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <motion.div
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <img src={logoDark} alt="LaCasaDark" className="h-12 w-12 rounded-xl shadow-card" />
+            <img src={logoDark} alt="LaCasaDark" className="h-9 w-9 rounded-lg shadow-card" />
           </motion.div>
           <div>
-            <h1 className="font-bold text-base text-gradient">LaCasaDark Flow</h1>
-            <p className="text-sm text-muted-foreground">Gerador de Vídeos com IA</p>
+            <h1 className="font-bold text-sm text-gradient">LaCasaDark Flow</h1>
+            <p className="text-xs text-muted-foreground">Gerador de Vídeos com IA</p>
           </div>
         </div>
         
@@ -1037,18 +1037,18 @@ export function SidePanelApp() {
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="p-4 bg-destructive/10 border-b border-destructive/30"
+          className="px-3 py-2 bg-destructive/10 border-b border-destructive/30"
         >
-          <div className="flex items-center gap-3 mb-3">
-            <AlertTriangle className="w-5 h-5 text-destructive" />
-            <span className="text-base font-medium text-destructive">Desconectado</span>
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Desconectado</span>
           </div>
           <Button 
             onClick={openGoogleFlow}
             size="sm"
-            className="w-full h-10 gap-2 text-sm"
+            className="w-full h-8 gap-2 text-xs"
           >
-            <ExternalLink className="w-5 h-5" />
+            <ExternalLink className="w-4 h-4" />
             Abrir Google Flow
           </Button>
         </motion.div>
@@ -1059,13 +1059,13 @@ export function SidePanelApp() {
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="px-5 py-3 bg-accent/10 border-b border-accent/30 flex items-center gap-3"
+          className="px-3 py-1.5 bg-accent/10 border-b border-accent/30 flex items-center gap-2"
         >
-          <CheckCircle2 className="w-5 h-5 text-accent" />
-          <span className="text-sm text-accent font-medium">Conectado ao Google Flow</span>
+          <CheckCircle2 className="w-4 h-4 text-accent" />
+          <span className="text-xs text-accent font-medium">Conectado ao Google Flow</span>
           {!flowPageReady && (
-            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1.5">
-              <Loader2 className="w-4 h-4 animate-spin" />
+            <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
               Carregando...
             </span>
           )}
@@ -1074,38 +1074,38 @@ export function SidePanelApp() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden min-h-0">
-        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-12">
+        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-10">
           <TabsTrigger 
             value="control" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-3 py-2 transition-all"
           >
             <Play className="w-4 h-4" />
             Controle
           </TabsTrigger>
           <TabsTrigger 
             value="settings" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-3 py-2 transition-all"
           >
             <Settings className="w-4 h-4" />
             Config
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-3 py-2 transition-all"
           >
             <Clock className="w-4 h-4" />
             Histórico
           </TabsTrigger>
           <TabsTrigger 
             value="tools" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-3 py-2 transition-all"
           >
             <Wrench className="w-4 h-4" />
             Ferramentas
           </TabsTrigger>
           <TabsTrigger 
             value="survival" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-3 py-2 transition-all"
           >
             <Compass className="w-4 h-4" />
             Sobrevivência
@@ -1115,22 +1115,22 @@ export function SidePanelApp() {
         {/* Control Tab */}
         <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0 min-h-0">
           <ScrollArea className="flex-1 min-h-0 scrollbar-thin">
-            <div className="p-5 space-y-6">
+            <div className="p-3 space-y-3">
               {/* Character Selection */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="space-y-4"
+                className="space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
-                    <div className="p-2 rounded-md bg-primary/10">
-                      <User className="w-4 h-4 text-primary" />
+                  <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
+                    <div className="p-1.5 rounded-md bg-primary/10">
+                      <User className="w-3.5 h-3.5 text-primary" />
                     </div>
                     Personagens
                     {selectedCharacterIds.length > 0 && (
-                      <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
                         {selectedCharacterIds.length} selecionado{selectedCharacterIds.length > 1 ? 's' : ''}
                       </Badge>
                     )}
@@ -1138,19 +1138,19 @@ export function SidePanelApp() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
+                    className="h-6 px-2 text-[10px] text-muted-foreground hover:text-foreground"
                     onClick={() => setSelectedCharacterIds([])}
                     disabled={selectedCharacterIds.length === 0}
                   >
                     Limpar
                   </Button>
                 </div>
-                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                   <div className="max-h-36 overflow-y-auto scrollbar-thin p-3 space-y-2">
+                 <div className="rounded-lg border border-border bg-card/50 overflow-hidden">
+                   <div className="max-h-24 overflow-y-auto scrollbar-thin p-2 space-y-1">
                    {characters.length === 0 ? (
-                     <div className="text-center py-4">
-                       <Sparkles className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
-                       <p className="text-sm text-muted-foreground">Nenhum personagem criado</p>
+                     <div className="text-center py-2">
+                       <Sparkles className="w-6 h-6 text-muted-foreground/40 mx-auto mb-1" />
+                       <p className="text-xs text-muted-foreground">Nenhum personagem criado</p>
                      </div>
                    ) : (
                      characters.map(char => (
@@ -1158,7 +1158,7 @@ export function SidePanelApp() {
                          key={char.id} 
                          whileHover={{ scale: 1.01 }}
                          whileTap={{ scale: 0.99 }}
-                         className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
+                         className={`flex items-center gap-2 p-2 rounded-md cursor-pointer transition-all ${
                            selectedCharacterIds.includes(char.id) 
                              ? 'bg-primary/15 border border-primary/40 shadow-sm' 
                              : 'hover:bg-muted/50 border border-transparent'
@@ -1174,19 +1174,19 @@ export function SidePanelApp() {
                                setSelectedCharacterIds(prev => prev.filter(id => id !== char.id));
                              }
                            }}
-                           className="w-5 h-5 rounded border-border accent-primary cursor-pointer"
+                           className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
                          />
                          {char.imageUrl ? (
-                           <img src={char.imageUrl} alt="" className="w-9 h-9 rounded-lg object-cover ring-1 ring-border" />
+                           <img src={char.imageUrl} alt="" className="w-7 h-7 rounded-md object-cover ring-1 ring-border" />
                          ) : (
-                           <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                             <User className="w-4 h-4 text-muted-foreground" />
+                           <div className="w-7 h-7 rounded-md bg-muted flex items-center justify-center">
+                             <User className="w-3.5 h-3.5 text-muted-foreground" />
                            </div>
                          )}
                          <div className="flex-1 min-w-0">
-                           <span className="text-sm font-medium truncate block">{char.name}</span>
+                           <span className="text-xs font-medium truncate block">{char.name}</span>
                            {char.attributes?.style && (
-                             <span className="text-xs text-muted-foreground">{char.attributes.style}</span>
+                             <span className="text-[10px] text-muted-foreground">{char.attributes.style}</span>
                            )}
                          </div>
                        </motion.label>
@@ -1195,14 +1195,14 @@ export function SidePanelApp() {
                    </div>
                    
                    {/* Create New Button */}
-                   <div className="p-3 border-t border-border bg-muted/30">
+                   <div className="p-2 border-t border-border bg-muted/30">
                      <Button 
                        variant="ghost" 
                        size="sm"
-                       className="w-full h-10 text-sm gap-2 justify-center hover:bg-primary/10 hover:text-primary"
+                       className="w-full h-7 text-xs gap-1.5 justify-center hover:bg-primary/10 hover:text-primary"
                        onClick={() => setShowCharacterForm(true)}
                      >
-                       <Plus className="w-4 h-4" />
+                       <Plus className="w-3.5 h-3.5" />
                        Criar Novo Personagem
                      </Button>
                    </div>
@@ -1212,9 +1212,9 @@ export function SidePanelApp() {
                   <motion.div 
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
-                    className="p-3 rounded-xl bg-primary/5 border border-primary/20"
+                    className="p-2 rounded-lg bg-primary/5 border border-primary/20"
                   >
-                      <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1.5">
+                      <p className="text-[9px] text-muted-foreground mb-1.5 flex items-center gap-1">
                         <GripVertical className="w-3 h-3" />
                         Arraste para reordenar (primeiro = principal)
                       </p>
@@ -1270,16 +1270,16 @@ export function SidePanelApp() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="space-y-4"
+                className="space-y-2"
               >
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
-                    <div className="p-2 rounded-md bg-accent/10">
-                      <FileText className="w-4 h-4 text-accent" />
+                  <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
+                    <div className="p-1.5 rounded-md bg-accent/10">
+                      <FileText className="w-3.5 h-3.5 text-accent" />
                     </div>
                     Lista de Prompts
                     {promptCount > 0 && (
-                      <Badge className="text-xs px-2 py-0.5 h-5 bg-accent/20 text-accent border-0">
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-accent/20 text-accent border-0">
                         {promptCount} cena{promptCount > 1 ? 's' : ''}
                       </Badge>
                     )}
@@ -1294,10 +1294,10 @@ export function SidePanelApp() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-8 text-xs gap-2 border-dashed"
+                    className="h-6 text-[10px] gap-1.5 border-dashed"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="w-4 h-4" />
+                    <Upload className="w-3.5 h-3.5" />
                     Importar .txt
                   </Button>
                 </div>
@@ -1313,9 +1313,9 @@ Com detalhes visuais e cinematográficos.
 🎬 Terceira cena - e assim por diante...
 
 💡 Dica: Linhas em branco separam as cenas!`}
-                  className="min-h-[160px] text-sm font-mono resize-none rounded-xl bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
+                  className="min-h-[100px] text-xs font-mono resize-none rounded-lg bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
                 />
-                <p className="text-xs text-muted-foreground/70 flex items-center gap-2">
+                <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-accent/50" />
                   Cada bloco separado por linha em branco = uma cena
                 </p>
@@ -1326,11 +1326,11 @@ Com detalhes visuais e cinematográficos.
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="space-y-3"
+                className="space-y-1.5"
               >
-                <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
-                  <div className="p-2 rounded-md bg-muted">
-                    <Download className="w-4 h-4 text-muted-foreground" />
+                <Label className="text-xs font-semibold flex items-center gap-1.5 text-foreground/90">
+                  <div className="p-1.5 rounded-md bg-muted">
+                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                   Pasta de Download
                 </Label>
@@ -1338,36 +1338,36 @@ Com detalhes visuais e cinematográficos.
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   placeholder="MeuProjeto_Cenas"
-                  className="h-10 text-sm rounded-lg bg-card/50"
+                  className="h-8 text-xs rounded-md bg-card/50"
                 />
               </motion.div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-10 text-sm gap-2 border-muted-foreground/20"
+                  className="flex-1 h-8 text-xs gap-1.5 border-muted-foreground/20"
                   onClick={() => setShowQueueManager(true)}
                 >
-                  <FolderPlus className="w-4 h-4" />
+                  <FolderPlus className="w-3.5 h-3.5" />
                   Gerenciar ({batchSession?.items.length || 0})
                 </Button>
                 <Button 
-                  className="flex-1 h-10 text-sm gap-2 shadow-button"
+                  className="flex-1 h-8 text-xs gap-1.5 shadow-button"
                   onClick={handleAddToQueue}
                   disabled={promptCount === 0}
                 >
-                  <ListPlus className="w-4 h-4" />
+                  <ListPlus className="w-3.5 h-3.5" />
                   Adicionar à Fila
                 </Button>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-10 w-10 shrink-0 border-destructive/50 text-destructive hover:bg-destructive/10"
+                  className="h-8 w-8 shrink-0 border-destructive/50 text-destructive hover:bg-destructive/10"
                   onClick={handleClearQueue}
                   disabled={!batchSession}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
 
@@ -1376,13 +1376,13 @@ Com detalhes visuais e cinematográficos.
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="space-y-3"
+                  className="space-y-1.5"
                 >
-                  <div className="flex items-center justify-between text-sm mb-1">
-                    <span className="font-medium flex items-center gap-2">
+                  <div className="flex items-center justify-between text-xs mb-0.5">
+                    <span className="font-medium flex items-center gap-1.5">
                       {isRunning ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
                           <span className="text-primary">Processando...</span>
                         </>
                       ) : (
@@ -1393,13 +1393,13 @@ Com detalhes visuais e cinematográficos.
                       {progress.completed}/{progress.total}
                     </span>
                   </div>
-                  <Progress value={progress.percentage} className="h-3" />
+                  <Progress value={progress.percentage} className="h-2" />
                     {/* Reset button when stuck */}
                     {(isRunning || batchSession.items.some(i => i.status === 'processing' || i.status === 'sending')) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full h-8 mt-2 text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                        className="w-full h-6 mt-1 text-[10px] text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                         onClick={() => {
                           // Reset all processing/sending items to pending
                           const resetItems = batchSession.items.map(item => 
@@ -1415,7 +1415,7 @@ Com detalhes visuais e cinematográficos.
                           toast.info("Fila resetada");
                         }}
                       >
-                        <RotateCcw className="w-4 h-4 mr-1.5" />
+                        <RotateCcw className="w-3 h-3 mr-1" />
                         Resetar itens travados
                       </Button>
                     )}
@@ -1423,43 +1423,43 @@ Com detalhes visuais e cinematográficos.
               )}
 
               {/* Start/Stop Buttons */}
-              <div className="flex gap-3">
+              <div className="flex gap-2">
                 <Button 
-                  className="flex-1 h-11 gap-2 text-sm shadow-button"
+                  className="flex-1 h-9 gap-1.5 text-xs shadow-button"
                   onClick={handleStartQueue}
                   disabled={isRunning || !batchSession || batchSession.items.length === 0}
                 >
-                  <Play className="w-5 h-5" />
+                  <Play className="w-4 h-4" />
                   Iniciar Fila
                 </Button>
                 <Button 
                   variant="destructive"
-                  className="flex-1 h-11 gap-2 text-sm"
+                  className="flex-1 h-9 gap-1.5 text-xs"
                   onClick={handleStopQueue}
                   disabled={!isRunning}
                 >
-                  <Square className="w-4 h-4" />
+                  <Square className="w-3.5 h-3.5" />
                   Parar
                 </Button>
               </div>
  
               {/* Parallel Mode Button */}
-              <div className="pt-2 border-t border-border">
+              <div className="pt-1.5 border-t border-border">
                 <Button 
                   variant="outline"
-                  className="w-full h-9 gap-2 text-xs border-dashed border-primary/40 text-primary hover:bg-primary/5"
+                  className="w-full h-7 gap-1.5 text-[10px] border-dashed border-primary/40 text-primary hover:bg-primary/5"
                   onClick={() => setShowParallelSetup(true)}
                   disabled={isRunning || (batchSession?.items.length || 0) === 0}
                 >
-                  <Layers className="w-4 h-4" />
+                  <Layers className="w-3.5 h-3.5" />
                   Modo Paralelo (Múltiplas Abas)
                 </Button>
                 {(batchSession?.items.length || 0) === 0 ? (
-                  <p className="text-[10px] text-destructive text-center mt-1.5">
+                  <p className="text-[9px] text-destructive text-center mt-1">
                     Adicione prompts à fila primeiro para usar o modo paralelo
                   </p>
                 ) : (
-                  <p className="text-[10px] text-muted-foreground text-center mt-1.5">
+                  <p className="text-[9px] text-muted-foreground text-center mt-1">
                     Abre várias abas do Flow para processar prompts simultaneamente
                   </p>
                 )}
@@ -1470,17 +1470,17 @@ Com detalhes visuais e cinematográficos.
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="space-y-2"
+                  className="space-y-1.5"
                 >
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs font-semibold text-muted-foreground">
+                    <Label className="text-[10px] font-semibold text-muted-foreground">
                       Fila de Processamento
                     </Label>
-                    <Badge variant="outline" className="text-[10px]">
+                    <Badge variant="outline" className="text-[9px]">
                       {batchSession.items.length} itens
                     </Badge>
                   </div>
-                  <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
+                  <div className="space-y-1 max-h-28 overflow-y-auto scrollbar-thin pr-1">
                     <AnimatePresence mode="popLayout">
                       {batchSession.items.map((item) => (
                         <motion.div 
@@ -1489,7 +1489,7 @@ Com detalhes visuais e cinematográficos.
                         initial={{ opacity: 0, x: -10 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 10 }}
-                        className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
+                        className={`p-1.5 rounded-md border text-[10px] flex items-start gap-2 transition-colors ${
                           item.status === 'processing' ? 'bg-primary/10 border-primary/30' :
                           item.status === 'downloading' ? 'bg-accent/10 border-accent/30' :
                         item.status === 'completed' ? 'bg-accent/20 border-accent/40' :
@@ -1499,30 +1499,30 @@ Com detalhes visuais e cinematográficos.
                       >
                         <div className="mt-0.5 shrink-0">{getStatusIcon(item.status)}</div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
+                          <div className="flex items-center gap-1">
                             <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-mono">
                               {String(item.sceneNumber).padStart(2, '0')}
                             </Badge>
                              {item.status === 'completed' && (
-                               <span className="text-accent text-[10px]">✓ Concluído</span>
+                               <span className="text-accent text-[9px]">✓</span>
                              )}
                              {item.status === 'processing' && (
-                               <span className="text-primary text-[10px]">Gerando...</span>
+                               <span className="text-primary text-[9px]">Gerando...</span>
                              )}
                           </div>
-                          <p className="text-muted-foreground line-clamp-1 mt-1">{item.prompt}</p>
+                          <p className="text-muted-foreground line-clamp-1 mt-0.5 text-[9px]">{item.prompt}</p>
                           {item.errorMessage && (
-                            <p className="text-destructive text-[10px] mt-1">{item.errorMessage}</p>
+                            <p className="text-destructive text-[9px] mt-0.5">{item.errorMessage}</p>
                           )}
                         </div>
                         {item.status === 'error' && (
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 shrink-0 hover:bg-destructive/10"
+                            className="h-5 w-5 shrink-0 hover:bg-destructive/10"
                             onClick={() => handleRetryItem(item)}
                           >
-                            <RotateCcw className="w-3 h-3" />
+                            <RotateCcw className="w-2.5 h-2.5" />
                           </Button>
                         )}
                         </motion.div>
