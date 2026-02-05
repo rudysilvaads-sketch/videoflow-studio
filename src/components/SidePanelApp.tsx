@@ -54,7 +54,10 @@ import {
   ExternalLink,
   AlertTriangle,
   CheckCircle2,
-  RefreshCw
+   RefreshCw,
+   ChevronUp,
+   ChevronDown,
+   GripVertical
 } from "lucide-react";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
@@ -960,18 +963,63 @@ export function SidePanelApp() {
                 </div>
                  {selectedCharacters.length > 0 && (
                   <div className="p-2 rounded-lg bg-primary/10 border border-primary/30">
-                     <div className="flex items-center gap-1 flex-wrap mb-2">
-                       {selectedCharacters.map(char => (
-                         <Badge key={char.id} variant="secondary" className="text-[10px] gap-1">
-                           {char.imageUrl && (
-                             <img src={char.imageUrl} alt="" className="w-3 h-3 rounded-full" />
-                           )}
-                           {char.name}
-                         </Badge>
-                       ))}
+                      <p className="text-[10px] text-muted-foreground mb-1.5">Arraste para reordenar (primeiro = principal):</p>
+                      <div className="space-y-1 mb-2">
+                        {selectedCharacterIds.map((charId, index) => {
+                          const char = characters.find(c => c.id === charId);
+                          if (!char) return null;
+                          return (
+                            <div 
+                              key={charId}
+                              className="flex items-center gap-1.5 p-1 rounded bg-muted/50 group"
+                            >
+                              <GripVertical className="w-3 h-3 text-muted-foreground shrink-0" />
+                              {char.imageUrl && (
+                                <img src={char.imageUrl} alt="" className="w-4 h-4 rounded-full shrink-0" />
+                              )}
+                              <span className="text-xs flex-1 truncate">{char.name}</span>
+                              <div className="flex gap-0.5">
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-60 hover:opacity-100"
+                                  disabled={index === 0}
+                                  onClick={() => {
+                                    const newOrder = [...selectedCharacterIds];
+                                    [newOrder[index - 1], newOrder[index]] = [newOrder[index], newOrder[index - 1]];
+                                    setSelectedCharacterIds(newOrder);
+                                  }}
+                                >
+                                  <ChevronUp className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-60 hover:opacity-100"
+                                  disabled={index === selectedCharacterIds.length - 1}
+                                  onClick={() => {
+                                    const newOrder = [...selectedCharacterIds];
+                                    [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+                                    setSelectedCharacterIds(newOrder);
+                                  }}
+                                >
+                                  <ChevronDown className="w-3 h-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-5 w-5 opacity-60 hover:opacity-100 text-destructive"
+                                  onClick={() => setSelectedCharacterIds(prev => prev.filter(id => id !== charId))}
+                                >
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          );
+                        })}
                     </div>
-                     <p className="text-xs text-muted-foreground line-clamp-3 font-mono bg-muted/30 p-1.5 rounded">
-                       {selectedCharacters.map(c => c.basePrompt).join(' [AND] ')}
+                      <p className="text-[10px] text-muted-foreground line-clamp-2 font-mono bg-muted/30 p-1.5 rounded">
+                        {selectedCharacterIds.map(id => characters.find(c => c.id === id)?.basePrompt || '').join(' [AND] ')}
                     </p>
                   </div>
                 )}
