@@ -277,11 +277,16 @@ export function SidePanelApp() {
         prompt,
         folderName: batchSession?.downloadFolder || folderName,
         sceneNumber,
+        settings: {
+          model: settings.model,
+          ratio: settings.ratio,
+          videosPerTask: settings.videosPerTask,
+        },
       });
       return true;
     }
     return false;
-  }, [batchSession?.downloadFolder, folderName]);
+  }, [batchSession?.downloadFolder, folderName, settings]);
 
   const processNextItem = useCallback(() => {
     if (!batchSession) return;
