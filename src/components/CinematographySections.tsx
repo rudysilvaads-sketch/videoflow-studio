@@ -17,6 +17,9 @@
  } from "lucide-react";
  import { CinematographySettings } from "@/types/character";
 import { CinematographyPreview } from "./CinematographyPreview";
+import { CinematographyPresetsSelector } from "./CinematographyPresetsSelector";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
  
  interface CinematographySectionsProps {
    settings: CinematographySettings;
@@ -125,6 +128,7 @@ import { CinematographyPreview } from "./CinematographyPreview";
  
 export function CinematographySections({ settings, onChange, characterName = "", basePrompt = "" }: CinematographySectionsProps) {
    const [expandedSections, setExpandedSections] = useState<string[]>(["character"]);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
  
    const toggleSection = (sectionId: string) => {
      setExpandedSections(prev => 
@@ -138,6 +142,35 @@ export function CinematographySections({ settings, onChange, characterName = "",
      onChange({ ...settings, [key]: value });
    };
  
+  const handleApplyPreset = (presetSettings: Partial<CinematographySettings>) => {
+    onChange({ ...settings, ...presetSettings });
+  };
+
+  const handleGenerateWithAI = async (description: string) => {
+    setIsGeneratingAI(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-cinematography', {
+        body: { description }
+      });
+      
+      if (error) {
+        console.error('Error generating cinematography:', error);
+        toast.error('Erro ao gerar configurações');
+        return;
+      }
+      
+      if (data?.settings) {
+        onChange({ ...settings, ...data.settings });
+        toast.success('Configurações geradas com IA!');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      toast.error('Erro ao gerar configurações');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
    const getFilledCount = (section: SectionConfig): number => {
      return section.fields.filter(f => settings[f.key]?.trim()).length;
    };
@@ -149,6 +182,13 @@ export function CinematographySections({ settings, onChange, characterName = "",
          <span className="text-xs font-semibold text-primary">Configurações Cinematográficas</span>
        </div>
        
+      {/* Presets & AI Selector */}
+      <CinematographyPresetsSelector
+        onApplyPreset={handleApplyPreset}
+        onGenerateWithAI={handleGenerateWithAI}
+        isGenerating={isGeneratingAI}
+      />
+      
        {sections.map((section) => {
          const isExpanded = expandedSections.includes(section.id);
          const filledCount = getFilledCount(section);

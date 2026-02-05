@@ -1,0 +1,297 @@
+ import { CinematographySettings } from "@/types/character";
+ 
+ export interface CinematographyPreset {
+   id: string;
+   name: string;
+   category: string;
+   icon: string;
+   description: string;
+   settings: Partial<CinematographySettings>;
+ }
+ 
+ export const presetCategories = [
+   "Todos",
+   "Noir & Drama",
+   "Sci-Fi & Futurista",
+   "Natureza & Ambiente",
+   "Urbano & Street",
+   "Fantasia & Épico",
+ ] as const;
+ 
+ export type PresetCategory = typeof presetCategories[number];
+ 
+ export const cinematographyPresets: CinematographyPreset[] = [
+   // NOIR & DRAMA
+   {
+     id: "classic-noir",
+     name: "Film Noir Clássico",
+     category: "Noir & Drama",
+     icon: "🎬",
+     description: "Estilo detetive dos anos 40 com sombras dramáticas",
+     settings: {
+       shotType: "Medium shot, 3/4 angle, low camera position",
+       lensStyle: "35mm cinematic, deep shadows, high contrast black and white with selective color",
+       cameraMovement: "Static or slow dolly, film grain",
+       lightingSetup: "Low-key lighting, interior night, smoky atmosphere",
+       keyLight: "Hard light from window blinds creating venetian blind shadows",
+       fillLight: "Minimal fill, deep shadows on face",
+       backLight: "Rim light separating subject from dark background",
+       colorPalette: "Black, white, grey, selective warm tones for highlights",
+       visualStyle: "High contrast, heavy film grain, 1940s aesthetic, moody atmosphere",
+       negativePrompt: "Bright colors, flat lighting, modern elements, cartoon style",
+     }
+   },
+   {
+     id: "neo-noir",
+     name: "Neo-Noir Moderno",
+     category: "Noir & Drama",
+     icon: "🌃",
+     description: "Noir contemporâneo com iluminação neon",
+     settings: {
+       shotType: "Close-up to medium shot, Dutch angle occasional",
+       lensStyle: "Anamorphic lens flares, shallow depth of field",
+       cameraMovement: "Handheld with subtle movement, tracking shots",
+       lightingSetup: "Urban night, neon signs, rain-soaked streets",
+       keyLight: "Neon pink/magenta from one side",
+       fillLight: "Cyan/blue neon from opposite side",
+       backLight: "Streetlamp rim light, car headlights",
+       environmentalLighting: "Rain creating specular highlights, wet pavement reflections",
+       colorPalette: "Deep blacks, neon pink, cyan, purple accents",
+       visualStyle: "Modern cinematic, slight film grain, saturated neon colors",
+       negativePrompt: "Daylight, natural colors, flat lighting, cheerful mood",
+     }
+   },
+   
+   // SCI-FI & FUTURISTA
+   {
+     id: "cyberpunk-neon",
+     name: "Cyberpunk Neon",
+     category: "Sci-Fi & Futurista",
+     icon: "🤖",
+     description: "Futuro distópico com hologramas e neon",
+     settings: {
+       shotType: "Wide establishing shots, medium shots for character",
+       lensStyle: "Wide angle 24mm, lens flares, chromatic aberration",
+       cameraMovement: "Slow tracking, drone-like movements",
+       lightingSetup: "Night city, massive LED billboards, holographic ads",
+       keyLight: "Harsh neon from multiple sources - pink, blue, green",
+       fillLight: "Ambient glow from screens and signs",
+       environmentalLighting: "Steam vents, rain, smoke, holographic projections",
+       locationDescription: "Mega-city streets, towering buildings, dense urban environment",
+       backgroundElements: "Flying vehicles, crowds, street vendors, massive screens",
+       atmosphericEffects: "Smog, rain, steam, neon reflections on wet surfaces",
+       colorPalette: "Electric blue, hot pink, toxic green, deep purple, black",
+       visualStyle: "High saturation, gritty texture, futuristic dystopia",
+       negativePrompt: "Natural lighting, rural setting, clean environment, vintage look",
+     }
+   },
+   {
+     id: "clean-scifi",
+     name: "Sci-Fi Clean",
+     category: "Sci-Fi & Futurista",
+     icon: "🚀",
+     description: "Futuro utópico, minimalista e limpo",
+     settings: {
+       shotType: "Wide symmetrical compositions, medium shots",
+       lensStyle: "35-50mm, clean sharp image, minimal distortion",
+       cameraMovement: "Smooth dolly, precise robotic movements",
+       lightingSetup: "Bright diffused lighting, white interiors",
+       keyLight: "Soft overhead panels, even illumination",
+       fillLight: "Ambient white light from walls",
+       backLight: "Subtle rim from windows to space",
+       locationDescription: "Sleek space station interior, white corridors, glass panels",
+       backgroundElements: "Holographic displays, clean architecture, plants in pods",
+       colorPalette: "White, silver, light blue, subtle orange accents",
+       visualStyle: "Ultra clean, sharp, minimal grain, high-tech utopia",
+       negativePrompt: "Dirty, gritty, dark, cluttered, vintage, worn",
+     }
+   },
+   
+   // NATUREZA & AMBIENTE
+   {
+     id: "golden-hour",
+     name: "Golden Hour",
+     category: "Natureza & Ambiente",
+     icon: "🌅",
+     description: "Luz dourada do pôr do sol",
+     settings: {
+       shotType: "Wide establishing, medium portrait shots",
+       lensStyle: "85mm portrait lens, beautiful bokeh, lens flares",
+       cameraMovement: "Slow pan, gentle tracking following subject",
+       lightingSetup: "Exterior, late afternoon, sun low on horizon",
+       keyLight: "Warm golden sunlight from side/back, 3000K color",
+       fillLight: "Soft bounced light from environment",
+       backLight: "Strong sun creating hair light and rim",
+       environmentalLighting: "Sun rays through trees, dust particles visible",
+       locationDescription: "Open field, beach, forest clearing",
+       atmosphericEffects: "Golden haze, floating particles, warm glow",
+       colorPalette: "Warm gold, amber, soft orange, earth tones",
+       visualStyle: "Soft dreamy quality, warm color grade, romantic mood",
+       negativePrompt: "Cold colors, harsh shadows, artificial light, night",
+     }
+   },
+   {
+     id: "misty-forest",
+     name: "Floresta Mística",
+     category: "Natureza & Ambiente",
+     icon: "🌲",
+     description: "Floresta enevoada e misteriosa",
+     settings: {
+       shotType: "Wide shots through trees, medium shots with depth",
+       lensStyle: "50mm, shallow depth of field, soft focus on edges",
+       cameraMovement: "Slow push-in, gentle floating movement",
+       lightingSetup: "Overcast day, filtered light through canopy",
+       keyLight: "Diffused daylight breaking through mist",
+       fillLight: "Soft ambient light from fog reflection",
+       environmentalLighting: "God rays through trees, volumetric fog",
+       locationDescription: "Dense ancient forest, moss-covered trees, ferns",
+       backgroundElements: "Twisted tree roots, fallen logs, distant shadows",
+       atmosphericEffects: "Thick low-lying fog, mist, floating particles",
+       colorPalette: "Muted greens, browns, grey, touches of white from mist",
+       visualStyle: "Ethereal, mysterious, soft contrast, desaturated",
+       negativePrompt: "Bright sun, clear sky, urban elements, artificial",
+     }
+   },
+   {
+     id: "tropical-paradise",
+     name: "Paraíso Tropical",
+     category: "Natureza & Ambiente",
+     icon: "🏝️",
+     description: "Praia paradisíaca com águas cristalinas",
+     settings: {
+       shotType: "Wide panoramic, medium shots on beach",
+       lensStyle: "24-35mm wide, vibrant colors, slight vignette",
+       cameraMovement: "Smooth aerial, gentle waves following",
+       lightingSetup: "Bright sunny day, clear sky, high sun",
+       keyLight: "Direct tropical sunlight, strong and warm",
+       fillLight: "Reflected light from white sand",
+       environmentalLighting: "Light dancing on water, palm shadows",
+       locationDescription: "White sand beach, turquoise water, palm trees",
+       backgroundElements: "Coral reef visible, distant islands, boats",
+       atmosphericEffects: "Light sea spray, tropical heat shimmer",
+       colorPalette: "Turquoise, teal, white, green palms, blue sky",
+       visualStyle: "Vibrant, high saturation, travel photography look",
+       negativePrompt: "Overcast, cold, urban, polluted, dark",
+     }
+   },
+   
+   // URBANO & STREET
+   {
+     id: "street-photography",
+     name: "Street Photography",
+     category: "Urbano & Street",
+     icon: "📸",
+     description: "Fotografia urbana documental",
+     settings: {
+       shotType: "Candid medium shots, environmental portraits",
+       lensStyle: "35mm or 50mm, natural perspective, slight grain",
+       cameraMovement: "Handheld, documentary style, reactive",
+       lightingSetup: "Available light, urban daylight, shadows from buildings",
+       keyLight: "Natural sunlight between buildings",
+       fillLight: "Reflected light from concrete and glass",
+       backLight: "Occasional sun flare through streets",
+       locationDescription: "City streets, crosswalks, storefronts, markets",
+       backgroundElements: "Pedestrians, vehicles, signage, architecture",
+       atmosphericEffects: "Urban dust, steam from vents, city haze",
+       colorPalette: "Urban grays, concrete tones, pops of color from signs",
+       visualStyle: "Documentary, authentic, subtle desaturation, classic film look",
+       negativePrompt: "Staged, perfect, overly polished, rural, nature",
+     }
+   },
+   {
+     id: "tokyo-night",
+     name: "Tokyo Night",
+     category: "Urbano & Street",
+     icon: "🗼",
+     description: "Noites vibrantes de Tokyo com neon japonês",
+     settings: {
+       shotType: "Medium shots in alleys, wide shots of streets",
+       lensStyle: "35mm, slight chromatic aberration, neon reflections",
+       cameraMovement: "Handheld walk-through, observational",
+       lightingSetup: "Night, dense signage, lanterns, vending machines",
+       keyLight: "Mixed neon from signs - red, white, yellow",
+       fillLight: "Ambient glow from storefronts and vending machines",
+       environmentalLighting: "Rain on pavement creating reflections, steam from food stalls",
+       locationDescription: "Narrow Tokyo alley, izakayas, lanterns, power lines",
+       backgroundElements: "Salarymen, bicycles, hanging signs, plants in pots",
+       atmosphericEffects: "Light rain, steam, warm glow from interiors",
+       colorPalette: "Warm red lanterns, white neon, orange glow, dark blue night",
+       visualStyle: "Warm and moody, film photography aesthetic, authentic",
+       negativePrompt: "Daytime, western architecture, empty streets, sterile",
+     }
+   },
+   
+   // FANTASIA & ÉPICO
+   {
+     id: "epic-fantasy",
+     name: "Fantasia Épica",
+     category: "Fantasia & Épico",
+     icon: "⚔️",
+     description: "Cenários grandiosos de fantasia medieval",
+     settings: {
+       shotType: "Epic wide shots, heroic low angles on characters",
+       lensStyle: "Wide anamorphic, dramatic perspective, slight barrel distortion",
+       cameraMovement: "Slow crane, sweeping helicopter shots",
+       lightingSetup: "Dramatic sky, storm clouds, rays of light",
+       keyLight: "Strong directional light through clouds, god rays",
+       fillLight: "Ambient light from sky and environment",
+       backLight: "Dramatic rim light from sunset or dawn",
+       locationDescription: "Vast mountain ranges, ancient castles, medieval villages",
+       backgroundElements: "Dragons in distance, armies, banners, towers",
+       atmosphericEffects: "Volumetric fog, dust from battle, dramatic clouds",
+       colorPalette: "Rich earth tones, gold, deep blue, stone grey",
+       visualStyle: "Cinematic epic, highly detailed, painterly quality",
+       negativePrompt: "Modern elements, technology, cartoon style, flat lighting",
+     }
+   },
+   {
+     id: "dark-fantasy",
+     name: "Dark Fantasy",
+     category: "Fantasia & Épico",
+     icon: "🌑",
+     description: "Fantasia sombria e gótica",
+     settings: {
+       shotType: "Low angles, silhouettes, dramatic compositions",
+       lensStyle: "Wide angle, dark vignette, high contrast",
+       cameraMovement: "Slow, ominous push-in, static tension shots",
+       lightingSetup: "Moonlight, torchlight, minimal light sources",
+       keyLight: "Cold moonlight or warm torch fire",
+       fillLight: "Deep shadows with minimal fill",
+       backLight: "Subtle rim from distant fire or moon",
+       environmentalLighting: "Flickering flames, lightning flashes, eerie glow",
+       locationDescription: "Ruined cathedral, haunted forest, dark castle",
+       backgroundElements: "Gargoyles, dead trees, crows, bones",
+       atmosphericEffects: "Heavy fog, ash particles, cold breath visible",
+       colorPalette: "Black, deep blue, cold grey, blood red accents",
+       visualStyle: "Gothic horror, high contrast, desaturated with color pops",
+       negativePrompt: "Bright, cheerful, colorful, daytime, modern",
+     }
+   },
+   {
+     id: "ethereal-magic",
+     name: "Magia Etérea",
+     category: "Fantasia & Épico",
+     icon: "✨",
+     description: "Fantasia luminosa e mágica",
+     settings: {
+       shotType: "Flowing medium shots, dreamy close-ups",
+       lensStyle: "Soft focus edges, lens flares, dreamy bokeh",
+       cameraMovement: "Floating, gentle circular movement",
+       lightingSetup: "Magical light sources, bioluminescence, aurora",
+       keyLight: "Soft ethereal glow from magical sources",
+       fillLight: "Ambient magical particles providing fill",
+       environmentalLighting: "Floating lights, sparkles, energy streams",
+       locationDescription: "Enchanted grove, crystal caves, fairy realm",
+       backgroundElements: "Floating islands, magical creatures, glowing plants",
+       atmosphericEffects: "Magical particles, soft mist, light streaks",
+       colorPalette: "Soft purples, teals, gold, iridescent highlights",
+       visualStyle: "Dreamy, ethereal, soft glow, fantasy illustration feel",
+       negativePrompt: "Dark, gritty, realistic, urban, mundane",
+     }
+   },
+ ];
+ 
+ export const getPresetsByCategory = (category: PresetCategory): CinematographyPreset[] => {
+   if (category === "Todos") return cinematographyPresets;
+   return cinematographyPresets.filter(p => p.category === category);
+ };
