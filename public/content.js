@@ -661,7 +661,7 @@ async function handleVideoReady(videoElement, videoUrl) {
       
       const a = document.createElement('a');
       a.href = downloadUrl;
-      a.download = `${currentBatchFolder}_cena-${sceneNum}.mp4`;
+      a.download = `cena-${sceneNum}.mp4`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

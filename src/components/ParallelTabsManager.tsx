@@ -136,26 +136,31 @@ import confetti from "canvas-confetti";
           }
 
           const newCompletedCount = tab.completedCount + 1;
-          const newPromptIndex = tab.currentPromptIndex + 1;
           
           updateTab(tab.id, {
             completedCount: newCompletedCount,
-            currentPromptIndex: newPromptIndex,
-            status: newPromptIndex >= tab.promptsAssigned.length ? 'ready' : 'processing'
+            // Não incrementar currentPromptIndex aqui - já foi incrementado no 65%
+            status: tab.currentPromptIndex >= tab.promptsAssigned.length ? 'ready' : 'processing'
           });
           
           toast.success(`Aba ${tab.id}: Prompt ${newCompletedCount}/${tab.promptsAssigned.length} concluído`);
           
-          // Enviar próximo prompt se ainda houver
-          if (isRunning && newPromptIndex < tab.promptsAssigned.length) {
-            // Verificar se a aba não está pausada antes de enviar próximo prompt
+          // Se o 65% não foi atingido (processo foi muito rápido), enviar próximo agora
+          // Verificamos se currentPromptIndex == completedCount, significando que o próximo ainda não foi enviado
+          if (isRunning && tab.currentPromptIndex === newCompletedCount && tab.currentPromptIndex < tab.promptsAssigned.length) {
             const currentTab = currentSession.tabs.find(t => t.id === tab.id);
             if (currentTab && !currentTab.isPaused) {
-              // Registrar tempo de início do próximo prompt
+              const nextPromptIndex = tab.currentPromptIndex;
+              console.log(`[Parallel] Vídeo concluído, enviando prompt ${nextPromptIndex + 1} para aba ${tab.id}`);
+              
+              updateTab(tab.id, { 
+                currentPromptIndex: nextPromptIndex + 1 
+              });
+              
               setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
-            setTimeout(() => {
-              sendPromptToTabRef.current({ ...tab, currentPromptIndex: newPromptIndex });
-            }, 1000);
+              setTimeout(() => {
+                sendPromptToTabRef.current({ ...tab, currentPromptIndex: nextPromptIndex });
+              }, 1000);
             }
           }
         }
@@ -170,6 +175,30 @@ import confetti from "canvas-confetti";
             status: 'processing'
           }
         }));
+        
+        // No modo paralelo também, enviar próximo prompt ao atingir 65%
+        const tab = currentSession.tabs.find(t => t.tabId === message.tabId);
+        if (tab && isRunning && !tab.isPaused) {
+          const nextPromptIndex = tab.currentPromptIndex + 1;
+          // Verificar se já não está enviando o próximo (evitar duplicatas)
+          if (nextPromptIndex < tab.promptsAssigned.length) {
+            console.log(`[Parallel] 65% atingido na aba ${tab.id}, preparando próximo prompt...`);
+            
+            // Marcar o prompt atual como "downloading"
+            updateTab(tab.id, { 
+              status: 'processing',
+              currentPromptIndex: nextPromptIndex 
+            });
+            
+            // Registrar tempo e enviar próximo prompt
+            setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
+            toast.info(`⏭️ Aba ${tab.id.split('-')[1]}: ${message.progress}% - Enviando próximo...`);
+            
+            setTimeout(() => {
+              sendPromptToTabRef.current({ ...tab, currentPromptIndex: nextPromptIndex });
+            }, 500);
+          }
+        }
       }
     };
     
