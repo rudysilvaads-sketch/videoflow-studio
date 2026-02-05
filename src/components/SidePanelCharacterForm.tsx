@@ -1,11 +1,14 @@
 import { useState } from "react";
+ import { motion, AnimatePresence } from "framer-motion";
 import { Character } from "@/types/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { X, Sparkles, Upload } from "lucide-react";
+ import { ScrollArea } from "@/components/ui/scroll-area";
+ import { X, Sparkles, Upload, ChevronDown, Search, Check } from "lucide-react";
 import { toast } from "sonner";
+ import { visualStyles, styleCategories, getStylesByCategory } from "@/data/visualStyles";
 
 interface SidePanelCharacterFormProps {
   character?: Character;
@@ -26,6 +29,16 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
       features: character?.attributes.features || [],
     },
   });
+   
+   const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
+   const [styleSearch, setStyleSearch] = useState("");
+ 
+   const filteredStyles = visualStyles.filter(s => 
+     s.label.toLowerCase().includes(styleSearch.toLowerCase()) ||
+     s.category.toLowerCase().includes(styleSearch.toLowerCase())
+   );
+ 
+   const selectedStyle = visualStyles.find(s => s.value === formData.attributes.style || s.label === formData.attributes.style);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,16 +87,117 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
         
         <div className="space-y-1.5">
           <Label htmlFor="style" className="text-xs">Estilo Visual</Label>
-          <Input
-            id="style"
-            placeholder="Ex: Anime, Realista, Cartoon"
-            value={formData.attributes.style}
-            onChange={(e) => setFormData(prev => ({ 
-              ...prev, 
-              attributes: { ...prev.attributes, style: e.target.value }
-            }))}
-            className="h-9 text-sm"
-          />
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setStyleDropdownOpen(!styleDropdownOpen)}
+              className="w-full h-9 px-3 text-sm text-left bg-background border border-input rounded-md flex items-center justify-between hover:bg-accent/50 transition-colors"
+            >
+              <span className={selectedStyle ? "text-foreground" : "text-muted-foreground"}>
+                {selectedStyle?.label || formData.attributes.style || "Selecione um estilo..."}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${styleDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
+            
+            <AnimatePresence>
+              {styleDropdownOpen && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.15 }}
+                  className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-lg shadow-xl overflow-hidden"
+                >
+                  {/* Search */}
+                  <div className="p-2 border-b border-border">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar estilo..."
+                        value={styleSearch}
+                        onChange={(e) => setStyleSearch(e.target.value)}
+                        className="h-8 text-xs pl-8"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+                  
+                  {/* Styles List */}
+                  <ScrollArea className="h-64">
+                    <div className="p-1">
+                      {styleSearch ? (
+                        // Flat search results
+                        filteredStyles.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4">Nenhum estilo encontrado</p>
+                        ) : (
+                          <div className="space-y-0.5">
+                            {filteredStyles.map((style) => (
+                              <button
+                                key={style.value}
+                                type="button"
+                                onClick={() => {
+                                  setFormData(prev => ({
+                                    ...prev,
+                                    attributes: { ...prev.attributes, style: style.label }
+                                  }));
+                                  setStyleDropdownOpen(false);
+                                  setStyleSearch("");
+                                }}
+                                className={`w-full px-2 py-1.5 text-xs text-left rounded flex items-center justify-between hover:bg-accent transition-colors ${
+                                  formData.attributes.style === style.label ? 'bg-primary/20 text-primary' : ''
+                                }`}
+                              >
+                                <span>{style.label}</span>
+                                <span className="text-[10px] text-muted-foreground">{style.category}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )
+                      ) : (
+                        // Grouped by category
+                        styleCategories.map((category) => (
+                          <div key={category} className="mb-2">
+                            <p className="px-2 py-1 text-[10px] font-semibold text-primary uppercase tracking-wider">{category}</p>
+                            <div className="space-y-0.5">
+                              {getStylesByCategory(category).map((style) => (
+                                <button
+                                  key={style.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      attributes: { ...prev.attributes, style: style.label }
+                                    }));
+                                    setStyleDropdownOpen(false);
+                                    setStyleSearch("");
+                                  }}
+                                  className={`w-full px-2 py-1.5 text-xs text-left rounded flex items-center justify-between hover:bg-accent transition-colors ${
+                                    formData.attributes.style === style.label ? 'bg-primary/20 text-primary' : ''
+                                  }`}
+                                >
+                                  <span>{style.label}</span>
+                                  {formData.attributes.style === style.label && (
+                                    <Check className="w-3 h-3 text-primary" />
+                                  )}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </ScrollArea>
+                  
+                  {/* Footer with count */}
+                  <div className="p-2 border-t border-border bg-muted/30">
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      {visualStyles.length} estilos disponíveis
+                    </p>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         <div className="space-y-1.5">
