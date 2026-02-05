@@ -6,6 +6,68 @@
 
 @layer base {
   :root {
+    /* Light theme (default) */
+    --background: 220 20% 97%;
+    --foreground: 225 25% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 225 25% 10%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 225 25% 10%;
+
+    --primary: 265 85% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 15% 92%;
+    --secondary-foreground: 225 25% 15%;
+
+    --muted: 220 15% 94%;
+    --muted-foreground: 220 10% 45%;
+
+    --accent: 160 70% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 15% 88%;
+    --input: 220 15% 90%;
+    --ring: 265 85% 55%;
+
+    --radius: 0.75rem;
+    
+    /* ASMR-inspired warm colors */
+    --asmr-warm: 30 80% 55%;
+    --asmr-cozy: 25 70% 45%;
+    --asmr-nature: 140 50% 40%;
+    --asmr-calm: 200 40% 50%;
+    
+    /* Enhanced gradients - Light */
+    --gradient-primary: linear-gradient(135deg, hsl(265 85% 55%), hsl(290 75% 50%));
+    --gradient-accent: linear-gradient(135deg, hsl(160 70% 40%), hsl(180 60% 35%));
+    --gradient-warm: linear-gradient(135deg, hsl(30 80% 55%), hsl(15 75% 50%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 20% 98%));
+    --gradient-glow: radial-gradient(ellipse at center, hsl(265 85% 55% / 0.08), transparent 70%);
+    --gradient-header: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 20% 96%));
+
+    /* Enhanced shadows - Light */
+    --shadow-glow: 0 0 40px hsl(265 85% 55% / 0.12);
+    --shadow-glow-accent: 0 0 30px hsl(160 70% 40% / 0.12);
+    --shadow-card: 0 4px 20px hsl(220 20% 50% / 0.08);
+    --shadow-button: 0 2px 8px hsl(220 20% 50% / 0.1);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 225 25% 10%;
+    --sidebar-primary: 265 85% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 15% 94%;
+    --sidebar-accent-foreground: 225 25% 15%;
+    --sidebar-border: 220 15% 88%;
+    --sidebar-ring: 265 85% 55%;
+  }
+
+  .dark {
     --background: 225 25% 5%;
     --foreground: 220 20% 96%;
 
@@ -56,36 +118,6 @@
     --shadow-card: 0 4px 20px hsl(225 25% 3% / 0.6);
     --shadow-button: 0 2px 8px hsl(225 25% 3% / 0.4);
 
-    --sidebar-background: 225 25% 6%;
-    --sidebar-foreground: 220 20% 96%;
-    --sidebar-primary: 265 85% 60%;
-    --sidebar-primary-foreground: 225 25% 5%;
-    --sidebar-accent: 225 20% 12%;
-    --sidebar-accent-foreground: 220 20% 96%;
-    --sidebar-border: 225 20% 16%;
-    --sidebar-ring: 265 85% 60%;
-  }
-
-  .dark {
-    --background: 225 25% 5%;
-    --foreground: 220 20% 96%;
-    --card: 225 25% 8%;
-    --card-foreground: 220 20% 96%;
-    --popover: 225 25% 10%;
-    --popover-foreground: 220 20% 96%;
-    --primary: 265 85% 60%;
-    --primary-foreground: 225 25% 5%;
-    --secondary: 225 20% 16%;
-    --secondary-foreground: 220 20% 96%;
-    --muted: 225 20% 12%;
-    --muted-foreground: 220 15% 50%;
-    --accent: 160 70% 45%;
-    --accent-foreground: 225 25% 5%;
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 220 20% 96%;
-    --border: 225 20% 16%;
-    --input: 225 20% 14%;
-    --ring: 265 85% 60%;
     --sidebar-background: 225 25% 6%;
     --sidebar-foreground: 220 20% 96%;
     --sidebar-primary: 265 85% 60%;

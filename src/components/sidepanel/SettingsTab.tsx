@@ -5,11 +5,14 @@
    Timer, 
    Download,
    Settings2,
-   Ratio
+  Ratio,
+  Palette
  } from "lucide-react";
  import { Label } from "@/components/ui/label";
  import { Input } from "@/components/ui/input";
  import { Switch } from "@/components/ui/switch";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useTheme } from "@/hooks/useTheme";
  import { 
    Select, 
    SelectContent, 
@@ -38,6 +41,8 @@
    const updateSetting = <K extends keyof AppSettings>(key: K, value: AppSettings[K]) => {
      onSettingsChange({ ...settings, [key]: value });
    };
+  
+  const { isDark } = useTheme();
  
    return (
      <motion.div 
@@ -45,6 +50,22 @@
        animate={{ opacity: 1 }}
        className="p-4 space-y-5"
      >
+      {/* Theme Toggle */}
+      <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="p-1.5 rounded-md bg-primary/10">
+            <Palette className="w-3.5 h-3.5 text-primary" />
+          </div>
+          <div>
+            <Label className="text-xs font-medium">Tema da Interface</Label>
+            <p className="text-[10px] text-muted-foreground">
+              {isDark ? "Modo escuro ativado" : "Modo claro ativado"}
+            </p>
+          </div>
+        </div>
+        <ThemeToggle size="sm" />
+      </div>
+
        {/* Model Selection */}
        <div className="space-y-2">
          <Label className="text-xs font-semibold flex items-center gap-2">
