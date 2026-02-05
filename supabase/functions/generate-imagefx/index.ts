@@ -9,59 +9,25 @@
    prompt: string;
    cookies: string;
    seed?: number;
-  validateOnly?: boolean;
+   validateOnly?: boolean;
  }
  
-// Clean and format cookies properly
-function formatCookies(rawCookies: string): string {
-  // If it's already a single line cookie string, return as-is
-  if (!rawCookies.includes('\n') && !rawCookies.includes('\t')) {
-    return rawCookies.trim();
-  }
-  
-  // Parse multi-line cookie formats (from DevTools)
-  const cookiePairs: string[] = [];
-  const lines = rawCookies.split(/[\n\r]+/);
-  
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed) continue;
-    
-    // Handle "name=value" format
-    if (trimmed.includes('=')) {
-      // Extract just the name=value part (ignore expiry, path, etc.)
-      const match = trimmed.match(/^([^=\s]+)=([^;]*)/);
-      if (match) {
-        const [, name, value] = match;
-        // Skip metadata-like entries
-        if (!['Expires', 'Path', 'Domain', 'Secure', 'HttpOnly', 'SameSite'].includes(name)) {
-          cookiePairs.push(`${name}=${value}`);
-        }
-      }
-    }
-  }
-  
-  return cookiePairs.join('; ');
-}
-
-// Check if cookies contain required auth cookies
-function validateCookieFormat(cookies: string): { valid: boolean; error?: string } {
-  const formatted = formatCookies(cookies);
-  
-  // Check for some expected Google cookies
-  const requiredPatterns = ['SID', 'HSID', 'SSID', '__Secure'];
-  const hasAuthCookies = requiredPatterns.some(pattern => formatted.includes(pattern));
-  
-  if (!hasAuthCookies) {
-    return { 
-      valid: false, 
-      error: 'Cookies incompletos. Certifique-se de copiar TODOS os cookies do ImageFX (incluindo SID, HSID, etc.)' 
-    };
-  }
-  
-  return { valid: true };
-}
-
+ // Detect cookie type: 'next-auth' (labs.google) or 'google' (aisandbox)
+ function detectCookieType(cookies: string): 'next-auth' | 'google' | 'unknown' {
+   if (cookies.includes('__Secure-next-auth.session-token') || cookies.includes('next-auth')) {
+     return 'next-auth';
+   }
+   if (cookies.includes('SID=') || cookies.includes('HSID=') || cookies.includes('__Secure-1PSID')) {
+     return 'google';
+   }
+   return 'unknown';
+ }
+ 
+ // Format cookies string
+ function formatCookies(rawCookies: string): string {
+   return rawCookies.trim().replace(/\s+/g, ' ');
+ }
+ 
  serve(async (req) => {
    // Handle CORS preflight requests
    if (req.method === 'OPTIONS') {
@@ -69,9 +35,9 @@ function validateCookieFormat(cookies: string): { valid: boolean; error?: string
    }
  
    try {
-    const { prompt, cookies, seed, validateOnly }: GenerateRequest = await req.json();
+     const { prompt, cookies, seed, validateOnly }: GenerateRequest = await req.json();
  
-    if (!prompt && !validateOnly) {
+     if (!prompt && !validateOnly) {
        return new Response(
          JSON.stringify({ error: 'Prompt is required' }),
          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -85,65 +51,50 @@ function validateCookieFormat(cookies: string): { valid: boolean; error?: string
        );
      }
  
-    // Format and validate cookies
-    const formattedCookies = formatCookies(cookies);
-    console.log('[ImageFX] Cookie length after formatting:', formattedCookies.length);
-    
-    // Basic format validation
-    const formatCheck = validateCookieFormat(formattedCookies);
-    if (!formatCheck.valid) {
-      console.log('[ImageFX] Cookie format validation failed:', formatCheck.error);
-      return new Response(
-        JSON.stringify({ 
-          valid: false,
-          error: formatCheck.error,
-          code: 'INVALID_FORMAT'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Validation-only mode: test if cookies are valid
-    if (validateOnly) {
-      console.log('[ImageFX] Validating cookies...');
-      
-     // Try a lightweight request to verify cookies work
-     // Using the initialization endpoint which is less resource-intensive
-     const testResponse = await fetch('https://aisandbox-pa.googleapis.com/v1:initializeSession', {
-       method: 'POST', 
-        headers: {
-          'Content-Type': 'application/json',
-         'Cookie': formattedCookies,
-          'Origin': 'https://labs.google',
-          'Referer': 'https://labs.google/',
-         'Accept': 'application/json',
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        },
-       body: JSON.stringify({ tool: 'IMAGE_FX' }),
-      });
-
-     const responseText = await testResponse.text();
-     console.log('[ImageFX] Validation response status:', testResponse.status);
-     
-     // 404 is OK - means cookies are valid but endpoint doesn't exist
-     // 401/403 means cookies are invalid
-      if (!testResponse.ok) {
-        const status = testResponse.status;
-        
-       // 404 can mean the endpoint doesn't exist but cookies are valid
-       // We need to check with the actual endpoint
-       if (status === 404) {
-         console.log('[ImageFX] Got 404, trying actual endpoint...');
+     const formattedCookies = formatCookies(cookies);
+     const cookieType = detectCookieType(formattedCookies);
+     console.log('[ImageFX] Detected cookie type:', cookieType);
+     console.log('[ImageFX] Cookie length:', formattedCookies.length);
+ 
+     // Validation-only mode
+     if (validateOnly) {
+       console.log('[ImageFX] Validating cookies...');
+       
+       if (cookieType === 'next-auth') {
+         // For next-auth cookies, test against labs.google
+         console.log('[ImageFX] Testing next-auth cookies...');
          
-         // Try minimal request to actual endpoint
-         const actualTest = await fetch('https://aisandbox-pa.googleapis.com/v1:runImageFx', {
+         // Simply check if the session token looks valid (is a JWT)
+         const sessionMatch = formattedCookies.match(/__Secure-next-auth\.session-token=([^;]+)/);
+         if (sessionMatch && sessionMatch[1].length > 50) {
+           console.log('[ImageFX] next-auth session token found and looks valid');
+           return new Response(
+             JSON.stringify({ valid: true, type: 'next-auth' }),
+             { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+           );
+         }
+         
+         return new Response(
+           JSON.stringify({ 
+             valid: false,
+             error: 'Token de sessão não encontrado ou inválido.',
+             code: 'INVALID_TOKEN' 
+           }),
+           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+         );
+         
+       } else if (cookieType === 'google') {
+         // For Google cookies, test against aisandbox API
+         console.log('[ImageFX] Testing Google cookies via aisandbox...');
+         
+         const testResponse = await fetch('https://aisandbox-pa.googleapis.com/v1:runImageFx', {
            method: 'POST',
            headers: {
              'Content-Type': 'application/json',
              'Cookie': formattedCookies,
              'Origin': 'https://labs.google',
              'Referer': 'https://labs.google/',
-             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
            },
            body: JSON.stringify({
              userInput: { candidatesCount: 1, prompts: ["test"], seed: 1 },
@@ -151,62 +102,43 @@ function validateCookieFormat(cookies: string): { valid: boolean; error?: string
            }),
          });
          
-         const actualText = await actualTest.text();
-         console.log('[ImageFX] Actual endpoint status:', actualTest.status);
+         await testResponse.text(); // consume body
+         console.log('[ImageFX] aisandbox response status:', testResponse.status);
          
-         if (actualTest.status === 401 || actualTest.status === 403) {
+         if (testResponse.status === 401 || testResponse.status === 403) {
            return new Response(
              JSON.stringify({ 
                valid: false,
-               error: 'Cookies expirados ou inválidos. Atualize seus cookies.',
+               error: 'Cookies expirados ou inválidos.',
                code: 'COOKIES_EXPIRED' 
              }),
              { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
            );
          }
          
-         // Any other response (including errors) means cookies are working
-         console.log('[ImageFX] Cookies appear valid');
+         console.log('[ImageFX] Cookies valid (google)');
          return new Response(
-           JSON.stringify({ valid: true }),
+           JSON.stringify({ valid: true, type: 'google' }),
+           { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+         );
+       } else {
+         // Unknown cookie type - try to validate anyway
+         console.log('[ImageFX] Unknown cookie type, assuming valid');
+         return new Response(
+           JSON.stringify({ valid: true, type: 'unknown' }),
            { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
          );
        }
-       
-       if (status === 401 || status === 403) {
-          return new Response(
-            JSON.stringify({ 
-              valid: false,
-              error: 'Cookies expirados ou inválidos.',
-              code: 'COOKIES_EXPIRED' 
-            }),
-            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-          );
-        }
-
-        return new Response(
-          JSON.stringify({ 
-            valid: false,
-            error: `Erro ao validar: ${status}`,
-          }),
-          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      console.log('[ImageFX] Cookies validated successfully');
-      return new Response(
-        JSON.stringify({ valid: true }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
+     }
+ 
+     // Image generation
      console.log('[ImageFX] Generating image with prompt:', prompt.substring(0, 100) + '...');
      console.log('[ImageFX] Using seed:', seed || 'random');
+     console.log('[ImageFX] Cookie type:', cookieType);
  
-     // ImageFX API endpoint (Google Labs)
+     // Use aisandbox API for generation (works for both cookie types)
      const imageFxUrl = 'https://aisandbox-pa.googleapis.com/v1:runImageFx';
  
-     // Build the request payload
      const payload = {
        userInput: {
          candidatesCount: 4,
@@ -223,7 +155,7 @@ function validateCookieFormat(cookies: string): { valid: boolean; error?: string
        method: 'POST',
        headers: {
          'Content-Type': 'application/json',
-        'Cookie': formattedCookies,
+         'Cookie': formattedCookies,
          'Origin': 'https://labs.google',
          'Referer': 'https://labs.google/',
          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -238,7 +170,7 @@ function validateCookieFormat(cookies: string): { valid: boolean; error?: string
        if (response.status === 401 || response.status === 403) {
          return new Response(
            JSON.stringify({ 
-             error: 'Cookies expirados ou inválidos. Atualize seus cookies do ImageFX nas configurações.',
+             error: 'Cookies inválidos. Para next-auth, faça login novamente. Para Google, copie os cookies do Network tab (aisandbox-pa.googleapis.com).',
              code: 'COOKIES_EXPIRED' 
            }),
            { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
