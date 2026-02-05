@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { 
   BatchSession, 
   BatchPromptItem,
@@ -38,6 +38,7 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
   const [currentSession, setCurrentSession] = useState(session);
 
   const progress = getBatchProgress(currentSession);
+   const isProcessingNextRef = useRef(false);
 
   const updateSession = useCallback((updates: Partial<BatchSession>) => {
     const updated = { ...currentSession, ...updates };
@@ -103,16 +104,49 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
     }
   }, [currentSession, updateItem, sendPromptToFlow, updateSession]);
 
+  // Handler para 65% - reutilizado em diferentes listeners
+  const handleProgressAt65 = useCallback((sceneNumber: number) => {
+    console.log('[BatchQueue] handleProgressAt65 chamado para cena', sceneNumber);
+    
+    if (isProcessingNextRef.current) {
+      console.log('[BatchQueue] Já processando próximo, ignorando');
+      return;
+    }
+    
+    if (!isRunning) {
+      console.log('[BatchQueue] Lote pausado, ignorando threshold');
+      return;
+    }
+    
+    // Verificar se há próximo pendente
+    const nextPending = currentSession.items.find(item => item.status === 'pending');
+    if (!nextPending) {
+      console.log('[BatchQueue] Não há itens pendentes');
+      return;
+    }
+    
+    console.log('[BatchQueue] Enviando próximo prompt:', nextPending.sceneNumber);
+    isProcessingNextRef.current = true;
+    
+    setTimeout(() => {
+      processNextItem();
+      // Resetar flag após um delay maior para evitar duplicatas
+      setTimeout(() => {
+        isProcessingNextRef.current = false;
+      }, 5000);
+    }, 1500);
+  }, [currentSession, isRunning, processNextItem]);
+ 
   // Listen for video completion messages from content script
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'VIDEO_COMPLETED') {
         const { videoUrl, sceneNumber } = event.data;
         
-        // Find processing item
+        // Find processing item (pode ter múltiplos se enviamos no 65%)
         const processingItem = currentSession.items.find(
-          item => item.status === 'processing'
-        );
+          item => item.status === 'processing' && item.sceneNumber === sceneNumber
+        ) || currentSession.items.find(item => item.status === 'processing');
         
         if (processingItem) {
           updateItem(processingItem.id, { 
@@ -122,11 +156,7 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
           });
           
           toast.success(`Cena ${processingItem.sceneNumber} concluída e baixada!`);
-          
-          // Process next if still running
-          if (isRunning) {
-            setTimeout(processNextItem, 1000);
-          }
+          // NÃO chamar processNextItem aqui - já foi chamado no threshold 65%
         }
       }
       
@@ -143,18 +173,51 @@ export function BatchQueueManager({ session, onBack, onSessionUpdate }: BatchQue
           
           toast.error(`Erro na cena ${processingItem.sceneNumber}`);
           
-          // Continue with next if running
+          // Em caso de erro, tentar próximo se não foi enviado
           if (isRunning) {
-            setTimeout(processNextItem, 2000);
+            isProcessingNextRef.current = false;
+            setTimeout(() => {
+              const hasPending = currentSession.items.some(item => item.status === 'pending');
+              if (hasPending && !isProcessingNextRef.current) {
+                processNextItem();
+              }
+            }, 2000);
           }
         }
       }
+       
+       // Também escutar PROGRESS_THRESHOLD_REACHED via postMessage (fallback)
+       if (event.data.type === 'PROGRESS_THRESHOLD_REACHED') {
+         console.log('[BatchQueue] 65% via postMessage:', event.data.sceneNumber);
+         handleProgressAt65(event.data.sceneNumber);
+       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [currentSession, isRunning, updateItem, processNextItem]);
+  }, [currentSession, isRunning, updateItem, processNextItem, isProcessingNextRef]);
 
+   // Listen for 65% progress threshold from Chrome extension
+   useEffect(() => {
+     // @ts-ignore - chrome is defined only in extension context
+     if (typeof window !== 'undefined' && window.chrome?.runtime?.onMessage) {
+       const handleChromeMessage = (message: { type: string; sceneNumber: number; progress: number }) => {
+         if (message.type === 'PROGRESS_THRESHOLD_REACHED') {
+           console.log('[BatchQueue] 65% via chrome.runtime:', message.sceneNumber);
+           handleProgressAt65(message.sceneNumber);
+         }
+       };
+       
+       // @ts-ignore
+       window.chrome.runtime.onMessage.addListener(handleChromeMessage);
+       
+       return () => {
+         // @ts-ignore
+         window.chrome.runtime.onMessage.removeListener(handleChromeMessage);
+       };
+     }
+   }, [handleProgressAt65]);
+ 
   const handleStart = () => {
     setIsRunning(true);
     updateSession({ isRunning: true });
