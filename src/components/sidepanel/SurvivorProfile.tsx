@@ -17,13 +17,16 @@ import {
   Palette,
   Shirt,
   Glasses,
-  Footprints
+   Footprints,
+   UserCheck,
+   ShirtIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+ import { Switch } from "@/components/ui/switch";
 import {
   Collapsible,
   CollapsibleContent,
@@ -51,6 +54,9 @@ interface SurvivorProfileProps {
     avatarSeed?: number;
     // Detalhes estruturados para consistência máxima
     details?: CharacterDetails;
+     // Configurações de travamento
+     lockClothing?: boolean;
+     lockPhysicalOnly?: boolean;
   };
   onProfileChange: (profile: {
     name: string;
@@ -60,6 +66,8 @@ interface SurvivorProfileProps {
     avatarUrl?: string;
     avatarSeed?: number;
     details?: CharacterDetails;
+     lockClothing?: boolean;
+     lockPhysicalOnly?: boolean;
   }) => void;
 }
 
@@ -138,7 +146,12 @@ const DETAIL_PLACEHOLDERS: Record<keyof CharacterDetails, string> = {
   characterId: "THE LAST HUMAN SURVIVOR",
 };
 
-function buildPromptFromDetails(details: CharacterDetails, name: string): string {
+function buildPromptFromDetails(
+   details: CharacterDetails, 
+   name: string,
+   lockClothing: boolean = true,
+   lockPhysicalOnly: boolean = false
+ ): string {
   const parts: string[] = [];
   
   // Intro com idade/tipo
@@ -166,18 +179,22 @@ function buildPromptFromDetails(details: CharacterDetails, name: string): string
   ].filter(Boolean);
   if (faceParts.length) parts.push(faceParts.join(", "));
   
-  // Roupas
-  const clothingParts = [
-    details.outerLayer && `Veste ${details.outerLayer}`,
-    details.topClothing && `sobre ${details.topClothing}`,
-    details.bottomClothing,
-    details.footwear,
-  ].filter(Boolean);
-  if (clothingParts.length) parts.push(clothingParts.join(", "));
+   // Roupas (só inclui se lockClothing estiver ativo e não for lockPhysicalOnly)
+   if (lockClothing && !lockPhysicalOnly) {
+     const clothingParts = [
+       details.outerLayer && `Veste ${details.outerLayer}`,
+       details.topClothing && `sobre ${details.topClothing}`,
+       details.bottomClothing,
+       details.footwear,
+     ].filter(Boolean);
+     if (clothingParts.length) parts.push(clothingParts.join(", "));
+   }
   
-  // Acessórios
-  const accParts = [details.accessories, details.jewelry, details.headwear].filter(Boolean);
-  if (accParts.length) parts.push(accParts.join(", "));
+   // Acessórios (só inclui se lockClothing estiver ativo e não for lockPhysicalOnly)
+   if (lockClothing && !lockPhysicalOnly) {
+     const accParts = [details.accessories, details.jewelry, details.headwear].filter(Boolean);
+     if (accParts.length) parts.push(accParts.join(", "));
+   }
   
   // Expressão e comportamento
   if (details.defaultExpression) parts.push(`Expressão ${details.defaultExpression}`);
@@ -186,6 +203,11 @@ function buildPromptFromDetails(details: CharacterDetails, name: string): string
   
   // Identificador único
   if (details.characterId) parts.push(`[${details.characterId}]`);
+   
+   // Adiciona nota sobre variação de roupa se lockPhysicalOnly
+   if (lockPhysicalOnly) {
+     parts.push("[MANTER ROSTO E FÍSICO IDÊNTICOS, ROUPA PODE VARIAR]");
+   }
   
   return parts.join(". ").replace(/\.\./g, ".");
 }
@@ -206,7 +228,12 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   };
 
   const applyStructuredDetails = () => {
-    const generatedPrompt = buildPromptFromDetails(localDetails, profile.name);
+     const generatedPrompt = buildPromptFromDetails(
+       localDetails, 
+       profile.name,
+       profile.lockClothing !== false,
+       profile.lockPhysicalOnly || false
+     );
     onProfileChange({
       ...profile,
       basePrompt: generatedPrompt,
@@ -322,6 +349,7 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
 
         {/* Lock Status */}
         <div className="flex items-center gap-2 mt-2">
+           <div className="flex flex-wrap items-center gap-1.5">
           <Badge 
             variant={profile.isLocked ? "default" : "secondary"}
             className="text-[10px] h-5"
@@ -329,7 +357,7 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
             {profile.isLocked ? (
               <>
                 <Lock className="w-2.5 h-2.5 mr-1" />
-                Bloqueado em todos os prompts
+                 Travado
               </>
             ) : (
               <>
@@ -338,11 +366,30 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
               </>
             )}
           </Badge>
+           {profile.isLocked && (
+             <Badge 
+               variant={profile.lockPhysicalOnly ? "outline" : "default"}
+               className={`text-[9px] h-5 ${profile.lockPhysicalOnly ? 'border-accent text-accent' : ''}`}
+             >
+               {profile.lockPhysicalOnly ? (
+                 <>
+                   <UserCheck className="w-2.5 h-2.5 mr-1" />
+                   Só Físico
+                 </>
+               ) : (
+                 <>
+                   <ShirtIcon className="w-2.5 h-2.5 mr-1" />
+                   +Roupa
+                 </>
+               )}
+             </Badge>
+           )}
           {profile.avatarSeed && (
             <Badge variant="outline" className="text-[9px] h-5">
               Seed: {profile.avatarSeed}
             </Badge>
           )}
+           </div>
         </div>
       </div>
 
@@ -378,6 +425,62 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
                 className="mt-1 h-8"
               />
             </div>
+             
+             {/* Toggles de Travamento */}
+             <div className="p-2.5 rounded-lg bg-muted/50 border border-border space-y-2">
+               <p className="text-[10px] font-medium text-muted-foreground mb-2">
+                 ⚙️ Configurações de Travamento
+               </p>
+               
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <ShirtIcon className="w-3.5 h-3.5 text-primary" />
+                   <Label className="text-[11px] cursor-pointer" htmlFor="lockClothing">
+                     Travar Roupa
+                   </Label>
+                 </div>
+                 <Switch
+                   id="lockClothing"
+                   checked={profile.lockClothing !== false}
+                   onCheckedChange={(checked) => {
+                     onProfileChange({ 
+                       ...profile, 
+                       lockClothing: checked,
+                       lockPhysicalOnly: checked ? profile.lockPhysicalOnly : false
+                     });
+                   }}
+                 />
+               </div>
+               
+               <div className="flex items-center justify-between">
+                 <div className="flex items-center gap-2">
+                   <UserCheck className="w-3.5 h-3.5 text-accent" />
+                   <Label className="text-[11px] cursor-pointer" htmlFor="lockPhysicalOnly">
+                     Só Físico (roupa varia)
+                   </Label>
+                 </div>
+                 <Switch
+                   id="lockPhysicalOnly"
+                   checked={profile.lockPhysicalOnly || false}
+                   onCheckedChange={(checked) => {
+                     onProfileChange({ 
+                       ...profile, 
+                       lockPhysicalOnly: checked,
+                       lockClothing: checked ? false : profile.lockClothing
+                     });
+                   }}
+                 />
+               </div>
+               
+               <p className="text-[9px] text-muted-foreground pt-1 border-t border-border/50">
+                 {profile.lockPhysicalOnly 
+                   ? "🎭 Rosto/cabelo/corpo ficam iguais, roupa pode mudar entre cenas"
+                   : profile.lockClothing !== false
+                     ? "🔒 Personagem inteiro travado (físico + roupa)"
+                     : "🔓 Nenhum travamento ativo"
+                 }
+               </p>
+             </div>
 
             {!useStructuredMode ? (
               <>
