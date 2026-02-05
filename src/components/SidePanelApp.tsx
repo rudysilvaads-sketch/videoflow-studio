@@ -21,6 +21,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { 
   Select, 
   SelectContent, 
@@ -44,12 +46,47 @@ import {
   Send,
   Plus,
   User,
-  RotateCcw
+  RotateCcw,
+  Copy,
+  X,
+  Download,
+  FileText
 } from "lucide-react";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
 
 const STORAGE_KEY = 'lacasadark_characters';
+const SETTINGS_KEY = 'lacasadark_settings';
+const LOG_KEY = 'lacasadark_log';
+
+interface AppSettings {
+  videosPerTask: number;
+  model: string;
+  ratio: string;
+  startFrom: number;
+  waitTimeMin: number;
+  waitTimeMax: number;
+  language: string;
+  autoDownload: boolean;
+}
+
+interface LogEntry {
+  id: string;
+  timestamp: Date;
+  message: string;
+  type: 'info' | 'success' | 'error' | 'warning';
+}
+
+const defaultSettings: AppSettings = {
+  videosPerTask: 1,
+  model: 'veo-3.1-fast',
+  ratio: '16:9',
+  startFrom: 1,
+  waitTimeMin: 30,
+  waitTimeMax: 60,
+  language: 'pt',
+  autoDownload: true,
+};
 
 const defaultCharacters: Character[] = [
   {
@@ -97,11 +134,30 @@ export function SidePanelApp() {
   });
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("none");
   const [showCharacterForm, setShowCharacterForm] = useState(false);
+  const [showQueueManager, setShowQueueManager] = useState(false);
   const [batchText, setBatchText] = useState("");
   const [folderName, setFolderName] = useState("LaCasaDark_Scenes");
   const [batchSession, setBatchSession] = useState<BatchSession | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [historyItems, setHistoryItems] = useState(() => getPromptHistory());
+  const [settings, setSettings] = useState<AppSettings>(() => {
+    const stored = localStorage.getItem(SETTINGS_KEY);
+    if (stored) {
+      try { return { ...defaultSettings, ...JSON.parse(stored) }; } 
+      catch { return defaultSettings; }
+    }
+    return defaultSettings;
+  });
+  const [logs, setLogs] = useState<LogEntry[]>(() => {
+    const stored = localStorage.getItem(LOG_KEY);
+    if (stored) {
+      try { 
+        return JSON.parse(stored).map((l: LogEntry) => ({ ...l, timestamp: new Date(l.timestamp) })); 
+      } catch { return []; }
+    }
+    return [];
+  });
+  const [failedTasks, setFailedTasks] = useState<BatchPromptItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selectedCharacter = characters.find(c => c.id === selectedCharacterId) || null;
@@ -109,10 +165,30 @@ export function SidePanelApp() {
   const promptCount = promptLines.length;
   const progress = batchSession ? getBatchProgress(batchSession) : { completed: 0, total: 0, percentage: 0 };
 
+  // Add log entry
+  const addLog = useCallback((message: string, type: LogEntry['type'] = 'info') => {
+    const entry: LogEntry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date(),
+      message,
+      type,
+    };
+    setLogs(prev => {
+      const updated = [entry, ...prev].slice(0, 100);
+      localStorage.setItem(LOG_KEY, JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   // Save characters to localStorage
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(characters));
   }, [characters]);
+
+  // Save settings to localStorage
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  }, [settings]);
 
   // Load existing batch on mount
   useEffect(() => {
@@ -120,6 +196,7 @@ export function SidePanelApp() {
     if (existingBatch) {
       setBatchSession(existingBatch);
       setIsRunning(existingBatch.isRunning);
+      addLog('log_config_loaded_successfully', 'success');
     }
   }, []);
 
@@ -178,6 +255,7 @@ export function SidePanelApp() {
     setBatchSession(session);
     saveBatch(session);
     setBatchText("");
+    addLog(`Added ${promptCount} prompts to queue with folder: ${folderName}`, 'success');
     toast.success(`${promptCount} cenas adicionadas à fila!`);
   };
 
@@ -185,6 +263,7 @@ export function SidePanelApp() {
     clearBatch();
     setBatchSession(null);
     setIsRunning(false);
+    addLog('Queue cleared', 'info');
     toast.info("Fila limpa");
   };
 
@@ -213,6 +292,7 @@ export function SidePanelApp() {
       const updated = { ...batchSession, isRunning: false };
       setBatchSession(updated);
       saveBatch(updated);
+      addLog('Batch completed successfully!', 'success');
       toast.success("🎉 Lote concluído!");
       return;
     }
@@ -226,12 +306,14 @@ export function SidePanelApp() {
       const processing = updateBatchItem(updated, nextItem.id, { status: 'processing' });
       setBatchSession(processing);
       saveBatch(processing);
+      addLog(`Prompt ${nextItem.sceneNumber} injected into Flow`, 'info');
       toast.info(`🚀 Cena ${nextItem.sceneNumber} enviada ao Flow`);
     } else {
       navigator.clipboard.writeText(nextItem.prompt);
       const processing = updateBatchItem(updated, nextItem.id, { status: 'processing' });
       setBatchSession(processing);
       saveBatch(processing);
+      addLog(`Prompt ${nextItem.sceneNumber} copied to clipboard (extension not active)`, 'warning');
       toast.warning(`📋 Cena ${nextItem.sceneNumber} copiada! Cole no Flow.`);
     }
   }, [batchSession, sendPromptToFlow]);
@@ -251,6 +333,7 @@ export function SidePanelApp() {
           });
           setBatchSession(updated);
           saveBatch(updated);
+          addLog(`Scene ${processingItem.sceneNumber} completed and downloaded`, 'success');
           toast.success(`✅ Cena ${processingItem.sceneNumber} concluída!`);
           
           if (isRunning) {
@@ -268,6 +351,8 @@ export function SidePanelApp() {
           });
           setBatchSession(updated);
           saveBatch(updated);
+          setFailedTasks(prev => [...prev, { ...processingItem, status: 'error', errorMessage: event.data.error }]);
+          addLog(`Scene ${processingItem.sceneNumber} failed: ${event.data.error}`, 'error');
           
           if (isRunning) {
             setTimeout(processNextItem, 2000);
@@ -290,6 +375,7 @@ export function SidePanelApp() {
     setBatchSession(updated);
     saveBatch(updated);
     processNextItem();
+    addLog('Queue started', 'success');
     toast.success("Fila iniciada!");
   };
 
@@ -300,6 +386,7 @@ export function SidePanelApp() {
       setBatchSession(updated);
       saveBatch(updated);
     }
+    addLog('Queue stopped by user', 'warning');
     toast.info("Fila pausada");
   };
 
@@ -313,10 +400,25 @@ export function SidePanelApp() {
   const getStatusIcon = (status: BatchPromptItem['status']) => {
     switch (status) {
       case 'pending': return <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />;
-      case 'sending': return <Send className="w-3 h-3 text-blue-400 animate-pulse" />;
+    case 'sending': return <Send className="w-3 h-3 text-primary animate-pulse" />;
       case 'processing': return <Loader2 className="w-3 h-3 text-primary animate-spin" />;
-      case 'completed': return <Check className="w-3 h-3 text-green-500" />;
-      case 'error': return <AlertCircle className="w-3 h-3 text-red-500" />;
+    case 'completed': return <Check className="w-3 h-3 text-accent" />;
+    case 'error': return <AlertCircle className="w-3 h-3 text-destructive" />;
+    }
+  };
+
+  const copyFailedPrompts = () => {
+    const failed = failedTasks.map(t => t.prompt).join('\n\n');
+    navigator.clipboard.writeText(failed);
+    toast.success('Failed prompts copied to clipboard');
+  };
+
+  const getLogIcon = (type: LogEntry['type']) => {
+    switch (type) {
+      case 'success': return '🟢';
+      case 'error': return '🔴';
+      case 'warning': return '🟡';
+      default: return '⚪';
     }
   };
 
@@ -331,6 +433,78 @@ export function SidePanelApp() {
 
   return (
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+      {/* Queue Manager Dialog */}
+      <Dialog open={showQueueManager} onOpenChange={setShowQueueManager}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-primary">Task Queue Manager</DialogTitle>
+          </DialogHeader>
+          <div className="border-b border-border pb-2 mb-2">
+            <div className="grid grid-cols-5 text-xs font-medium text-muted-foreground gap-2">
+              <span>#</span>
+              <span className="col-span-2">DESCRIPTION</span>
+              <span>PROGRESS</span>
+              <span>ACTIONS</span>
+            </div>
+          </div>
+          <ScrollArea className="h-64">
+            {!batchSession || batchSession.items.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-8">
+                No tasks in queue. Add tasks from the Control tab.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {batchSession.items.map((item, idx) => (
+                  <div key={item.id} className="grid grid-cols-5 text-xs gap-2 items-center p-2 rounded bg-card border border-border">
+                    <span className="font-mono">{String(idx + 1).padStart(2, '0')}</span>
+                    <span className="col-span-2 truncate">{item.prompt.slice(0, 30)}...</span>
+                    <span>{getStatusIcon(item.status)}</span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleRetryItem(item)}
+                      disabled={item.status !== 'error'}
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </ScrollArea>
+          <div className="flex gap-2 pt-2 border-t border-border">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 gap-1.5"
+              onClick={() => {
+                if (batchSession) {
+                  const resetItems = batchSession.items.map(i => ({ ...i, status: 'pending' as const, errorMessage: undefined }));
+                  const updated = { ...batchSession, items: resetItems, isRunning: false };
+                  setBatchSession(updated);
+                  saveBatch(updated);
+                  setIsRunning(false);
+                  addLog('Queue reset', 'info');
+                }
+              }}
+            >
+              <RotateCcw className="w-3 h-3" />
+              Reset All
+            </Button>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1 gap-1.5 text-destructive border-destructive/50 hover:bg-destructive/10"
+              onClick={handleClearQueue}
+            >
+              <Trash2 className="w-3 h-3" />
+              Delete All
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Header */}
       <div className="flex items-center justify-between p-3 border-b border-border bg-card/50">
         <div className="flex items-center gap-2">
@@ -482,15 +656,15 @@ export function SidePanelApp() {
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-9 text-xs gap-1.5 border-primary/50 text-primary hover:bg-primary/10"
-                  onClick={() => {/* TODO: manage queue modal */}}
+                  className="flex-1 h-9 text-xs gap-1.5 border-accent/50 text-accent-foreground hover:bg-accent/10"
+                  onClick={() => setShowQueueManager(true)}
                 >
                   <FolderPlus className="w-3.5 h-3.5" />
                   Manage ({batchSession?.items.length || 0})
                 </Button>
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-9 text-xs gap-1.5 border-amber-500/50 text-amber-500 hover:bg-amber-500/10"
+                  className="flex-1 h-9 text-xs gap-1.5 border-primary/50 text-primary hover:bg-primary/10"
                   onClick={handleAddToQueue}
                   disabled={promptCount === 0}
                 >
@@ -589,35 +763,168 @@ export function SidePanelApp() {
 
         {/* Settings Tab */}
         <TabsContent value="settings" className="flex-1 overflow-auto mt-0 p-3 space-y-4">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium">Gerenciar Personagens</Label>
+          {/* General Settings */}
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-3">General Settings</h3>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Videos per task:</Label>
+                <Select 
+                  value={String(settings.videosPerTask)} 
+                  onValueChange={(v) => setSettings(s => ({ ...s, videosPerTask: parseInt(v) }))}
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Model (Optional):</Label>
+                <Select 
+                  value={settings.model} 
+                  onValueChange={(v) => setSettings(s => ({ ...s, model: v }))}
+                >
+                  <SelectTrigger className="w-40 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="veo-3.1-fast">Default (Veo 3.1 - Fast)</SelectItem>
+                    <SelectItem value="veo-3">Veo 3</SelectItem>
+                    <SelectItem value="imagen-3">Imagen 3</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Ratio (T2V & I2V Crop):</Label>
+                <Select 
+                  value={settings.ratio} 
+                  onValueChange={(v) => setSettings(s => ({ ...s, ratio: v }))}
+                >
+                  <SelectTrigger className="w-40 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                    <SelectItem value="9:16">Portrait (9:16)</SelectItem>
+                    <SelectItem value="1:1">Square (1:1)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Start from (Prompt/Image):</Label>
+                <div className="flex items-center gap-1">
+                  <Input 
+                    type="number" 
+                    min={1} 
+                    value={settings.startFrom}
+                    onChange={(e) => setSettings(s => ({ ...s, startFrom: parseInt(e.target.value) || 1 }))}
+                    className="w-16 h-8 text-xs text-center"
+                  />
+                  <span className="text-xs text-muted-foreground">#</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Video creation wait time (sec):</Label>
+                <div className="flex items-center gap-1">
+                  <Input 
+                    type="number" 
+                    min={10} 
+                    value={settings.waitTimeMin}
+                    onChange={(e) => setSettings(s => ({ ...s, waitTimeMin: parseInt(e.target.value) || 30 }))}
+                    className="w-14 h-8 text-xs text-center"
+                  />
+                  <span className="text-xs text-muted-foreground">to</span>
+                  <Input 
+                    type="number" 
+                    min={10} 
+                    value={settings.waitTimeMax}
+                    onChange={(e) => setSettings(s => ({ ...s, waitTimeMax: parseInt(e.target.value) || 60 }))}
+                    className="w-14 h-8 text-xs text-center"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">Language:</Label>
+                <Select 
+                  value={settings.language} 
+                  onValueChange={(v) => setSettings(s => ({ ...s, language: v }))}
+                >
+                  <SelectTrigger className="w-32 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pt">Português</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Download Settings */}
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-3">Download Settings</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Label className="text-xs">Auto-download videos:</Label>
+                <Switch 
+                  checked={settings.autoDownload}
+                  onCheckedChange={(v) => setSettings(s => ({ ...s, autoDownload: v }))}
+                />
+              </div>
+              <Button 
+                variant="link" 
+                size="sm" 
+                className="text-xs h-auto p-0 text-primary"
+              >
+                Configure folder
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-2">
+              Tip: Turn off 'Ask where to save...' in your browser's download settings for seamless auto-downloading.
+            </p>
+          </div>
+
+          {/* Character Management */}
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-3">Personagens Consistentes</h3>
             <div className="space-y-2">
               {characters.map(char => (
                 <div key={char.id} className="p-2 rounded-lg border border-border bg-card flex items-center gap-2">
                   {char.imageUrl && (
-                    <img src={char.imageUrl} alt={char.name} className="w-10 h-10 rounded-full object-cover" />
+                    <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-full object-cover" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{char.name}</p>
-                    <p className="text-xs text-muted-foreground truncate">{char.description}</p>
+                    <p className="text-xs font-medium truncate">{char.name}</p>
+                    <p className="text-[10px] text-muted-foreground truncate">{char.attributes.style}</p>
                   </div>
                   <Button 
                     variant="ghost" 
                     size="icon" 
-                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    className="h-7 w-7 text-destructive hover:text-destructive"
                     onClick={() => setCharacters(prev => prev.filter(c => c.id !== char.id))}
                   >
-                    <Trash2 className="w-4 h-4" />
+                    <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </div>
               ))}
               <Button 
                 variant="outline" 
-                className="w-full h-9 text-xs gap-1.5"
+                className="w-full h-8 text-xs gap-1.5"
                 onClick={() => setShowCharacterForm(true)}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Adicionar Personagem
+                Add Character
               </Button>
             </div>
           </div>
@@ -625,53 +932,121 @@ export function SidePanelApp() {
 
         {/* History Tab */}
         <TabsContent value="history" className="flex-1 overflow-auto mt-0 p-3 space-y-3">
-          {historyItems.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              <Clock className="w-8 h-8 mx-auto mb-2 opacity-50" />
-              <p className="text-sm">Nenhum histórico ainda</p>
-            </div>
-          ) : (
-            <>
-              <div className="flex justify-between items-center">
-                <p className="text-xs text-muted-foreground">{historyItems.length} prompts</p>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-7 text-xs text-destructive"
-                  onClick={() => {
-                    clearPromptHistory();
-                    setHistoryItems([]);
-                    toast.success("Histórico limpo");
-                  }}
-                >
-                  <Trash2 className="w-3 h-3 mr-1" />
-                  Limpar
-                </Button>
-              </div>
-              {historyItems.map(item => (
-                <div key={item.id} className="p-2 rounded-lg border border-border bg-card space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="text-[10px]">{item.characterName}</Badge>
-                    {item.templateName && (
-                      <Badge variant="outline" className="text-[10px]">{item.templateName}</Badge>
-                    )}
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{item.userPrompt}</p>
-                  <p className="text-[10px] text-muted-foreground/60">
-                    {new Date(item.createdAt).toLocaleString('pt-BR')}
-                  </p>
+          {/* Detailed Log */}
+          <div>
+            <h3 className="text-sm font-medium text-primary mb-2">Detailed Log</h3>
+            <ScrollArea className="h-48 rounded border border-border bg-card/50 p-2">
+              {logs.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">No logs yet</p>
+              ) : (
+                <div className="space-y-1">
+                  {logs.map(log => (
+                    <div key={log.id} className="text-xs font-mono flex items-start gap-2">
+                      <span className="text-muted-foreground shrink-0">
+                        {log.timestamp.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      </span>
+                      <span>{getLogIcon(log.type)}</span>
+                      <span className="text-foreground/80">[{log.message}]</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </>
-          )}
+              )}
+            </ScrollArea>
+          </div>
+
+          {/* Failed Tasks */}
+          <div>
+            <h3 className="text-sm font-medium text-destructive mb-2">
+              Failed Tasks ({failedTasks.length})
+            </h3>
+            <ScrollArea className="h-24 rounded border border-border bg-card/50 p-2">
+              {failedTasks.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-2">No failed tasks</p>
+              ) : (
+                <div className="space-y-1">
+                  {failedTasks.map((task, idx) => (
+                    <div key={task.id} className="text-xs flex items-center gap-2">
+                      <Badge variant="destructive" className="text-[10px]">{idx + 1}</Badge>
+                      <span className="truncate text-muted-foreground">{task.prompt.slice(0, 50)}...</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+            <Button 
+              variant="outline" 
+              className="w-full h-9 mt-2 text-xs gap-1.5"
+              onClick={copyFailedPrompts}
+              disabled={failedTasks.length === 0}
+            >
+              <Copy className="w-3.5 h-3.5" />
+              Copy Failed Prompts/Images
+            </Button>
+          </div>
+
+          {/* Prompt History */}
+          <div>
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-sm font-medium text-primary">Prompt History</h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-6 text-[10px] text-destructive"
+                onClick={() => {
+                  clearPromptHistory();
+                  setHistoryItems([]);
+                  toast.success("History cleared");
+                }}
+                disabled={historyItems.length === 0}
+              >
+                <Trash2 className="w-3 h-3 mr-1" />
+                Clear
+              </Button>
+            </div>
+            {historyItems.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">No history yet</p>
+            ) : (
+              <div className="space-y-1.5">
+                {historyItems.slice(0, 10).map(item => (
+                  <div key={item.id} className="p-1.5 rounded border border-border bg-card text-xs">
+                    <div className="flex items-center gap-1 mb-0.5">
+                      <Badge variant="secondary" className="text-[9px] px-1">{item.characterName}</Badge>
+                    </div>
+                    <p className="text-muted-foreground line-clamp-1">{item.userPrompt}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </TabsContent>
 
         {/* Tools Tab */}
         <TabsContent value="tools" className="flex-1 overflow-auto mt-0 p-3 space-y-4">
-          <div className="text-center py-8 text-muted-foreground">
-            <Wrench className="w-8 h-8 mx-auto mb-2 opacity-50" />
-            <p className="text-sm">Ferramentas em breve...</p>
-            <p className="text-xs mt-1">Templates, exportação, etc.</p>
+          <div className="space-y-3">
+            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+              <FileText className="w-4 h-4" />
+              Export Queue as .txt
+            </Button>
+            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+              <Download className="w-4 h-4" />
+              Download All Videos
+            </Button>
+            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+              <User className="w-4 h-4" />
+              Import Character from JSON
+            </Button>
+          </div>
+
+          <div className="pt-4 border-t border-border">
+            <h3 className="text-sm font-medium text-primary mb-3">User Manual</h3>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="flex-1 text-xs">
+                Português
+              </Button>
+              <Button variant="default" size="sm" className="flex-1 text-xs">
+                English
+              </Button>
+            </div>
           </div>
         </TabsContent>
       </Tabs>
