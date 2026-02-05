@@ -331,9 +331,19 @@ export function SidePanelApp() {
            // Quando atingir 65%, enviar próximo prompt
            const currentProcessing = batchSession.items.find(i => i.status === 'processing');
            if (currentProcessing) {
-             addLog(`Cena ${message.sceneNumber} em ${message.progress}%, enviando próxima...`, 'info');
+             // Marcar item atual como "downloading" (ainda baixando, mas podemos enviar o próximo)
+             const updatedSession = updateBatchItem(batchSession, currentProcessing.id, { 
+               status: 'downloading' 
+             });
+             setBatchSession(updatedSession);
+             saveBatch(updatedSession);
+             
+             addLog(`Cena ${currentProcessing.sceneNumber} em ${message.progress}%, enviando próxima...`, 'info');
+             toast.info(`⏭️ ${message.progress}% - Enviando próximo prompt...`);
+             
+             // Enviar próximo prompt
              setTimeout(() => {
-                 processNextItemRef.current();
+               processNextItemRef.current();
              }, 500);
            }
          }
@@ -606,7 +616,10 @@ export function SidePanelApp() {
       
       if (message.type === 'VIDEO_COMPLETED') {
         if (batchSession) {
-          const processingItem = batchSession.items.find(item => item.status === 'processing');
+          // Procurar item em processing OU downloading
+          const processingItem = batchSession.items.find(
+            item => item.status === 'processing' || item.status === 'downloading'
+          );
           if (processingItem) {
             const updated = updateBatchItem(batchSession, processingItem.id, { 
               status: 'completed',
@@ -618,7 +631,9 @@ export function SidePanelApp() {
             addLog(`Scene ${processingItem.sceneNumber} completed and downloaded`, 'success');
             toast.success(`✅ Cena ${processingItem.sceneNumber} concluída!`);
             
-            if (isRunning) {
+            // Só processar próximo se não tiver nenhum em processamento (já foi enviado em 65%)
+            const hasProcessing = updated.items.some(i => i.status === 'processing' || i.status === 'sending');
+            if (isRunning && !hasProcessing) {
               setTimeout(() => processNextItemRef.current(), 1000);
             }
           }
@@ -627,7 +642,9 @@ export function SidePanelApp() {
       
       if (message.type === 'VIDEO_ERROR') {
         if (batchSession) {
-          const processingItem = batchSession.items.find(item => item.status === 'processing');
+          const processingItem = batchSession.items.find(
+            item => item.status === 'processing' || item.status === 'downloading'
+          );
           if (processingItem) {
             const updated = updateBatchItem(batchSession, processingItem.id, { 
               status: 'error',
@@ -707,6 +724,7 @@ export function SidePanelApp() {
       case 'pending': return <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />;
     case 'sending': return <Send className="w-3 h-3 text-primary animate-pulse" />;
       case 'processing': return <Loader2 className="w-3 h-3 text-primary animate-spin" />;
+      case 'downloading': return <Download className="w-3 h-3 text-accent animate-pulse" />;
     case 'completed': return <Check className="w-3 h-3 text-accent" />;
     case 'error': return <AlertCircle className="w-3 h-3 text-destructive" />;
     }

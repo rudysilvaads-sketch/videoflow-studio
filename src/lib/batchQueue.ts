@@ -2,7 +2,7 @@ export interface BatchPromptItem {
   id: string;
   prompt: string;
   sceneNumber: number;
-  status: 'pending' | 'sending' | 'processing' | 'completed' | 'error';
+  status: 'pending' | 'sending' | 'processing' | 'downloading' | 'completed' | 'error';
   videoUrl?: string;
   downloadedAt?: Date;
   errorMessage?: string;
