@@ -325,22 +325,34 @@ import confetti from "canvas-confetti";
      
      if (needsOpening) {
        await openTabs();
-       // Wait for tabs to load
-       await new Promise(resolve => setTimeout(resolve, 2000));
+       // Wait for tabs to load and content scripts to initialize
+       toast.info("Aguardando abas carregarem...");
+       await new Promise(resolve => setTimeout(resolve, 5000));
      }
      
      setIsRunning(true);
      updateSession({ isRunning: true });
      
-     // Send first prompt to each tab
-     currentSession.tabs.forEach(tab => {
-      if (tab.status === 'ready' && !tab.isPaused) {
-        // Registrar tempo de início
-        setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
-         sendPromptToTab(tab);
-         updateTab(tab.id, { status: 'processing' });
+     // Send first prompt to each tab with staggered delays
+     toast.info("Enviando prompts para as abas...");
+     
+     let delay = 0;
+     for (const tab of currentSession.tabs) {
+       if (tab.status === 'ready' && !tab.isPaused && tab.tabId) {
+         // Stagger prompt sending to avoid overwhelming
+         setTimeout(() => {
+           console.log(`[Parallel] Enviando prompt inicial para aba ${tab.id} (tabId: ${tab.tabId})`);
+           setLastPromptStartTime(prev => ({ ...prev, [tab.id]: Date.now() }));
+           const sent = sendPromptToTab(tab);
+           if (sent) {
+             updateTab(tab.id, { status: 'processing' });
+           } else {
+             console.error(`[Parallel] Falha ao enviar para aba ${tab.id}`);
+           }
+         }, delay);
+         delay += 1500; // 1.5s entre cada aba
        }
-     });
+     }
      
      toast.success("Processamento paralelo iniciado!");
    };
