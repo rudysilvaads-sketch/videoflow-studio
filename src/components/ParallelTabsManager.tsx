@@ -23,6 +23,7 @@
    Trash2
  } from "lucide-react";
  import { toast } from "sonner";
+import confetti from "canvas-confetti";
  
  interface ParallelTabsManagerProps {
    session: ParallelSession;
@@ -246,6 +247,38 @@
     sendPromptToTabRef.current = sendPromptToTab;
   }, [sendPromptToTab]);
  
+  // Detectar quando todos os prompts foram concluídos
+  useEffect(() => {
+    if (progress.completed === progress.total && progress.total > 0 && isRunning) {
+      // Parar a execução
+      setIsRunning(false);
+      updateSession({ isRunning: false });
+      
+      // Mostrar notificação de sucesso
+      toast.success("🎉 Todos os prompts foram concluídos!", {
+        description: `${progress.total} vídeos gerados em ${currentSession.tabs.length} abas`,
+        duration: 10000,
+      });
+      
+      // Efeito de confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      // Notificação do sistema (se permitido)
+      if (Notification.permission === "granted") {
+        new Notification("Flow Automation", {
+          body: `✅ Todos os ${progress.total} prompts foram concluídos!`,
+          icon: "/icons/icon128.png"
+        });
+      } else if (Notification.permission !== "denied") {
+        Notification.requestPermission();
+      }
+    }
+  }, [progress.completed, progress.total, isRunning, currentSession.tabs.length, updateSession]);
+
    // Start all tabs processing
    const handleStart = async () => {
      // First open all tabs if not already open
