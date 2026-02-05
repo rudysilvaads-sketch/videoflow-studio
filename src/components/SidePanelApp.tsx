@@ -9,6 +9,7 @@ import {
   saveBatch, 
   createBatchFromText,
   clearBatch,
+  appendToBatch,
   updateBatchItem,
   getNextPendingItem,
   getBatchProgress
@@ -511,6 +512,8 @@ export function SidePanelApp() {
        combinedCharacterNames = selectedCharacter.name;
      }
  
+     // Sempre criar novo batch (substituir o anterior) ao invés de acumular
+     clearBatch();
      const session = createBatchFromText(batchText, {
        characterId: selectedCharacterIds.length > 0 ? selectedCharacterIds.join(',') : selectedCharacter?.id,
        characterName: combinedCharacterNames || undefined,
