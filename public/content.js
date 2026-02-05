@@ -1,17 +1,26 @@
 // Content script para La Casa Dark CORE
-// Interage com Google Flow / Labs para injetar prompts e baixar vídeos
+// Interage com Google Flow / Labs para injetar prompts e baixar vídeos automaticamente
 
-console.log('[LaCasaDark] Content script carregando...');
+console.log('[LaCasaDark] Content script v2.0 carregando...');
 
 let currentBatchFolder = 'LaCasaDark_Scenes';
 let currentSceneNumber = 1;
 let isMonitoringVideo = false;
 let videoObserver = null;
+let processingInProgress = false;
 let currentSettings = {
   model: 'veo-3.1-fast',
   ratio: '16:9',
   videosPerTask: 1,
 };
+
+// Notificar side panel que o content script está pronto
+setTimeout(() => {
+  chrome.runtime.sendMessage({ 
+    type: 'CONTENT_SCRIPT_READY', 
+    url: window.location.href 
+  });
+}, 1000);
 
 // Comunicação com o background/side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -32,15 +41,24 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       currentSettings = { ...currentSettings, ...message.settings };
     }
     
-    // Iniciar fluxo completo: criar projeto -> configurar -> injetar
-    startFullWorkflow(message.prompt, message.sceneNumber)
+    // Verificar se já está processando
+    if (processingInProgress) {
+      console.log('[LaCasaDark] Aguardando processamento anterior...');
+      sendResponse({ success: false, error: 'Processing in progress' });
+      return true;
+    }
+    
+    processingInProgress = true;
+    
+    // Iniciar fluxo automático
+    executeAutomation(message.prompt, message.sceneNumber)
       .then(result => {
-        if (result.success) {
-          startVideoMonitor(message.sceneNumber);
-        }
+        processingInProgress = false;
         sendResponse(result);
       })
       .catch(error => {
+        processingInProgress = false;
+        console.error('[LaCasaDark] Erro:', error);
         sendResponse({ success: false, error: error.message });
       });
     
@@ -63,174 +81,199 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-// Fluxo completo: Novo projeto -> Configurar -> Injetar prompt -> Enviar
-async function startFullWorkflow(prompt, sceneNumber) {
-  console.log('[LaCasaDark] Iniciando fluxo completo para cena', sceneNumber);
-  showNotification('🔄 Iniciando novo projeto...', 'info');
+// Executa automação completa
+async function executeAutomation(prompt, sceneNumber) {
+  console.log('[LaCasaDark] === INICIANDO AUTOMAÇÃO ===');
+  console.log('[LaCasaDark] Cena:', sceneNumber);
+  console.log('[LaCasaDark] Prompt:', prompt.substring(0, 100) + '...');
+  
+  showNotification('🔄 Iniciando automação...', 'info');
   
   try {
-    // Passo 1: Clicar em "+ Novo projeto"
-    const newProjectCreated = await clickNewProject();
-    if (!newProjectCreated) {
-      console.log('[LaCasaDark] Não foi possível criar novo projeto, tentando usar campo existente');
+    // Passo 1: Verificar se estamos na página correta
+    const isFlowPage = window.location.href.includes('labs.google') || 
+                       window.location.href.includes('aitestkitchen');
+    
+    if (!isFlowPage) {
+      showNotification('❌ Não estamos na página do Google Flow!', 'error');
+      return { success: false, error: 'Not on Google Flow page' };
     }
     
-    // Aguardar modal/página carregar
+    // Passo 2: Clicar no botão "Novo projeto" se necessário
+    await clickNewProjectButton();
     await delay(1500);
     
-    // Passo 2: Configurar Model e Ratio se disponível
-    await configureSettings();
+    // Passo 3: Aguardar e encontrar o campo de texto
+    const promptField = await waitForPromptField(5000);
     
-    // Aguardar configurações aplicarem
+    if (!promptField) {
+      showNotification('❌ Campo de prompt não encontrado!', 'error');
+      return { success: false, error: 'Prompt field not found' };
+    }
+    
+    // Passo 4: Inserir o prompt
+    await insertPrompt(promptField, prompt);
+    showNotification('✅ Prompt inserido!', 'success');
     await delay(500);
     
-    // Passo 3: Injetar prompt
-    const result = injectPromptToFlow(prompt);
+    // Passo 5: Clicar no botão de enviar
+    const submitted = await clickSubmitButton();
     
-    return result;
+    if (submitted) {
+      showNotification('🚀 Gerando vídeo...', 'info');
+      startVideoMonitor(sceneNumber);
+      return { success: true };
+    } else {
+      showNotification('⚠️ Clique manualmente no botão de enviar', 'warning');
+      return { success: true, warning: 'Submit button not clicked' };
+    }
     
   } catch (error) {
-    console.error('[LaCasaDark] Erro no fluxo:', error);
+    console.error('[LaCasaDark] Erro na automação:', error);
     showNotification('❌ Erro: ' + error.message, 'error');
     return { success: false, error: error.message };
   }
 }
 
-// Clicar no botão "+ Novo projeto"
-async function clickNewProject() {
-  console.log('[LaCasaDark] Procurando botão Novo projeto...');
+// Clicar no botão de novo projeto
+async function clickNewProjectButton() {
+  console.log('[LaCasaDark] Procurando botão de novo projeto...');
   
-  // Procurar botão com texto "Novo projeto" ou "New project"
+  // Lista de seletores possíveis baseado na interface do Flow
+  const selectors = [
+    // Botões com texto
+    'button:has-text("Novo projeto")',
+    'button:has-text("New project")',
+    // Botões com + no início
+    'button[aria-label*="novo"]',
+    'button[aria-label*="new"]',
+    'button[aria-label*="add"]',
+    'button[aria-label*="criar"]',
+    'button[aria-label*="create"]',
+  ];
+  
+  // Método 1: Busca por texto no botão
   const buttons = document.querySelectorAll('button, div[role="button"], a');
   
   for (const btn of buttons) {
     const text = (btn.textContent || '').toLowerCase().trim();
-    const ariaLabel = (btn.getAttribute('aria-label') || '').toLowerCase();
     
-    // Verificar variações do texto
     if (
       text.includes('novo projeto') || 
       text.includes('new project') ||
-      text.includes('+ novo') ||
-      text.includes('+ new') ||
-      ariaLabel.includes('novo projeto') ||
-      ariaLabel.includes('new project')
+      text === '+ novo projeto' ||
+      text === '+ new project'
     ) {
-      console.log('[LaCasaDark] Botão Novo projeto encontrado:', btn);
+      console.log('[LaCasaDark] Botão encontrado:', text);
       showNotification('📁 Criando novo projeto...', 'info');
-      
       btn.click();
-      await delay(1000);
       return true;
     }
   }
   
-  // Tentar encontrar pelo ícone de "+"
-  const addButtons = document.querySelectorAll('[aria-label*="add"], [aria-label*="Add"], [aria-label*="criar"], [aria-label*="Create"]');
-  for (const btn of addButtons) {
-    const rect = btn.getBoundingClientRect();
-    if (rect.width > 0 && rect.height > 0) {
-      console.log('[LaCasaDark] Botão + encontrado:', btn);
-      btn.click();
-      await delay(1000);
+  // Método 2: Buscar pelo ícone + em cards/botões grandes
+  const cards = document.querySelectorAll('[class*="card"], [class*="grid"] > div');
+  for (const card of cards) {
+    const text = (card.textContent || '').toLowerCase();
+    if (text.includes('novo projeto') || text.includes('new project')) {
+      const clickable = card.querySelector('button') || card;
+      console.log('[LaCasaDark] Card encontrado:', text.substring(0, 50));
+      clickable.click();
       return true;
     }
   }
   
-  console.log('[LaCasaDark] Botão Novo projeto não encontrado');
+  console.log('[LaCasaDark] Botão novo projeto não encontrado - pode já estar na página de criação');
   return false;
 }
 
-// Configurar Model e Ratio
-async function configureSettings() {
-  console.log('[LaCasaDark] Configurando settings:', currentSettings);
-  showNotification('⚙️ Configurando modelo e proporção...', 'info');
+// Aguardar campo de prompt aparecer
+async function waitForPromptField(timeout = 5000) {
+  const startTime = Date.now();
   
-  // Configurar Ratio/Proporção
-  await selectDropdownOption(['ratio', 'proporção', 'aspect', 'crop'], currentSettings.ratio);
+  while (Date.now() - startTime < timeout) {
+    const field = findPromptField();
+    if (field) {
+      console.log('[LaCasaDark] Campo encontrado após', Date.now() - startTime, 'ms');
+      return field;
+    }
+    await delay(200);
+  }
+  
+  console.log('[LaCasaDark] Timeout aguardando campo de prompt');
+  return null;
+}
+
+// Inserir prompt no campo
+async function insertPrompt(field, prompt) {
+  console.log('[LaCasaDark] Inserindo prompt...');
+  
+  // Focar no campo
+  field.focus();
+  field.click();
+  await delay(100);
+  
+  // Limpar conteúdo existente
+  if (field.tagName === 'TEXTAREA' || field.tagName === 'INPUT') {
+    field.value = '';
+    field.value = prompt;
+    
+    // Disparar eventos para React/Angular
+    field.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+    field.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+    
+    // Simular keypress para frameworks mais complexos
+    const inputEvent = new InputEvent('input', {
+      bubbles: true,
+      cancelable: true,
+      inputType: 'insertText',
+      data: prompt
+    });
+    field.dispatchEvent(inputEvent);
+    
+  } else if (field.contentEditable === 'true') {
+    // Para divs editáveis
+    field.innerHTML = '';
+    field.textContent = prompt;
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  
+  console.log('[LaCasaDark] Prompt inserido com sucesso');
+}
+
+// Clicar no botão de enviar
+async function clickSubmitButton() {
+  console.log('[LaCasaDark] Procurando botão de enviar...');
   await delay(300);
   
-  // Configurar Model se não for o padrão
-  if (currentSettings.model && currentSettings.model !== 'veo-3.1-fast') {
-    await selectDropdownOption(['model', 'modelo'], currentSettings.model);
-    await delay(300);
+  const button = findSubmitButton();
+  
+  if (button && !button.disabled) {
+    console.log('[LaCasaDark] Clicando no botão de enviar');
+    button.click();
+    return true;
   }
   
-  console.log('[LaCasaDark] Settings configuradas');
+  // Tentar encontrar pelo Enter key
+  const promptField = findPromptField();
+  if (promptField) {
+    console.log('[LaCasaDark] Tentando Enter no campo');
+    promptField.dispatchEvent(new KeyboardEvent('keydown', { 
+      key: 'Enter', 
+      code: 'Enter',
+      keyCode: 13,
+      bubbles: true 
+    }));
+    return true;
+  }
+  
+  return false;
 }
 
-// Selecionar opção em dropdown
-async function selectDropdownOption(labelKeywords, value) {
-  console.log('[LaCasaDark] Procurando dropdown para:', labelKeywords, 'valor:', value);
-  
-  // Mapear valores de settings para texto visível
-  const valueMap = {
-    '16:9': ['landscape', 'paisagem', '16:9', 'horizontal'],
-    '9:16': ['portrait', 'retrato', '9:16', 'vertical'],
-    '1:1': ['square', 'quadrado', '1:1'],
-    'veo-3.1-fast': ['veo 3.1', 'default', 'padrão', 'fast'],
-    'veo-3': ['veo 3', 'veo3'],
-    'imagen-3': ['imagen', 'imagen 3'],
-  };
-  
-  const searchTerms = valueMap[value] || [value];
-  
-  // Procurar labels e seus dropdowns correspondentes
-  const labels = document.querySelectorAll('label, span, div');
-  
-  for (const label of labels) {
-    const labelText = (label.textContent || '').toLowerCase();
-    
-    // Verificar se é o label certo
-    const isMatch = labelKeywords.some(kw => labelText.includes(kw.toLowerCase()));
-    if (!isMatch) continue;
-    
-    // Procurar dropdown próximo (select, button com dropdown, etc)
-    const parent = label.closest('div');
-    if (!parent) continue;
-    
-    const dropdown = parent.querySelector('select, button[aria-haspopup], [role="combobox"], [role="listbox"]');
-    
-    if (dropdown) {
-      console.log('[LaCasaDark] Dropdown encontrado:', dropdown);
-      
-      if (dropdown.tagName === 'SELECT') {
-        // Select nativo
-        const options = dropdown.querySelectorAll('option');
-        for (const opt of options) {
-          const optText = opt.textContent.toLowerCase();
-          if (searchTerms.some(term => optText.includes(term.toLowerCase()))) {
-            dropdown.value = opt.value;
-            dropdown.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log('[LaCasaDark] Opção selecionada:', opt.textContent);
-            return true;
-          }
-        }
-      } else {
-        // Dropdown customizado - clicar para abrir
-        dropdown.click();
-        await delay(300);
-        
-        // Procurar opções no menu aberto
-        const menuItems = document.querySelectorAll('[role="option"], [role="menuitem"], li, div[data-value]');
-        for (const item of menuItems) {
-          const itemText = (item.textContent || '').toLowerCase();
-          if (searchTerms.some(term => itemText.includes(term.toLowerCase()))) {
-            console.log('[LaCasaDark] Item selecionado:', item.textContent);
-            item.click();
-            await delay(200);
-            return true;
-          }
-        }
-        
-        // Fechar menu se não encontrou
-        document.body.click();
-      }
-    }
-  }
-  
-  console.log('[LaCasaDark] Dropdown não encontrado para:', labelKeywords);
-  return false;
+// Fluxo completo: Novo projeto -> Configurar -> Injetar prompt -> Enviar
+async function startFullWorkflow(prompt, sceneNumber) {
+  // Wrapper para compatibilidade
+  return executeAutomation(prompt, sceneNumber);
 }
 
 // Delay helper

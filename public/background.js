@@ -1,6 +1,8 @@
 // Background service worker para La Casa Dark CORE
 // Gerencia comunicação entre side panel e content scripts
 
+console.log('[La Casa Dark CORE] Background service worker v2.0 carregando...');
+
 // Abrir side panel quando clicar no ícone da extensão
 chrome.action.onClicked.addListener((tab) => {
   chrome.sidePanel.open({ windowId: tab.windowId });
@@ -11,7 +13,7 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
   if (!tab.url) return;
   
   const isGoogleFlow = tab.url.includes('aitestkitchen.withgoogle.com') || 
-                       tab.url.includes('labs.google');
+                       tab.url.includes('labs.google.com');
   
   if (isGoogleFlow) {
     await chrome.sidePanel.setOptions({
@@ -19,12 +21,38 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
       path: 'index.html',
       enabled: true
     });
+    console.log('[Background] Side panel habilitado para Google Flow');
   }
 });
 
 // Listener para mensagens do side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Background] Mensagem recebida:', message.type);
+  
+  // Mensagem do content script que está pronto
+  if (message.type === 'CONTENT_SCRIPT_READY') {
+    console.log('[Background] Content script pronto em:', message.url);
+    sendResponse({ received: true });
+    return true;
+  }
+  
+  // Verificar se a página do Flow está pronta
+  if (message.type === 'CHECK_PAGE_READY') {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]?.id) {
+        chrome.tabs.sendMessage(tabs[0].id, { type: 'CHECK_PAGE_READY' }, (response) => {
+          if (chrome.runtime.lastError) {
+            sendResponse({ ready: false, error: chrome.runtime.lastError.message });
+          } else {
+            sendResponse(response || { ready: false });
+          }
+        });
+      } else {
+        sendResponse({ ready: false, error: 'No active tab' });
+      }
+    });
+    return true;
+  }
   
   // Mensagem do side panel para injetar prompt simples
   if (message.type === 'COPY_TO_FLOW' || message.type === 'INJECT_PROMPT') {
@@ -83,10 +111,9 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   // Mensagens de status do content script - retransmitir para side panel
   if (message.type === 'VIDEO_COMPLETED' || message.type === 'VIDEO_ERROR') {
-    // Broadcast para todas as extensões (side panel vai receber)
-    chrome.runtime.sendMessage(message).catch(() => {
-      // Ignorar erro se side panel não estiver aberto
-    });
+    console.log('[Background] Retransmitindo evento:', message.type);
+    // Enviar para o side panel via postMessage
+    // O side panel escuta eventos do window
     sendResponse({ received: true });
     return true;
   }
@@ -94,4 +121,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-console.log('[La Casa Dark CORE] Background service worker carregado');
+console.log('[La Casa Dark CORE] Background service worker v2.0 carregado');

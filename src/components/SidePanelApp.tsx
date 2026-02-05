@@ -50,7 +50,11 @@ import {
   Copy,
   X,
   Download,
-  FileText
+  FileText,
+  ExternalLink,
+  AlertTriangle,
+  CheckCircle2,
+  RefreshCw
 } from "lucide-react";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
@@ -159,6 +163,12 @@ export function SidePanelApp() {
   });
   const [failedTasks, setFailedTasks] = useState<BatchPromptItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const jsonInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estado para detecção de página
+  const [isOnFlowPage, setIsOnFlowPage] = useState(false);
+  const [flowPageReady, setFlowPageReady] = useState(false);
+  const [checkingPage, setCheckingPage] = useState(true);
 
   const selectedCharacter = characters.find(c => c.id === selectedCharacterId) || null;
   const promptLines = batchText.split('\n').filter(line => line.trim().length > 0);
@@ -207,6 +217,50 @@ export function SidePanelApp() {
     }
   }, [activeTab]);
 
+  // Verificar se está na página do Flow
+  const checkFlowPage = useCallback(() => {
+    setCheckingPage(true);
+    
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.chrome?.tabs?.query) {
+      // @ts-ignore
+      window.chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any[]) => {
+        if (tabs[0]?.url) {
+          const url = tabs[0].url;
+          const isFlow = url.includes('labs.google.com') || 
+                        url.includes('aitestkitchen.withgoogle.com');
+          setIsOnFlowPage(isFlow);
+          
+          if (isFlow) {
+            // Verificar se o campo está pronto
+            // @ts-ignore
+            window.chrome.runtime.sendMessage({ type: 'CHECK_PAGE_READY' }, (response: any) => {
+              setFlowPageReady(response?.ready || false);
+              setCheckingPage(false);
+            });
+          } else {
+            setFlowPageReady(false);
+            setCheckingPage(false);
+          }
+        } else {
+          setCheckingPage(false);
+        }
+      });
+    } else {
+      // Fallback para contexto preview
+      setIsOnFlowPage(true);
+      setFlowPageReady(true);
+      setCheckingPage(false);
+    }
+  }, []);
+
+  // Verificar página ao montar e periodicamente
+  useEffect(() => {
+    checkFlowPage();
+    const interval = setInterval(checkFlowPage, 5000);
+    return () => clearInterval(interval);
+  }, [checkFlowPage]);
+
   const handleSaveCharacter = (data: Omit<Character, 'id' | 'createdAt'> & { id?: string }) => {
     if (data.id) {
       setCharacters(prev => prev.map(c => 
@@ -225,6 +279,18 @@ export function SidePanelApp() {
     toast.success("Personagem salvo!");
   };
 
+  // Abrir Google Flow em nova aba
+  const openGoogleFlow = () => {
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.chrome?.tabs?.create) {
+      // @ts-ignore
+      window.chrome.tabs.create({ url: 'https://labs.google.com/veo' });
+    } else {
+      window.open('https://labs.google.com/veo', '_blank');
+    }
+    addLog('Opened Google Flow in new tab', 'info');
+  };
+
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -237,6 +303,106 @@ export function SidePanelApp() {
     };
     reader.readAsText(file);
     e.target.value = '';
+  };
+
+  // Import character from JSON
+  const handleImportCharacterJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target?.result as string);
+        const newChar: Character = {
+          id: crypto.randomUUID(),
+          name: data.name || 'Imported Character',
+          description: data.description || '',
+          basePrompt: data.basePrompt || data.prompt || '',
+          imageUrl: data.imageUrl || data.image || '',
+          attributes: data.attributes || { age: '', gender: '', style: '', features: [] },
+          createdAt: new Date(),
+        };
+        setCharacters(prev => [newChar, ...prev]);
+        toast.success(`Personagem "${newChar.name}" importado!`);
+        addLog(`Imported character: ${newChar.name}`, 'success');
+      } catch {
+        toast.error("Arquivo JSON inválido");
+        addLog('Failed to import character: invalid JSON', 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  // Export queue as txt
+  const handleExportQueue = () => {
+    if (!batchSession || batchSession.items.length === 0) {
+      toast.error("Fila vazia");
+      return;
+    }
+    
+    const content = batchSession.items.map((item, idx) => 
+      `# Scene ${String(idx + 1).padStart(2, '0')}\n${item.prompt}`
+    ).join('\n\n');
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${folderName}_queue.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    toast.success("Queue exportada!");
+    addLog(`Exported queue with ${batchSession.items.length} items`, 'success');
+  };
+
+  // Download all completed videos
+  const handleDownloadAllVideos = () => {
+    if (!batchSession) {
+      toast.error("Nenhuma fila ativa");
+      return;
+    }
+    
+    const completedItems = batchSession.items.filter(item => item.status === 'completed' && item.videoUrl);
+    
+    if (completedItems.length === 0) {
+      toast.error("Nenhum vídeo concluído para baixar");
+      return;
+    }
+    
+    completedItems.forEach(item => {
+      if (item.videoUrl) {
+        // @ts-ignore
+        if (window.chrome?.runtime?.sendMessage) {
+          // @ts-ignore
+          window.chrome.runtime.sendMessage({
+            type: 'DOWNLOAD_VIDEO',
+            url: item.videoUrl,
+            filename: `${folderName}/cena-${String(item.sceneNumber).padStart(2, '0')}.mp4`
+          });
+        }
+      }
+    });
+    
+    toast.success(`Baixando ${completedItems.length} vídeos...`);
+    addLog(`Downloading ${completedItems.length} videos`, 'success');
+  };
+
+  // Configure download folder - opens Chrome settings
+  const handleConfigureFolder = () => {
+    // @ts-ignore
+    if (typeof window !== 'undefined' && window.chrome?.tabs?.create) {
+      // @ts-ignore
+      window.chrome.tabs.create({ url: 'chrome://settings/downloads' });
+      toast.info("Configure a pasta de download no Chrome");
+      addLog('Opened Chrome download settings', 'info');
+    } else {
+      toast.info("Abra chrome://settings/downloads para configurar");
+    }
   };
 
   const handleAddToQueue = () => {
@@ -438,6 +604,15 @@ export function SidePanelApp() {
 
   return (
     <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+      {/* Hidden input for JSON import */}
+      <input
+        ref={jsonInputRef}
+        type="file"
+        accept=".json"
+        onChange={handleImportCharacterJSON}
+        className="hidden"
+      />
+
       {/* Queue Manager Dialog */}
       <Dialog open={showQueueManager} onOpenChange={setShowQueueManager}>
         <DialogContent className="max-w-md">
@@ -520,6 +695,46 @@ export function SidePanelApp() {
           </div>
         </div>
       </div>
+
+      {/* Flow Detection Banner */}
+      {!isOnFlowPage && !checkingPage && (
+        <div className="p-3 bg-primary/10 border-b border-primary/30">
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium">Não conectado ao Google Flow</span>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3">
+            Abra o Google Flow para usar a automação de vídeos.
+          </p>
+          <Button 
+            onClick={openGoogleFlow}
+            className="w-full h-10 gap-2"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Abrir Google Flow
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="w-full mt-2 h-8 text-xs gap-1.5"
+            onClick={checkFlowPage}
+          >
+            <RefreshCw className="w-3 h-3" />
+            Verificar conexão
+          </Button>
+        </div>
+      )}
+
+      {/* Connected indicator */}
+      {isOnFlowPage && !checkingPage && (
+        <div className="px-3 py-1.5 bg-accent/20 border-b border-accent/40 flex items-center gap-2">
+          <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
+          <span className="text-xs text-accent">Conectado ao Google Flow</span>
+          {!flowPageReady && (
+            <span className="text-[10px] text-muted-foreground ml-auto">Aguardando página...</span>
+          )}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
@@ -891,6 +1106,7 @@ export function SidePanelApp() {
                 variant="link" 
                 size="sm" 
                 className="text-xs h-auto p-0 text-primary"
+                onClick={handleConfigureFolder}
               >
                 Configure folder
               </Button>
@@ -1028,15 +1244,29 @@ export function SidePanelApp() {
         {/* Tools Tab */}
         <TabsContent value="tools" className="flex-1 overflow-auto mt-0 p-3 space-y-4">
           <div className="space-y-3">
-            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+            <Button 
+              variant="outline" 
+              className="w-full h-10 justify-start gap-2 text-sm"
+              onClick={handleExportQueue}
+              disabled={!batchSession || batchSession.items.length === 0}
+            >
               <FileText className="w-4 h-4" />
               Export Queue as .txt
             </Button>
-            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+            <Button 
+              variant="outline" 
+              className="w-full h-10 justify-start gap-2 text-sm"
+              onClick={handleDownloadAllVideos}
+              disabled={!batchSession || batchSession.items.filter(i => i.status === 'completed').length === 0}
+            >
               <Download className="w-4 h-4" />
               Download All Videos
             </Button>
-            <Button variant="outline" className="w-full h-10 justify-start gap-2 text-sm">
+            <Button 
+              variant="outline" 
+              className="w-full h-10 justify-start gap-2 text-sm"
+              onClick={() => jsonInputRef.current?.click()}
+            >
               <User className="w-4 h-4" />
               Import Character from JSON
             </Button>
