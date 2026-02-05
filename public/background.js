@@ -1,7 +1,7 @@
 // Background service worker para La Casa Dark CORE
 // Gerencia comunicação entre side panel e content scripts
 
-console.log('[La Casa Dark CORE] Background service worker v2.0 carregando...');
+ console.log('[La Casa Dark CORE] Background service worker v3.0 carregando...');
 
 // Abrir side panel quando clicar no ícone da extensão
 chrome.action.onClicked.addListener((tab) => {
@@ -30,13 +30,45 @@ chrome.tabs.onUpdated.addListener(async (tabId, info, tab) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[Background] Mensagem recebida:', message.type);
   
+   // Ping para verificar se content script está ativo
+   if (message.type === 'PING_CONTENT_SCRIPT') {
+     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+       if (tabs[0]?.id) {
+         chrome.tabs.sendMessage(tabs[0].id, { type: 'PING' }, (response) => {
+           if (chrome.runtime.lastError) {
+             sendResponse({ active: false, error: chrome.runtime.lastError.message });
+           } else {
+             sendResponse({ active: true, ...response });
+           }
+         });
+       } else {
+         sendResponse({ active: false, error: 'No active tab' });
+       }
+     });
+     return true;
+   }
+ 
   // Mensagem do content script que está pronto
   if (message.type === 'CONTENT_SCRIPT_READY') {
     console.log('[Background] Content script pronto em:', message.url);
+     // Notificar todas as janelas/side panels
+     chrome.runtime.sendMessage({ type: 'FLOW_PAGE_READY', url: message.url });
     sendResponse({ received: true });
     return true;
   }
   
+   // Progresso atingiu 65%
+   if (message.type === 'PROGRESS_THRESHOLD_REACHED') {
+     console.log('[Background] Progresso 65% atingido, cena:', message.sceneNumber);
+     chrome.runtime.sendMessage({
+       type: 'PROGRESS_THRESHOLD_REACHED',
+       sceneNumber: message.sceneNumber,
+       progress: message.progress
+     });
+     sendResponse({ received: true });
+     return true;
+   }
+ 
   // Verificar se a página do Flow está pronta
   if (message.type === 'CHECK_PAGE_READY') {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -81,7 +113,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           type: 'INJECT_BATCH_PROMPT',
           prompt: message.prompt,
           folderName: message.folderName,
-          sceneNumber: message.sceneNumber
+           sceneNumber: message.sceneNumber,
+           settings: message.settings
         }, (response) => {
           sendResponse(response || { success: false, error: 'Sem resposta do content script' });
         });
@@ -122,4 +155,4 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   return true;
 });
 
-console.log('[La Casa Dark CORE] Background service worker v2.0 carregado');
+ console.log('[La Casa Dark CORE] Background service worker v3.0 carregado');

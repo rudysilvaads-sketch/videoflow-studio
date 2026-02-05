@@ -150,6 +150,7 @@ export function SidePanelApp() {
     return defaultCharacters;
   });
   const [selectedCharacterId, setSelectedCharacterId] = useState<string>("none");
+   const [selectedCharacterIds, setSelectedCharacterIds] = useState<string[]>([]);
   const [showCharacterForm, setShowCharacterForm] = useState(false);
   const [showQueueManager, setShowQueueManager] = useState(false);
   const [batchText, setBatchText] = useState("");
@@ -177,6 +178,7 @@ export function SidePanelApp() {
   const [failedTasks, setFailedTasks] = useState<BatchPromptItem[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const jsonInputRef = useRef<HTMLInputElement>(null);
+   const processNextItemRef = useRef<() => void>(() => {});
   
   // Estado para detecção de página
   const [isOnFlowPage, setIsOnFlowPage] = useState(false);
@@ -184,6 +186,7 @@ export function SidePanelApp() {
   const [checkingPage, setCheckingPage] = useState(true);
 
   const selectedCharacter = characters.find(c => c.id === selectedCharacterId) || null;
+   const selectedCharacters = characters.filter(c => selectedCharacterIds.includes(c.id));
   const promptLines = batchText.split('\n').filter(line => line.trim().length > 0);
   const promptCount = promptLines.length;
   const progress = batchSession ? getBatchProgress(batchSession) : { completed: 0, total: 0, percentage: 0 };
@@ -234,6 +237,23 @@ export function SidePanelApp() {
   const checkFlowPage = useCallback(() => {
     setCheckingPage(true);
     
+     // Tentar ping direto ao content script primeiro
+     // @ts-ignore
+     if (typeof window !== 'undefined' && window.chrome?.runtime?.sendMessage) {
+       // @ts-ignore
+       window.chrome.runtime.sendMessage({ type: 'PING_CONTENT_SCRIPT' }, (response: any) => {
+         if (response?.active && response?.url) {
+           const isFlow = isFlowUrl(response.url);
+           if (isFlow) {
+             setIsOnFlowPage(true);
+             setFlowPageReady(true);
+             setCheckingPage(false);
+             return;
+           }
+         }
+       });
+     }
+ 
     // @ts-ignore
     if (typeof window !== 'undefined' && window.chrome?.tabs?.query) {
       // @ts-ignore
@@ -269,9 +289,44 @@ export function SidePanelApp() {
   // Verificar página ao montar e periodicamente
   useEffect(() => {
     checkFlowPage();
-    const interval = setInterval(checkFlowPage, 5000);
+     const interval = setInterval(checkFlowPage, 3000);
     return () => clearInterval(interval);
   }, [checkFlowPage]);
+ 
+   // Escutar mensagens do background (FLOW_PAGE_READY, PROGRESS_THRESHOLD_REACHED)
+   useEffect(() => {
+     // @ts-ignore
+     if (typeof window !== 'undefined' && window.chrome?.runtime?.onMessage) {
+       const listener = (message: any) => {
+         console.log('[SidePanel] Mensagem recebida:', message.type);
+         
+         if (message.type === 'FLOW_PAGE_READY') {
+           setIsOnFlowPage(true);
+           setFlowPageReady(true);
+           setCheckingPage(false);
+           addLog('Conectado ao Google Flow', 'success');
+         }
+         
+         if (message.type === 'PROGRESS_THRESHOLD_REACHED' && isRunning && batchSession) {
+           // Quando atingir 65%, enviar próximo prompt
+           const currentProcessing = batchSession.items.find(i => i.status === 'processing');
+           if (currentProcessing) {
+             addLog(`Cena ${message.sceneNumber} em ${message.progress}%, enviando próxima...`, 'info');
+             setTimeout(() => {
+                 processNextItemRef.current();
+             }, 500);
+           }
+         }
+       };
+       
+       // @ts-ignore
+       window.chrome.runtime.onMessage.addListener(listener);
+       return () => {
+         // @ts-ignore
+         window.chrome.runtime.onMessage.removeListener(listener);
+       };
+     }
+   }, [isRunning, batchSession, addLog]);
 
   const handleSaveCharacter = (data: Omit<Character, 'id' | 'createdAt'> & { id?: string }) => {
     if (data.id) {
@@ -423,17 +478,32 @@ export function SidePanelApp() {
       return;
     }
 
-    const session = createBatchFromText(batchText, {
-      characterId: selectedCharacter?.id,
-      characterName: selectedCharacter?.name,
-      characterBasePrompt: selectedCharacter?.basePrompt,
-    });
+     // Combinar prompts de múltiplos personagens
+     let combinedBasePrompt = '';
+     let combinedCharacterNames = '';
+     
+     if (selectedCharacterIds.length > 0) {
+       combinedBasePrompt = selectedCharacters
+         .map(c => c.basePrompt)
+         .join('\n\n[AND]\n\n');
+       combinedCharacterNames = selectedCharacters.map(c => c.name).join(' + ');
+     } else if (selectedCharacter) {
+       combinedBasePrompt = selectedCharacter.basePrompt;
+       combinedCharacterNames = selectedCharacter.name;
+     }
+ 
+     const session = createBatchFromText(batchText, {
+       characterId: selectedCharacterIds.length > 0 ? selectedCharacterIds.join(',') : selectedCharacter?.id,
+       characterName: combinedCharacterNames || undefined,
+       characterBasePrompt: combinedBasePrompt || undefined,
+     });
     session.downloadFolder = folderName;
     
     setBatchSession(session);
     saveBatch(session);
     setBatchText("");
-    addLog(`Added ${promptCount} prompts to queue with folder: ${folderName}`, 'success');
+     const charCount = selectedCharacterIds.length || (selectedCharacter ? 1 : 0);
+     addLog(`Adicionado ${promptCount} prompts com ${charCount} personagem(s)`, 'success');
     toast.success(`${promptCount} cenas adicionadas à fila!`);
   };
 
@@ -466,7 +536,7 @@ export function SidePanelApp() {
     return false;
   }, [batchSession?.downloadFolder, folderName, settings]);
 
-  const processNextItem = useCallback(() => {
+   const processNextItem = useCallback(() => {
     if (!batchSession) return;
     
     const nextItem = getNextPendingItem(batchSession);
@@ -500,6 +570,11 @@ export function SidePanelApp() {
       toast.warning(`📋 Cena ${nextItem.sceneNumber} copiada! Cole no Flow.`);
     }
   }, [batchSession, sendPromptToFlow]);
+ 
+   // Manter ref atualizada
+   useEffect(() => {
+     processNextItemRef.current = processNextItem;
+   }, [processNextItem]);
 
   // Listen for completion messages
   useEffect(() => {
@@ -830,53 +905,73 @@ export function SidePanelApp() {
               <div className="space-y-2">
                 <Label className="text-xs font-medium flex items-center gap-1.5">
                   <User className="w-3.5 h-3.5 text-primary" />
-                  Personagem Consistente
+                   Personagem Consistente {selectedCharacterIds.length > 0 && `(${selectedCharacterIds.length})`}
                 </Label>
-                <div className="flex gap-2">
-                  <Select value={selectedCharacterId} onValueChange={setSelectedCharacterId}>
-                    <SelectTrigger className="h-9 text-sm flex-1">
-                      <SelectValue placeholder="Selecione um personagem" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Nenhum personagem</SelectItem>
-                      {characters.map(char => (
-                        <SelectItem key={char.id} value={char.id}>
-                          <div className="flex items-center gap-2">
-                            {char.imageUrl && (
-                              <img src={char.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
-                            )}
-                            {char.name}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                 <div className="space-y-1.5 max-h-32 overflow-y-auto border border-border rounded-lg p-2 bg-card/50">
+                   {characters.length === 0 ? (
+                     <p className="text-xs text-muted-foreground text-center py-2">Nenhum personagem</p>
+                   ) : (
+                     characters.map(char => (
+                       <label 
+                         key={char.id} 
+                         className={`flex items-center gap-2 p-1.5 rounded cursor-pointer hover:bg-muted/50 transition-colors ${
+                           selectedCharacterIds.includes(char.id) ? 'bg-primary/10 border border-primary/30' : ''
+                         }`}
+                       >
+                         <input
+                           type="checkbox"
+                           checked={selectedCharacterIds.includes(char.id)}
+                           onChange={(e) => {
+                             if (e.target.checked) {
+                               setSelectedCharacterIds(prev => [...prev, char.id]);
+                             } else {
+                               setSelectedCharacterIds(prev => prev.filter(id => id !== char.id));
+                             }
+                           }}
+                           className="w-3.5 h-3.5 rounded border-border accent-primary"
+                         />
+                         {char.imageUrl && (
+                           <img src={char.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                         )}
+                         <span className="text-xs flex-1 truncate">{char.name}</span>
+                       </label>
+                     ))
+                   )}
+                 </div>
+                 <div className="flex gap-2">
                   <Button 
                     variant="outline" 
-                    size="icon" 
-                    className="h-9 w-9 shrink-0"
+                     size="sm"
+                     className="flex-1 h-8 text-xs gap-1.5"
                     onClick={() => setShowCharacterForm(true)}
                   >
                     <Plus className="w-4 h-4" />
+                     Novo Personagem
+                   </Button>
+                   <Button 
+                     variant="ghost" 
+                     size="sm"
+                     className="h-8 text-xs"
+                     onClick={() => setSelectedCharacterIds([])}
+                     disabled={selectedCharacterIds.length === 0}
+                   >
+                     Limpar
                   </Button>
                 </div>
-                {selectedCharacter && (
+                 {selectedCharacters.length > 0 && (
                   <div className="p-2 rounded-lg bg-primary/10 border border-primary/30">
-                    <div className="flex items-center gap-2">
-                      {selectedCharacter.imageUrl && (
-                        <img 
-                          src={selectedCharacter.imageUrl} 
-                          alt={selectedCharacter.name}
-                          className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/50"
-                        />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium">{selectedCharacter.name}</p>
-                        <p className="text-xs text-muted-foreground truncate">{selectedCharacter.attributes.style}</p>
-                      </div>
+                     <div className="flex items-center gap-1 flex-wrap mb-2">
+                       {selectedCharacters.map(char => (
+                         <Badge key={char.id} variant="secondary" className="text-[10px] gap-1">
+                           {char.imageUrl && (
+                             <img src={char.imageUrl} alt="" className="w-3 h-3 rounded-full" />
+                           )}
+                           {char.name}
+                         </Badge>
+                       ))}
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2 line-clamp-2 font-mono bg-muted/30 p-1.5 rounded">
-                      {selectedCharacter.basePrompt}
+                     <p className="text-xs text-muted-foreground line-clamp-3 font-mono bg-muted/30 p-1.5 rounded">
+                       {selectedCharacters.map(c => c.basePrompt).join(' [AND] ')}
                     </p>
                   </div>
                 )}
@@ -1008,7 +1103,7 @@ export function SidePanelApp() {
                             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
                               {String(item.sceneNumber).padStart(2, '0')}
                             </Badge>
-                            {item.status === 'completed' && <span className="text-green-500">✓</span>}
+                             {item.status === 'completed' && <span className="text-accent">✓</span>}
                           </div>
                           <p className="text-muted-foreground line-clamp-1 mt-0.5">{item.prompt}</p>
                           {item.errorMessage && (

@@ -1,31 +1,45 @@
 // Content script para La Casa Dark CORE
 // Interage com Google Flow / Labs para injetar prompts e baixar vídeos automaticamente
 
-console.log('[LaCasaDark] Content script v2.0 carregando...');
+ console.log('[LaCasaDark] Content script v3.0 carregando...');
 
 let currentBatchFolder = 'LaCasaDark_Scenes';
 let currentSceneNumber = 1;
 let isMonitoringVideo = false;
+ let isMonitoringProgress = false;
 let videoObserver = null;
+ let progressObserver = null;
 let processingInProgress = false;
+ let lastProgressValue = 0;
+ let progressThresholdReached = false;
 let currentSettings = {
   model: 'veo-3.1-fast',
   ratio: '16:9',
   videosPerTask: 1,
 };
 
-// Notificar side panel que o content script está pronto
-setTimeout(() => {
-  chrome.runtime.sendMessage({ 
-    type: 'CONTENT_SCRIPT_READY', 
-    url: window.location.href 
-  });
-}, 1000);
+ // Notificar side panel que o content script está pronto
+ function notifyReady() {
+   chrome.runtime.sendMessage({ 
+     type: 'CONTENT_SCRIPT_READY', 
+     url: window.location.href 
+   });
+ }
+ 
+ // Notificar imediatamente e após delay
+ notifyReady();
+ setTimeout(notifyReady, 500);
+ setTimeout(notifyReady, 1500);
 
 // Comunicação com o background/side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   console.log('[LaCasaDark] Mensagem recebida:', message.type, message);
   
+   if (message.type === 'PING') {
+     sendResponse({ pong: true, url: window.location.href });
+     return true;
+   }
+ 
   if (message.type === 'INJECT_PROMPT') {
     const result = injectPromptToFlow(message.prompt);
     sendResponse(result);
@@ -67,10 +81,17 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   
   if (message.type === 'CHECK_PAGE_READY') {
     const promptField = findPromptField();
-    sendResponse({ ready: !!promptField, found: promptField ? 'yes' : 'no' });
+     sendResponse({ ready: true, fieldFound: !!promptField, url: window.location.href });
     return true;
   }
   
+   if (message.type === 'REQUEST_NEXT_PROMPT') {
+     console.log('[LaCasaDark] Pronto para próximo prompt');
+     progressThresholdReached = false;
+     sendResponse({ ready: true });
+     return true;
+   }
+ 
   if (message.type === 'UPDATE_SETTINGS') {
     currentSettings = { ...currentSettings, ...message.settings };
     console.log('[LaCasaDark] Settings atualizadas:', currentSettings);
@@ -462,9 +483,13 @@ function startVideoMonitor(sceneNumber) {
   
   isMonitoringVideo = true;
   currentSceneNumber = sceneNumber || currentSceneNumber;
-  
+   progressThresholdReached = false;
+   lastProgressValue = 0;
   console.log('[LaCasaDark] Monitorando vídeo para cena', currentSceneNumber);
   
+   // Iniciar monitoramento de progresso (para enviar próximo em 65%)
+   startProgressMonitor();
+ 
   // Armazenar vídeos existentes
   const existingVideos = new Set();
   document.querySelectorAll('video').forEach(v => {
@@ -510,12 +535,111 @@ function startVideoMonitor(sceneNumber) {
   }, 10 * 60 * 1000);
 }
 
+ // Monitorar progresso de geração para enviar próximo prompt em 65%
+ function startProgressMonitor() {
+   if (isMonitoringProgress) return;
+   isMonitoringProgress = true;
+   
+   console.log('[LaCasaDark] Iniciando monitor de progresso (65%)');
+   
+   const checkProgress = () => {
+     if (!isMonitoringProgress) return;
+     
+     // Procurar barras de progresso ou indicadores de %
+     const progressElements = [
+       ...document.querySelectorAll('[role="progressbar"]'),
+       ...document.querySelectorAll('progress'),
+       ...document.querySelectorAll('[class*="progress"]'),
+       ...document.querySelectorAll('[class*="Progress"]'),
+     ];
+     
+     for (const el of progressElements) {
+       let progressValue = 0;
+       
+       if (el.hasAttribute('aria-valuenow')) {
+         progressValue = parseFloat(el.getAttribute('aria-valuenow') || '0');
+       } else if (el.hasAttribute('value')) {
+         const max = parseFloat(el.getAttribute('max') || '100');
+         const val = parseFloat(el.getAttribute('value') || '0');
+         progressValue = (val / max) * 100;
+       } else if (el.style.width && el.style.width.includes('%')) {
+         progressValue = parseFloat(el.style.width);
+       } else if (el.style.transform && el.style.transform.includes('scaleX')) {
+         const match = el.style.transform.match(/scaleX\(([\d.]+)\)/);
+         if (match) {
+           progressValue = parseFloat(match[1]) * 100;
+         }
+       }
+       
+       const textContent = el.textContent || '';
+       const percentMatch = textContent.match(/(\d+)\s*%/);
+       if (percentMatch) {
+         progressValue = parseFloat(percentMatch[1]);
+       }
+       
+       if (progressValue > lastProgressValue) {
+         lastProgressValue = progressValue;
+         console.log('[LaCasaDark] Progresso:', progressValue + '%');
+         
+         if (progressValue >= 65 && !progressThresholdReached) {
+           progressThresholdReached = true;
+           console.log('[LaCasaDark] 🎯 65% atingido! Notificando para próximo prompt...');
+           showNotification('⏭️ 65% - Preparando próximo...', 'info');
+           
+           chrome.runtime.sendMessage({
+             type: 'PROGRESS_THRESHOLD_REACHED',
+             sceneNumber: currentSceneNumber,
+             progress: progressValue
+           });
+         }
+       }
+     }
+     
+     if (!progressThresholdReached) {
+       const allText = document.body.innerText;
+       const progressMatches = allText.match(/(\d{1,3})\s*%/g);
+       if (progressMatches) {
+         for (const match of progressMatches) {
+           const value = parseInt(match);
+           if (value > 0 && value <= 100 && value > lastProgressValue) {
+             lastProgressValue = value;
+             console.log('[LaCasaDark] Progresso (texto):', value + '%');
+             
+             if (value >= 65 && !progressThresholdReached) {
+               progressThresholdReached = true;
+               console.log('[LaCasaDark] 🎯 65% atingido via texto!');
+               showNotification('⏭️ 65% - Preparando próximo...', 'info');
+               
+               chrome.runtime.sendMessage({
+                 type: 'PROGRESS_THRESHOLD_REACHED',
+                 sceneNumber: currentSceneNumber,
+                 progress: value
+               });
+             }
+           }
+         }
+       }
+     }
+     
+     if (isMonitoringProgress) {
+       setTimeout(checkProgress, 2000);
+     }
+   };
+   
+   setTimeout(checkProgress, 3000);
+ }
+ 
+ function stopProgressMonitor() {
+   isMonitoringProgress = false;
+ }
+ 
 function stopVideoMonitor() {
   if (videoObserver) {
     videoObserver.disconnect();
     videoObserver = null;
   }
   isMonitoringVideo = false;
+   stopProgressMonitor();
 }
 
 async function handleVideoReady(videoElement, videoUrl) {
@@ -624,7 +748,7 @@ style.textContent = `
 document.head.appendChild(style);
 
 // Log de inicialização
-console.log('[LaCasaDark CORE] ✅ Content script ativo em:', window.location.href);
+ console.log('[LaCasaDark CORE] ✅ Content script v3.0 ativo em:', window.location.href);
 
 // Verificar se estamos na página certa
 if (window.location.href.includes('labs.google') || window.location.href.includes('aitestkitchen')) {
@@ -635,6 +759,7 @@ if (window.location.href.includes('labs.google') || window.location.href.include
     const field = findPromptField();
     if (field) {
       console.log('[LaCasaDark] ✅ Pronto para receber prompts');
+       notifyReady();
     } else {
       console.log('[LaCasaDark] ⚠️ Campo de prompt não encontrado ainda');
     }
