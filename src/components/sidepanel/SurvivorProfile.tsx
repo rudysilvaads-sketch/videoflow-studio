@@ -11,7 +11,13 @@ import {
   Eye,
   EyeOff,
   ImagePlus,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Palette,
+  Shirt,
+  Glasses,
+  Footprints
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -27,6 +33,13 @@ import { survivorCharacterTemplate } from "@/data/survivalScenarios";
 import { cn } from "@/lib/utils";
 import { useImageFxGeneration } from "@/hooks/useImageFxGeneration";
 import { useCredentials } from "@/hooks/useCredentials";
+import { Separator } from "@/components/ui/separator";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 
 interface SurvivorProfileProps {
   profile: {
@@ -36,6 +49,8 @@ interface SurvivorProfileProps {
     visualStyle: string;
     avatarUrl?: string;
     avatarSeed?: number;
+    // Detalhes estruturados para consistência máxima
+    details?: CharacterDetails;
   };
   onProfileChange: (profile: {
     name: string;
@@ -44,7 +59,135 @@ interface SurvivorProfileProps {
     visualStyle: string;
     avatarUrl?: string;
     avatarSeed?: number;
+    details?: CharacterDetails;
   }) => void;
+}
+
+interface CharacterDetails {
+  // Rosto e cabeça
+  faceShape?: string;
+  skinTone?: string;
+  eyeColor?: string;
+  eyeShape?: string;
+  eyebrows?: string;
+  nose?: string;
+  lips?: string;
+  facialHair?: string;
+  facialMarks?: string;
+  
+  // Cabelo
+  hairStyle?: string;
+  hairColor?: string;
+  hairLength?: string;
+  hairTexture?: string;
+  
+  // Corpo
+  bodyType?: string;
+  height?: string;
+  age?: string;
+  posture?: string;
+  
+  // Roupas
+  topClothing?: string;
+  bottomClothing?: string;
+  footwear?: string;
+  outerLayer?: string;
+  
+  // Acessórios
+  accessories?: string;
+  jewelry?: string;
+  headwear?: string;
+  
+  // Expressão e comportamento
+  defaultExpression?: string;
+  bodyLanguage?: string;
+  distinctiveFeatures?: string;
+  
+  // Identificador único
+  characterId?: string;
+}
+
+const DETAIL_PLACEHOLDERS: Record<keyof CharacterDetails, string> = {
+  faceShape: "oval, angular, redondo, quadrado...",
+  skinTone: "bronzeada, pálida, oliveira, negra, sardenta...",
+  eyeColor: "castanhos escuros, azuis gélidos, verdes, âmbar...",
+  eyeShape: "amendoados, grandes, profundos, levemente caídos...",
+  eyebrows: "grossas e escuras, arqueadas, finas...",
+  nose: "aquilino, largo, pequeno, levemente torto...",
+  lips: "finos, carnudos, rachados pelo frio...",
+  facialHair: "barba de vários dias, cavanhaque, bigode, limpo...",
+  facialMarks: "cicatriz na sobrancelha esquerda, sinal no queixo...",
+  hairStyle: "bagunçado, raspado nas laterais, preso em rabo...",
+  hairColor: "castanho-escuro, grisalho, loiro sujo, ruivo...",
+  hairLength: "curto, médio na nuca, longo até os ombros...",
+  hairTexture: "liso, ondulado, cacheado, crespo...",
+  bodyType: "atlético, magro, musculoso, robusto...",
+  height: "alto (1,85m), médio, baixo...",
+  age: "35-40 anos, jovem adulto, meia-idade...",
+  posture: "vigilante, curvado, confiante, tenso...",
+  topClothing: "camisa cinza surrada, camiseta preta, moletom...",
+  bottomClothing: "calças cargo marrons, jeans rasgado...",
+  footwear: "botas de couro surradas, tênis gastos...",
+  outerLayer: "jaqueta militar verde-oliva, casaco de couro...",
+  accessories: "mochila tática, faca no cinto, cantil...",
+  jewelry: "nenhum, aliança antiga, cordão com pingente...",
+  headwear: "nenhum, boné, capuz, bandana...",
+  defaultExpression: "sempre séria e vigilante, desconfiado...",
+  bodyLanguage: "movimentos cautelosos e silenciosos...",
+  distinctiveFeatures: "mãos calejadas, andar manco, voz rouca...",
+  characterId: "THE LAST HUMAN SURVIVOR",
+};
+
+function buildPromptFromDetails(details: CharacterDetails, name: string): string {
+  const parts: string[] = [];
+  
+  // Intro com idade/tipo
+  if (details.age || details.bodyType || details.height) {
+    parts.push([details.age, details.bodyType, details.height].filter(Boolean).join(", "));
+  }
+  
+  // Cabelo
+  if (details.hairColor || details.hairStyle || details.hairLength || details.hairTexture) {
+    const hair = ["cabelos", details.hairColor, details.hairLength, details.hairTexture, details.hairStyle].filter(Boolean).join(" ");
+    parts.push(hair);
+  }
+  
+  // Rosto
+  const faceParts = [
+    details.faceShape && `rosto ${details.faceShape}`,
+    details.skinTone && `pele ${details.skinTone}`,
+    details.eyeColor && `olhos ${details.eyeColor}`,
+    details.eyeShape && `(${details.eyeShape})`,
+    details.eyebrows && `sobrancelhas ${details.eyebrows}`,
+    details.nose && `nariz ${details.nose}`,
+    details.lips && `lábios ${details.lips}`,
+    details.facialHair,
+    details.facialMarks,
+  ].filter(Boolean);
+  if (faceParts.length) parts.push(faceParts.join(", "));
+  
+  // Roupas
+  const clothingParts = [
+    details.outerLayer && `Veste ${details.outerLayer}`,
+    details.topClothing && `sobre ${details.topClothing}`,
+    details.bottomClothing,
+    details.footwear,
+  ].filter(Boolean);
+  if (clothingParts.length) parts.push(clothingParts.join(", "));
+  
+  // Acessórios
+  const accParts = [details.accessories, details.jewelry, details.headwear].filter(Boolean);
+  if (accParts.length) parts.push(accParts.join(", "));
+  
+  // Expressão e comportamento
+  if (details.defaultExpression) parts.push(`Expressão ${details.defaultExpression}`);
+  if (details.bodyLanguage) parts.push(details.bodyLanguage);
+  if (details.distinctiveFeatures) parts.push(details.distinctiveFeatures);
+  
+  // Identificador único
+  if (details.characterId) parts.push(`[${details.characterId}]`);
+  
+  return parts.join(". ").replace(/\.\./g, ".");
 }
 
 export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfileProps) {
@@ -52,9 +195,26 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   const [copied, setCopied] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showImageGenerator, setShowImageGenerator] = useState(false);
+  const [useStructuredMode, setUseStructuredMode] = useState(false);
+  const [localDetails, setLocalDetails] = useState<CharacterDetails>(profile.details || {});
 
   const { generate, isGenerating, lastResult } = useImageFxGeneration();
   const { hasImageFxCookies } = useCredentials();
+
+  const updateDetail = (key: keyof CharacterDetails, value: string) => {
+    setLocalDetails(prev => ({ ...prev, [key]: value }));
+  };
+
+  const applyStructuredDetails = () => {
+    const generatedPrompt = buildPromptFromDetails(localDetails, profile.name);
+    onProfileChange({
+      ...profile,
+      basePrompt: generatedPrompt,
+      details: localDetails,
+    });
+    setUseStructuredMode(false);
+    setIsEditing(false);
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(profile.basePrompt);
@@ -190,6 +350,26 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
       <div className="p-3 space-y-3">
         {isEditing ? (
           <div className="space-y-3">
+            {/* Toggle entre modo texto livre e estruturado */}
+            <div className="flex gap-2 p-2 rounded-lg bg-muted/50">
+              <Button
+                variant={useStructuredMode ? "outline" : "default"}
+                size="sm"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => setUseStructuredMode(false)}
+              >
+                Texto Livre
+              </Button>
+              <Button
+                variant={useStructuredMode ? "default" : "outline"}
+                size="sm"
+                className="flex-1 h-7 text-[10px]"
+                onClick={() => setUseStructuredMode(true)}
+              >
+                ✨ Estruturado (Máx. Consistência)
+              </Button>
+            </div>
+
             <div>
               <Label className="text-xs">Nome do Personagem</Label>
               <Input
@@ -198,36 +378,214 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
                 className="mt-1 h-8"
               />
             </div>
-            <div>
-              <Label className="text-xs">Prompt Base (Descrição Visual)</Label>
-              <Textarea
-                value={profile.basePrompt}
-                onChange={(e) => onProfileChange({ ...profile, basePrompt: e.target.value })}
-                className="mt-1 min-h-[120px] text-xs font-mono"
-                placeholder="Descrição detalhada do personagem..."
-              />
-              <p className="text-[10px] text-muted-foreground mt-1">
-                💡 Inclua detalhes como idade, roupas, características físicas e expressões.
-                Termine com um identificador único entre colchetes para consistência.
-              </p>
-            </div>
-            <div>
-              <Label className="text-xs">Estilo Visual</Label>
-              <Input
-                value={profile.visualStyle}
-                onChange={(e) => onProfileChange({ ...profile, visualStyle: e.target.value })}
-                className="mt-1 h-8"
-                placeholder="Ex: Cinematográfico, tons dessaturados..."
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={() => setIsEditing(false)} className="flex-1">
-                Salvar
-              </Button>
-              <Button size="sm" variant="outline" onClick={resetToDefault}>
-                Restaurar Padrão
-              </Button>
-            </div>
+
+            {!useStructuredMode ? (
+              <>
+                <div>
+                  <Label className="text-xs">Prompt Base (Descrição Visual)</Label>
+                  <Textarea
+                    value={profile.basePrompt}
+                    onChange={(e) => onProfileChange({ ...profile, basePrompt: e.target.value })}
+                    className="mt-1 min-h-[120px] text-xs font-mono"
+                    placeholder="Descrição detalhada do personagem..."
+                  />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    💡 Inclua detalhes como idade, roupas, características físicas e expressões.
+                    Termine com um identificador único entre colchetes para consistência.
+                  </p>
+                </div>
+                <div>
+                  <Label className="text-xs">Estilo Visual</Label>
+                  <Input
+                    value={profile.visualStyle}
+                    onChange={(e) => onProfileChange({ ...profile, visualStyle: e.target.value })}
+                    className="mt-1 h-8"
+                    placeholder="Ex: Cinematográfico, tons dessaturados..."
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={() => setIsEditing(false)} className="flex-1">
+                    Salvar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={resetToDefault}>
+                    Restaurar Padrão
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Modo Estruturado — campos detalhados */}
+                <div className="p-2 rounded-lg bg-primary/5 border border-primary/20">
+                  <p className="text-[10px] text-primary font-medium mb-1">
+                    ✨ Preencha cada detalhe para consistência máxima entre cenas
+                  </p>
+                  <p className="text-[9px] text-muted-foreground">
+                    Quanto mais detalhes, mais o personagem sairá igual em todos os vídeos.
+                  </p>
+                </div>
+
+                <Accordion type="multiple" className="w-full" defaultValue={["face", "hair", "clothes"]}>
+                  {/* Rosto */}
+                  <AccordionItem value="face">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <User className="w-3.5 h-3.5 text-primary" />
+                        Rosto e Pele
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["faceShape", "skinTone", "eyeColor", "eyeShape", "eyebrows", "nose", "lips", "facialHair", "facialMarks"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Cabelo */}
+                  <AccordionItem value="hair">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <Palette className="w-3.5 h-3.5 text-primary" />
+                        Cabelo
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["hairColor", "hairLength", "hairStyle", "hairTexture"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Corpo */}
+                  <AccordionItem value="body">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <Footprints className="w-3.5 h-3.5 text-primary" />
+                        Corpo e Idade
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["age", "height", "bodyType", "posture"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Roupas */}
+                  <AccordionItem value="clothes">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <Shirt className="w-3.5 h-3.5 text-primary" />
+                        Roupas
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["outerLayer", "topClothing", "bottomClothing", "footwear"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Acessórios */}
+                  <AccordionItem value="accessories">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <Glasses className="w-3.5 h-3.5 text-primary" />
+                        Acessórios
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["accessories", "jewelry", "headwear"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+
+                  {/* Expressão e Comportamento */}
+                  <AccordionItem value="expression">
+                    <AccordionTrigger className="text-xs py-2">
+                      <span className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-primary" />
+                        Expressão e Marcas
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="space-y-2 pt-1">
+                      {(["defaultExpression", "bodyLanguage", "distinctiveFeatures", "characterId"] as const).map((key) => (
+                        <div key={key}>
+                          <Label className="text-[10px] capitalize">{key.replace(/([A-Z])/g, " $1")}</Label>
+                          <Input
+                            value={localDetails[key] || ""}
+                            onChange={(e) => updateDetail(key, e.target.value)}
+                            placeholder={DETAIL_PLACEHOLDERS[key]}
+                            className="h-7 text-xs mt-0.5"
+                          />
+                        </div>
+                      ))}
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
+
+                <Separator />
+
+                <div>
+                  <Label className="text-xs">Estilo Visual</Label>
+                  <Input
+                    value={profile.visualStyle}
+                    onChange={(e) => onProfileChange({ ...profile, visualStyle: e.target.value })}
+                    className="mt-1 h-8"
+                    placeholder="Ex: Cinematográfico, tons dessaturados..."
+                  />
+                </div>
+
+                <div className="flex gap-2">
+                  <Button size="sm" onClick={applyStructuredDetails} className="flex-1">
+                    Gerar Prompt e Salvar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setUseStructuredMode(false)}>
+                    Cancelar
+                  </Button>
+                </div>
+              </>
+            )}
           </div>
         ) : (
           <>
