@@ -794,35 +794,35 @@ export function SidePanelApp() {
   // Não mostrar a interface completa fora do Flow — apenas a tela de conexão.
   if (!checkingPage && !isOnFlowPage) {
     return (
-      <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+      <div className="h-screen w-full bg-background flex flex-col overflow-hidden extension-panel">
         {/* Header */}
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 border-b border-border gradient-header"
+          className="flex items-center gap-4 p-5 border-b border-border gradient-header"
         >
           <motion.img 
             src={logoDark} 
             alt="LaCasaDark" 
-            className="h-10 w-10 rounded-xl shadow-card"
+            className="h-12 w-12 rounded-xl shadow-card"
             whileHover={{ scale: 1.05, rotate: 5 }}
           />
           <div>
-            <h1 className="font-bold text-sm text-gradient">LaCasaDark Flow</h1>
-            <p className="text-[11px] text-muted-foreground">Gerador de Vídeos com IA</p>
+            <h1 className="font-bold text-base text-gradient">LaCasaDark Flow</h1>
+            <p className="text-sm text-muted-foreground">Gerador de Vídeos com IA</p>
           </div>
         </motion.div>
 
         {/* Content */}
-        <div className="flex-1 p-5 flex flex-col justify-center">
+        <div className="flex-1 p-6 flex flex-col justify-center">
           <motion.div 
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="text-center mb-8"
+            className="text-center mb-10"
           >
             <motion.div 
-              className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center"
+              className="w-24 h-24 mx-auto mb-5 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center"
               animate={{ 
                 boxShadow: [
                   "0 0 20px hsl(265 85% 60% / 0.2)",
@@ -832,9 +832,9 @@ export function SidePanelApp() {
               }}
               transition={{ duration: 2, repeat: Infinity }}
             >
-              <Video className="w-10 h-10 text-primary" />
+              <Video className="w-12 h-12 text-primary" />
             </motion.div>
-            <h2 className="text-lg font-bold mb-2">Conecte ao Google Flow</h2>
+            <h2 className="text-xl font-bold mb-3">Conecte ao Google Flow</h2>
             <p className="text-sm text-muted-foreground max-w-xs mx-auto">
               Abra o Google Flow para gerar vídeos com IA de forma automatizada.
             </p>
@@ -845,7 +845,7 @@ export function SidePanelApp() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-3 mb-8"
+            className="space-y-4 mb-10"
           >
             {[
               { icon: Sparkles, text: "Consistência de personagens" },
@@ -857,12 +857,12 @@ export function SidePanelApp() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.3 + i * 0.1 }}
-                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+                className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border"
               >
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <feature.icon className="w-4 h-4 text-primary" />
+                <div className="p-2.5 rounded-lg bg-primary/10">
+                  <feature.icon className="w-5 h-5 text-primary" />
                 </div>
-                <span className="text-sm">{feature.text}</span>
+                <span className="text-base">{feature.text}</span>
               </motion.div>
             ))}
           </motion.div>
@@ -872,22 +872,22 @@ export function SidePanelApp() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="space-y-3"
+            className="space-y-4"
           >
             <Button 
               onClick={openGoogleFlow} 
-              className="w-full h-12 gap-2 text-sm font-semibold shadow-button"
+              className="w-full h-14 gap-3 text-base font-semibold shadow-button"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-5 h-5" />
               Abrir Google Flow
             </Button>
 
             <Button
               variant="ghost"
-              className="w-full h-10 text-xs gap-2 text-muted-foreground"
+              className="w-full h-11 text-sm gap-2 text-muted-foreground"
               onClick={checkFlowPage}
             >
-              <RefreshCw className="w-3.5 h-3.5" />
+              <RefreshCw className="w-4 h-4" />
               Verificar Conexão
             </Button>
           </motion.div>
@@ -898,9 +898,9 @@ export function SidePanelApp() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
-          className="p-4 border-t border-border text-center"
+          className="p-5 border-t border-border text-center"
         >
-          <p className="text-[10px] text-muted-foreground/60">
+          <p className="text-xs text-muted-foreground/60">
             Funciona apenas em <span className="font-mono">labs.google/fx/tools/flow</span>
           </p>
         </motion.div>
@@ -909,7 +909,7 @@ export function SidePanelApp() {
   }
 
   return (
-    <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
+    <div className="h-screen w-full bg-background flex flex-col overflow-hidden extension-panel">
       {/* Hidden input for JSON import */}
       <input
         ref={jsonInputRef}
@@ -995,23 +995,23 @@ export function SidePanelApp() {
       <motion.div 
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-4 border-b border-border gradient-header"
+        className="flex items-center justify-between p-5 border-b border-border gradient-header"
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <motion.div
             whileHover={{ scale: 1.05, rotate: 5 }}
             transition={{ type: "spring", stiffness: 400 }}
           >
-            <img src={logoDark} alt="LaCasaDark" className="h-10 w-10 rounded-xl shadow-card" />
+            <img src={logoDark} alt="LaCasaDark" className="h-12 w-12 rounded-xl shadow-card" />
           </motion.div>
           <div>
-            <h1 className="font-bold text-sm text-gradient">LaCasaDark Flow</h1>
-            <p className="text-[11px] text-muted-foreground">Gerador de Vídeos com IA</p>
+            <h1 className="font-bold text-base text-gradient">LaCasaDark Flow</h1>
+            <p className="text-sm text-muted-foreground">Gerador de Vídeos com IA</p>
           </div>
         </div>
         
         {checkingPage && (
-          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         )}
       </motion.div>
 
@@ -1020,18 +1020,18 @@ export function SidePanelApp() {
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="p-3 bg-destructive/10 border-b border-destructive/30"
+          className="p-4 bg-destructive/10 border-b border-destructive/30"
         >
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-destructive" />
-            <span className="text-sm font-medium text-destructive">Desconectado</span>
+          <div className="flex items-center gap-3 mb-3">
+            <AlertTriangle className="w-5 h-5 text-destructive" />
+            <span className="text-base font-medium text-destructive">Desconectado</span>
           </div>
           <Button 
             onClick={openGoogleFlow}
             size="sm"
-            className="w-full h-9 gap-2"
+            className="w-full h-10 gap-2 text-sm"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-5 h-5" />
             Abrir Google Flow
           </Button>
         </motion.div>
@@ -1042,13 +1042,13 @@ export function SidePanelApp() {
         <motion.div 
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="px-4 py-2.5 bg-accent/10 border-b border-accent/30 flex items-center gap-2.5"
+          className="px-5 py-3 bg-accent/10 border-b border-accent/30 flex items-center gap-3"
         >
-          <CheckCircle2 className="w-4 h-4 text-accent" />
-          <span className="text-xs text-accent font-medium">Conectado ao Google Flow</span>
+          <CheckCircle2 className="w-5 h-5 text-accent" />
+          <span className="text-sm text-accent font-medium">Conectado ao Google Flow</span>
           {!flowPageReady && (
-            <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
-              <Loader2 className="w-3 h-3 animate-spin" />
+            <span className="text-xs text-muted-foreground ml-auto flex items-center gap-1.5">
+              <Loader2 className="w-4 h-4 animate-spin" />
               Carregando...
             </span>
           )}
@@ -1057,40 +1057,40 @@ export function SidePanelApp() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-11">
+        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-12">
           <TabsTrigger 
             value="control" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
           >
-            <Play className="w-3.5 h-3.5" />
+            <Play className="w-4 h-4" />
             Controle
           </TabsTrigger>
           <TabsTrigger 
             value="settings" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
           >
-            <Settings className="w-3.5 h-3.5" />
+            <Settings className="w-4 h-4" />
             Config
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
           >
-            <Clock className="w-3.5 h-3.5" />
+            <Clock className="w-4 h-4" />
             Histórico
           </TabsTrigger>
           <TabsTrigger 
             value="tools" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
           >
-            <Wrench className="w-3.5 h-3.5" />
+            <Wrench className="w-4 h-4" />
             Ferramentas
           </TabsTrigger>
           <TabsTrigger 
             value="survival" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
           >
-            <Compass className="w-3.5 h-3.5" />
+            <Compass className="w-4 h-4" />
             Sobrevivência
           </TabsTrigger>
         </TabsList>
@@ -1098,22 +1098,22 @@ export function SidePanelApp() {
         {/* Control Tab */}
         <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0">
           <ScrollArea className="flex-1 scrollbar-thin">
-            <div className="p-4 space-y-5">
+            <div className="p-5 space-y-6">
               {/* Character Selection */}
               <motion.div 
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="space-y-3"
+                className="space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
-                    <div className="p-1.5 rounded-md bg-primary/10">
-                      <User className="w-3.5 h-3.5 text-primary" />
+                  <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
+                    <div className="p-2 rounded-md bg-primary/10">
+                      <User className="w-4 h-4 text-primary" />
                     </div>
                     Personagens
                     {selectedCharacterIds.length > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5 h-5">
                         {selectedCharacterIds.length} selecionado{selectedCharacterIds.length > 1 ? 's' : ''}
                       </Badge>
                     )}
@@ -1121,7 +1121,7 @@ export function SidePanelApp() {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="h-7 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                    className="h-8 px-3 text-xs text-muted-foreground hover:text-foreground"
                     onClick={() => setSelectedCharacterIds([])}
                     disabled={selectedCharacterIds.length === 0}
                   >
@@ -1129,11 +1129,11 @@ export function SidePanelApp() {
                   </Button>
                 </div>
                  <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
-                   <div className="max-h-28 overflow-y-auto scrollbar-thin p-2 space-y-1">
+                   <div className="max-h-36 overflow-y-auto scrollbar-thin p-3 space-y-2">
                    {characters.length === 0 ? (
                      <div className="text-center py-4">
-                       <Sparkles className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
-                       <p className="text-xs text-muted-foreground">Nenhum personagem criado</p>
+                       <Sparkles className="w-8 h-8 text-muted-foreground/40 mx-auto mb-2" />
+                       <p className="text-sm text-muted-foreground">Nenhum personagem criado</p>
                      </div>
                    ) : (
                      characters.map(char => (
@@ -1141,7 +1141,7 @@ export function SidePanelApp() {
                          key={char.id} 
                          whileHover={{ scale: 1.01 }}
                          whileTap={{ scale: 0.99 }}
-                         className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                         className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all ${
                            selectedCharacterIds.includes(char.id) 
                              ? 'bg-primary/15 border border-primary/40 shadow-sm' 
                              : 'hover:bg-muted/50 border border-transparent'
@@ -1157,19 +1157,19 @@ export function SidePanelApp() {
                                setSelectedCharacterIds(prev => prev.filter(id => id !== char.id));
                              }
                            }}
-                           className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
+                           className="w-5 h-5 rounded border-border accent-primary cursor-pointer"
                          />
                          {char.imageUrl ? (
-                           <img src={char.imageUrl} alt="" className="w-7 h-7 rounded-lg object-cover ring-1 ring-border" />
+                           <img src={char.imageUrl} alt="" className="w-9 h-9 rounded-lg object-cover ring-1 ring-border" />
                          ) : (
-                           <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
-                             <User className="w-3.5 h-3.5 text-muted-foreground" />
+                           <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
+                             <User className="w-4 h-4 text-muted-foreground" />
                            </div>
                          )}
                          <div className="flex-1 min-w-0">
-                           <span className="text-xs font-medium truncate block">{char.name}</span>
+                           <span className="text-sm font-medium truncate block">{char.name}</span>
                            {char.attributes?.style && (
-                             <span className="text-[10px] text-muted-foreground">{char.attributes.style}</span>
+                             <span className="text-xs text-muted-foreground">{char.attributes.style}</span>
                            )}
                          </div>
                        </motion.label>
@@ -1178,14 +1178,14 @@ export function SidePanelApp() {
                    </div>
                    
                    {/* Create New Button */}
-                   <div className="p-2 border-t border-border bg-muted/30">
+                   <div className="p-3 border-t border-border bg-muted/30">
                      <Button 
                        variant="ghost" 
                        size="sm"
-                       className="w-full h-8 text-xs gap-1.5 justify-center hover:bg-primary/10 hover:text-primary"
+                       className="w-full h-10 text-sm gap-2 justify-center hover:bg-primary/10 hover:text-primary"
                        onClick={() => setShowCharacterForm(true)}
                      >
-                       <Plus className="w-3.5 h-3.5" />
+                       <Plus className="w-4 h-4" />
                        Criar Novo Personagem
                      </Button>
                    </div>
@@ -1253,16 +1253,16 @@ export function SidePanelApp() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="space-y-3"
+                className="space-y-4"
               >
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
-                    <div className="p-1.5 rounded-md bg-accent/10">
-                      <FileText className="w-3.5 h-3.5 text-accent" />
+                  <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
+                    <div className="p-2 rounded-md bg-accent/10">
+                      <FileText className="w-4 h-4 text-accent" />
                     </div>
                     Lista de Prompts
                     {promptCount > 0 && (
-                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-accent/20 text-accent border-0">
+                      <Badge className="text-xs px-2 py-0.5 h-5 bg-accent/20 text-accent border-0">
                         {promptCount} cena{promptCount > 1 ? 's' : ''}
                       </Badge>
                     )}
@@ -1277,10 +1277,10 @@ export function SidePanelApp() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-7 text-[10px] gap-1.5 border-dashed"
+                    className="h-8 text-xs gap-2 border-dashed"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    <Upload className="w-3 h-3" />
+                    <Upload className="w-4 h-4" />
                     Importar .txt
                   </Button>
                 </div>
@@ -1296,10 +1296,10 @@ Com detalhes visuais e cinematográficos.
 🎬 Terceira cena - e assim por diante...
 
 💡 Dica: Linhas em branco separam as cenas!`}
-                  className="min-h-[140px] text-sm font-mono resize-none rounded-xl bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
+                  className="min-h-[160px] text-sm font-mono resize-none rounded-xl bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
                 />
-                <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent/50" />
+                <p className="text-xs text-muted-foreground/70 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-accent/50" />
                   Cada bloco separado por linha em branco = uma cena
                 </p>
               </motion.div>
@@ -1309,11 +1309,11 @@ Com detalhes visuais e cinematográficos.
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.25 }}
-                className="space-y-2"
+                className="space-y-3"
               >
-                <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
-                  <div className="p-1.5 rounded-md bg-muted">
-                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                <Label className="text-sm font-semibold flex items-center gap-2 text-foreground/90">
+                  <div className="p-2 rounded-md bg-muted">
+                    <Download className="w-4 h-4 text-muted-foreground" />
                   </div>
                   Pasta de Download
                 </Label>
@@ -1321,36 +1321,36 @@ Com detalhes visuais e cinematográficos.
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
                   placeholder="MeuProjeto_Cenas"
-                  className="h-9 text-sm rounded-lg bg-card/50"
+                  className="h-10 text-sm rounded-lg bg-card/50"
                 />
               </motion.div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-9 text-xs gap-1.5 border-muted-foreground/20"
+                  className="flex-1 h-10 text-sm gap-2 border-muted-foreground/20"
                   onClick={() => setShowQueueManager(true)}
                 >
-                  <FolderPlus className="w-3.5 h-3.5" />
+                  <FolderPlus className="w-4 h-4" />
                   Gerenciar ({batchSession?.items.length || 0})
                 </Button>
                 <Button 
-                  className="flex-1 h-9 text-xs gap-1.5 shadow-button"
+                  className="flex-1 h-10 text-sm gap-2 shadow-button"
                   onClick={handleAddToQueue}
                   disabled={promptCount === 0}
                 >
-                  <ListPlus className="w-3.5 h-3.5" />
+                  <ListPlus className="w-4 h-4" />
                   Adicionar à Fila
                 </Button>
                 <Button 
                   variant="outline" 
                   size="icon" 
-                  className="h-9 w-9 shrink-0 border-destructive/50 text-destructive hover:bg-destructive/10"
+                  className="h-10 w-10 shrink-0 border-destructive/50 text-destructive hover:bg-destructive/10"
                   onClick={handleClearQueue}
                   disabled={!batchSession}
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
 
@@ -1359,13 +1359,13 @@ Com detalhes visuais e cinematográficos.
                 <motion.div 
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className="space-y-2"
+                  className="space-y-3"
                 >
-                  <div className="flex items-center justify-between text-xs mb-1">
+                  <div className="flex items-center justify-between text-sm mb-1">
                     <span className="font-medium flex items-center gap-2">
                       {isRunning ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          <Loader2 className="w-4 h-4 animate-spin text-primary" />
                           <span className="text-primary">Processando...</span>
                         </>
                       ) : (
@@ -1376,13 +1376,13 @@ Com detalhes visuais e cinematográficos.
                       {progress.completed}/{progress.total}
                     </span>
                   </div>
-                  <Progress value={progress.percentage} className="h-2.5" />
+                  <Progress value={progress.percentage} className="h-3" />
                     {/* Reset button when stuck */}
                     {(isRunning || batchSession.items.some(i => i.status === 'processing' || i.status === 'sending')) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="w-full h-7 mt-2 text-[10px] text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                        className="w-full h-8 mt-2 text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                         onClick={() => {
                           // Reset all processing/sending items to pending
                           const resetItems = batchSession.items.map(item => 
@@ -1398,7 +1398,7 @@ Com detalhes visuais e cinematográficos.
                           toast.info("Fila resetada");
                         }}
                       >
-                        <RotateCcw className="w-3 h-3 mr-1" />
+                        <RotateCcw className="w-4 h-4 mr-1.5" />
                         Resetar itens travados
                       </Button>
                     )}
@@ -1406,18 +1406,18 @@ Com detalhes visuais e cinematográficos.
               )}
 
               {/* Start/Stop Buttons */}
-              <div className="flex gap-2">
+              <div className="flex gap-3">
                 <Button 
-                  className="flex-1 h-10 gap-2 shadow-button"
+                  className="flex-1 h-11 gap-2 text-sm shadow-button"
                   onClick={handleStartQueue}
                   disabled={isRunning || !batchSession || batchSession.items.length === 0}
                 >
-                  <Play className="w-4 h-4" />
+                  <Play className="w-5 h-5" />
                   Iniciar Fila
                 </Button>
                 <Button 
                   variant="destructive"
-                  className="flex-1 h-10 gap-2"
+                  className="flex-1 h-11 gap-2 text-sm"
                   onClick={handleStopQueue}
                   disabled={!isRunning}
                 >

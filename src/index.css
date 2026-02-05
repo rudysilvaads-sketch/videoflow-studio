@@ -137,10 +137,50 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
   }
 
   .font-mono {
     font-family: 'JetBrains Mono', monospace;
+  }
+  
+  /* Extension Panel - Larger base sizes for better readability */
+  .extension-panel {
+    font-size: 14px;
+  }
+  
+  .extension-panel h1 {
+    font-size: 1rem;
+  }
+  
+  .extension-panel h2 {
+    font-size: 0.9375rem;
+  }
+  
+  .extension-panel h3 {
+    font-size: 0.875rem;
+  }
+  
+  .extension-panel p,
+  .extension-panel span,
+  .extension-panel label {
+    font-size: 0.8125rem;
+  }
+  
+  .extension-panel .text-xs {
+    font-size: 0.75rem !important;
+  }
+  
+  .extension-panel .text-sm {
+    font-size: 0.8125rem !important;
+  }
+  
+  .extension-panel input,
+  .extension-panel textarea,
+  .extension-panel select,
+  .extension-panel button {
+    font-size: 0.8125rem;
   }
 }
 

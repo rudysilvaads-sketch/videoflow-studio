@@ -16,14 +16,14 @@
  
  export function TabNavigation({ activeTab, onTabChange }: TabNavigationProps) {
    return (
-     <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-11">
+    <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-12">
        {tabs.map((tab) => (
          <TabsTrigger
            key={tab.id}
            value={tab.id}
-           className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
+          className="relative rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-2 text-sm px-4 py-3 transition-all"
          >
-           <tab.icon className="w-3.5 h-3.5" />
+          <tab.icon className="w-4 h-4" />
            <span>{tab.label}</span>
            {activeTab === tab.id && (
              <motion.div

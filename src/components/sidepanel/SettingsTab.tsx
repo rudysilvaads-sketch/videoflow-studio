@@ -244,17 +244,17 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
      <motion.div 
        initial={{ opacity: 0 }}
        animate={{ opacity: 1 }}
-       className="p-4 space-y-5"
+      className="p-5 space-y-6"
      >
       {/* Theme Toggle */}
-      <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="p-1.5 rounded-md bg-primary/10">
-            <Palette className="w-3.5 h-3.5 text-primary" />
+     <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
+       <div className="flex items-center gap-3">
+         <div className="p-2 rounded-md bg-primary/10">
+           <Palette className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <Label className="text-xs font-medium">Tema da Interface</Label>
-            <p className="text-[10px] text-muted-foreground">
+           <Label className="text-sm font-medium">Tema da Interface</Label>
+           <p className="text-xs text-muted-foreground">
               {isDark ? "Modo escuro ativado" : "Modo claro ativado"}
             </p>
           </div>
@@ -265,21 +265,21 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
       {/* API & Credentials Section */}
       <Collapsible open={apiSectionOpen} onOpenChange={setApiSectionOpen}>
         <CollapsibleTrigger asChild>
-          <button className="w-full flex items-center justify-between p-3 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
-            <div className="flex items-center gap-2.5">
-               <div className="p-1.5 rounded-md bg-accent/10">
-                 <Key className="w-3.5 h-3.5 text-accent" />
+         <button className="w-full flex items-center justify-between p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors">
+           <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-accent/10">
+                <Key className="w-4 h-4 text-accent" />
               </div>
               <div className="text-left">
-                <Label className="text-xs font-medium cursor-pointer">APIs & Credenciais</Label>
-                <p className="text-[10px] text-muted-foreground">
+                <Label className="text-sm font-medium cursor-pointer">APIs & Credenciais</Label>
+                <p className="text-xs text-muted-foreground">
                   Gemini API, ImageFX Cookies
                 </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               {(hasGeminiKey || hasCookies) && (
-                <Badge variant="secondary" className="text-[9px] h-4 bg-accent/20 text-accent">
+                <Badge variant="secondary" className="text-xs h-5 bg-accent/20 text-accent">
                   {[hasGeminiKey && "Gemini", hasCookies && "ImageFX"].filter(Boolean).join(" + ")}
                 </Badge>
               )}
@@ -299,16 +299,16 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mt-2 space-y-4 p-3 rounded-xl bg-muted/30 border border-border"
+           className="mt-3 space-y-5 p-4 rounded-xl bg-muted/30 border border-border"
           >
             {/* Gemini API Key */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium flex items-center gap-2">
-                 <Key className="w-3 h-3 text-accent" />
+           <div className="space-y-3">
+             <Label className="text-sm font-medium flex items-center gap-2">
+                <Key className="w-4 h-4 text-accent" />
                 Gemini API Key
                 {hasGeminiKey && (
-                  <Badge variant="outline" className="text-[9px] h-4 text-accent border-accent/30">
-                    <Check className="w-2 h-2 mr-0.5" /> Configurada
+                 <Badge variant="outline" className="text-xs h-5 text-accent border-accent/30">
+                   <Check className="w-3 h-3 mr-1" /> Configurada
                   </Badge>
                 )}
               </Label>
@@ -319,33 +319,33 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                    onChange={(e) => handleGeminiKeyChange(e.target.value)}
                   placeholder="AIzaSy..."
                    className={cn(
-                     "h-9 pr-20 font-mono text-xs",
+                    "h-10 pr-20 font-mono text-sm",
                      geminiValidation === 'valid' && "border-accent focus-visible:ring-accent",
                      geminiValidation === 'invalid' && "border-destructive focus-visible:ring-destructive"
                    )}
                 />
                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                    {geminiValidation === 'valid' && (
-                     <Check className="w-3.5 h-3.5 text-accent" />
+                     <Check className="w-4 h-4 text-accent" />
                    )}
                    {geminiValidation === 'invalid' && (
-                     <XCircle className="w-3.5 h-3.5 text-destructive" />
+                     <XCircle className="w-4 h-4 text-destructive" />
                   )}
                    <button
                      type="button"
                      onClick={() => setShowGeminiKey(!showGeminiKey)}
-                     className="p-1 hover:bg-muted rounded"
+                     className="p-1.5 hover:bg-muted rounded"
                    >
                      {showGeminiKey ? (
-                       <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+                       <EyeOff className="w-4 h-4 text-muted-foreground" />
                      ) : (
-                       <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                       <Eye className="w-4 h-4 text-muted-foreground" />
                      )}
                    </button>
                  </div>
               </div>
-               <div className="flex items-center justify-between mt-1.5">
-                 <p className="text-[10px] text-muted-foreground">
+               <div className="flex items-center justify-between mt-2">
+                 <p className="text-xs text-muted-foreground">
                    Obtenha em{" "}
                    <a 
                      href="https://aistudio.google.com/app/apikey" 
@@ -360,13 +360,13 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                    type="button"
                    variant="ghost"
                    size="sm"
-                   className="h-6 px-2 text-[10px]"
+                   className="h-8 px-3 text-xs"
                    onClick={handleTestGeminiKey}
                    disabled={validatingGemini || !credentials.geminiApiKey.trim()}
                  >
                    {validatingGemini ? (
                      <>
-                       <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                       <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                        Validando...
                      </>
                    ) : (
@@ -377,18 +377,18 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                
                {/* Validation Status Message */}
                {geminiValidation === 'invalid' && (
-                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
-                   <XCircle className="w-3 h-3 text-destructive" />
-                   <p className="text-[10px] text-destructive">
+                 <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
+                   <XCircle className="w-4 h-4 text-destructive" />
+                   <p className="text-xs text-destructive">
                      API Key inválida. Verifique se copiou corretamente.
                    </p>
                  </div>
                )}
                
                {geminiValidation === 'valid' && (
-                 <div className="flex items-center gap-1.5 p-2 rounded-lg bg-accent/10 border border-accent/20 mt-2">
-                   <Check className="w-3 h-3 text-accent" />
-                   <p className="text-[10px] text-accent">
+                 <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20 mt-2">
+                   <Check className="w-4 h-4 text-accent" />
+                   <p className="text-xs text-accent">
                      Conexão validada com sucesso!
                    </p>
                  </div>
@@ -396,23 +396,23 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
             </div>
 
             {/* ImageFX Cookies */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium flex items-center gap-2">
-                 <Cookie className="w-3 h-3 text-primary" />
+           <div className="space-y-3">
+             <Label className="text-sm font-medium flex items-center gap-2">
+                <Cookie className="w-4 h-4 text-primary" />
                 ImageFX Cookies
                 {hasCookies && (
                   <Badge variant="outline" className={cn(
-                    "text-[9px] h-4",
+                   "text-xs h-5",
                     cookiesValidation === 'valid' ? "text-accent border-accent/30" : 
                     cookiesValidation === 'invalid' ? "text-destructive border-destructive/30" :
                     "text-accent border-accent/30"
                   )}>
                     {cookiesValidation === 'valid' ? (
-                      <><Check className="w-2 h-2 mr-0.5" /> Validados</>
+                     <><Check className="w-3 h-3 mr-1" /> Validados</>
                     ) : cookiesValidation === 'invalid' ? (
-                      <><XCircle className="w-2 h-2 mr-0.5" /> Inválidos</>
+                     <><XCircle className="w-3 h-3 mr-1" /> Inválidos</>
                     ) : (
-                      <><Check className="w-2 h-2 mr-0.5" /> Configurados</>
+                     <><Check className="w-3 h-3 mr-1" /> Configurados</>
                     )}
                   </Badge>
                 )}
@@ -423,7 +423,7 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                   onChange={(e) => handleCookiesChange(e.target.value)}
                   placeholder="Cole os cookies do ImageFX aqui..."
                   className={cn(
-                    "min-h-[80px] font-mono text-xs resize-none",
+                   "min-h-[100px] font-mono text-sm resize-none",
                     !showCookies && credentials.imageFxCookies && "text-transparent select-none",
                     cookiesValidation === 'valid' && "border-accent focus-visible:ring-accent",
                     cookiesValidation === 'invalid' && "border-destructive focus-visible:ring-destructive"
@@ -436,18 +436,18 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                   <button
                     type="button"
                     onClick={() => setShowCookies(!showCookies)}
-                    className="absolute right-2 top-2 p-1 hover:bg-muted rounded bg-background/80"
+                   className="absolute right-2 top-2 p-1.5 hover:bg-muted rounded bg-background/80"
                   >
                     {showCookies ? (
-                      <EyeOff className="w-3.5 h-3.5 text-muted-foreground" />
+                     <EyeOff className="w-4 h-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="w-3.5 h-3.5 text-muted-foreground" />
+                     <Eye className="w-4 h-4 text-muted-foreground" />
                     )}
                   </button>
                 )}
               </div>
-              <div className="flex items-center justify-between mt-1.5">
-                <p className="text-[10px] text-muted-foreground flex-1">
+             <div className="flex items-center justify-between mt-2">
+               <p className="text-xs text-muted-foreground flex-1">
                   <strong>Como obter:</strong> Abra o ImageFX, pressione F12, vá em Application → Cookies, 
                   e copie todos os cookies.
                 </p>
@@ -455,13 +455,13 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-6 px-2 text-[10px]"
+                 className="h-8 px-3 text-xs"
                   onClick={handleTestCookies}
                   disabled={validatingCookies || !credentials.imageFxCookies.trim()}
                 >
                   {validatingCookies ? (
                     <>
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                     <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />
                       Validando...
                     </>
                   ) : (
@@ -472,18 +472,18 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
               
               {/* Cookies Validation Status */}
               {cookiesValidation === 'invalid' && (
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
-                  <XCircle className="w-3 h-3 text-destructive" />
-                  <p className="text-[10px] text-destructive">
+               <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20 mt-2">
+                 <XCircle className="w-4 h-4 text-destructive" />
+                 <p className="text-xs text-destructive">
                     Cookies inválidos ou expirados. Obtenha novos cookies do ImageFX.
                   </p>
                 </div>
               )}
               
               {cookiesValidation === 'valid' && (
-                <div className="flex items-center gap-1.5 p-2 rounded-lg bg-accent/10 border border-accent/20 mt-2">
-                  <Check className="w-3 h-3 text-accent" />
-                  <p className="text-[10px] text-accent">
+               <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/10 border border-accent/20 mt-2">
+                 <Check className="w-4 h-4 text-accent" />
+                 <p className="text-xs text-accent">
                     Sessão do ImageFX ativa e funcionando!
                   </p>
                 </div>
@@ -493,33 +493,32 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
             {/* Save Button */}
             <Button 
               onClick={handleSaveCredentials}
-              size="sm"
-              className="w-full gap-2"
+             className="w-full h-10 gap-2 text-sm"
               variant={saved ? "outline" : "default"}
               disabled={validatingGemini || validatingCookies}
             >
               {validatingGemini || validatingCookies ? (
                  <>
-                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                    Validando...
                  </>
                ) : saved ? (
                 <>
-                  <Check className="w-3.5 h-3.5" />
+                 <Check className="w-4 h-4" />
                   Credenciais Salvas!
                 </>
               ) : (
                 <>
-                  <Key className="w-3.5 h-3.5" />
+                 <Key className="w-4 h-4" />
                   Salvar Credenciais
                 </>
               )}
             </Button>
 
             {/* Security Note */}
-            <div className="flex items-start gap-2 p-2 rounded-lg bg-muted/50">
-              <AlertCircle className="w-3.5 h-3.5 text-muted-foreground mt-0.5 flex-shrink-0" />
-              <p className="text-[10px] text-muted-foreground">
+           <div className="flex items-start gap-2.5 p-3 rounded-lg bg-muted/50">
+             <AlertCircle className="w-4 h-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+             <p className="text-xs text-muted-foreground">
                 Suas credenciais são salvas apenas localmente no seu navegador e nunca são enviadas para servidores externos.
               </p>
             </div>
@@ -528,15 +527,15 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
       </Collapsible>
 
        {/* Model Selection */}
-       <div className="space-y-2">
-         <Label className="text-xs font-semibold flex items-center gap-2">
-           <div className="p-1.5 rounded-md bg-primary/10">
-             <Video className="w-3.5 h-3.5 text-primary" />
+       <div className="space-y-3">
+         <Label className="text-sm font-semibold flex items-center gap-2">
+           <div className="p-2 rounded-md bg-primary/10">
+             <Video className="w-4 h-4 text-primary" />
            </div>
            Modelo de Geração
          </Label>
-         <Select value={settings.model} onValueChange={(v) => updateSetting('model', v)}>
-           <SelectTrigger className="h-9 rounded-lg">
+         <Select value={settings.model} onValueChange={(v: string) => updateSetting('model', v)}>
+           <SelectTrigger className="h-10 rounded-lg text-sm">
              <SelectValue />
            </SelectTrigger>
            <SelectContent>
@@ -548,15 +547,15 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        </div>
  
        {/* Aspect Ratio */}
-       <div className="space-y-2">
-         <Label className="text-xs font-semibold flex items-center gap-2">
-           <div className="p-1.5 rounded-md bg-accent/10">
-             <Ratio className="w-3.5 h-3.5 text-accent" />
+       <div className="space-y-3">
+         <Label className="text-sm font-semibold flex items-center gap-2">
+           <div className="p-2 rounded-md bg-accent/10">
+             <Ratio className="w-4 h-4 text-accent" />
            </div>
            Proporção do Vídeo
          </Label>
-         <Select value={settings.ratio} onValueChange={(v) => updateSetting('ratio', v)}>
-           <SelectTrigger className="h-9 rounded-lg">
+         <Select value={settings.ratio} onValueChange={(v: string) => updateSetting('ratio', v)}>
+           <SelectTrigger className="h-10 rounded-lg text-sm">
              <SelectValue />
            </SelectTrigger>
            <SelectContent>
@@ -569,10 +568,10 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        </div>
  
        {/* Videos per Task */}
-       <div className="space-y-2">
-         <Label className="text-xs font-semibold flex items-center gap-2">
-           <div className="p-1.5 rounded-md bg-muted">
-             <Gauge className="w-3.5 h-3.5 text-muted-foreground" />
+       <div className="space-y-3">
+         <Label className="text-sm font-semibold flex items-center gap-2">
+           <div className="p-2 rounded-md bg-muted">
+             <Gauge className="w-4 h-4 text-muted-foreground" />
            </div>
            Vídeos por Tarefa
          </Label>
@@ -580,7 +579,7 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
            value={String(settings.videosPerTask)} 
            onValueChange={(v) => updateSetting('videosPerTask', Number(v))}
          >
-           <SelectTrigger className="h-9 rounded-lg">
+           <SelectTrigger className="h-10 rounded-lg text-sm">
              <SelectValue />
            </SelectTrigger>
            <SelectContent>
@@ -592,32 +591,32 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        </div>
  
        {/* Wait Time */}
-       <div className="space-y-2">
-         <Label className="text-xs font-semibold flex items-center gap-2">
-           <div className="p-1.5 rounded-md bg-muted">
-             <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+       <div className="space-y-3">
+         <Label className="text-sm font-semibold flex items-center gap-2">
+           <div className="p-2 rounded-md bg-muted">
+             <Timer className="w-4 h-4 text-muted-foreground" />
            </div>
            Tempo de Espera (segundos)
          </Label>
          <div className="grid grid-cols-2 gap-3">
            <div>
-             <Label className="text-[10px] text-muted-foreground mb-1 block">Mínimo</Label>
+             <Label className="text-xs text-muted-foreground mb-1.5 block">Mínimo</Label>
              <Input
                type="number"
                value={settings.waitTimeMin}
                onChange={(e) => updateSetting('waitTimeMin', Number(e.target.value))}
-               className="h-9 rounded-lg"
+               className="h-10 rounded-lg text-sm"
                min={5}
                max={300}
              />
            </div>
            <div>
-             <Label className="text-[10px] text-muted-foreground mb-1 block">Máximo</Label>
+             <Label className="text-xs text-muted-foreground mb-1.5 block">Máximo</Label>
              <Input
                type="number"
                value={settings.waitTimeMax}
                onChange={(e) => updateSetting('waitTimeMax', Number(e.target.value))}
-               className="h-9 rounded-lg"
+               className="h-10 rounded-lg text-sm"
                min={10}
                max={600}
              />
@@ -626,14 +625,14 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        </div>
  
        {/* Auto Download */}
-       <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
-         <div className="flex items-center gap-2.5">
-           <div className="p-1.5 rounded-md bg-accent/10">
-             <Download className="w-3.5 h-3.5 text-accent" />
+       <div className="flex items-center justify-between p-4 rounded-xl bg-card border border-border">
+         <div className="flex items-center gap-3">
+           <div className="p-2 rounded-md bg-accent/10">
+             <Download className="w-4 h-4 text-accent" />
            </div>
            <div>
-             <Label className="text-xs font-medium">Download Automático</Label>
-             <p className="text-[10px] text-muted-foreground">Baixar vídeos ao concluir</p>
+             <Label className="text-sm font-medium">Download Automático</Label>
+             <p className="text-xs text-muted-foreground">Baixar vídeos ao concluir</p>
            </div>
          </div>
          <Switch
@@ -643,12 +642,12 @@ const CREDENTIALS_KEY = "lacasadark_credentials";
        </div>
  
        {/* Info */}
-       <div className="p-3 rounded-xl bg-muted/50 border border-border">
+       <div className="p-4 rounded-xl bg-muted/50 border border-border">
          <div className="flex items-start gap-2">
-           <Settings2 className="w-4 h-4 text-muted-foreground mt-0.5" />
+           <Settings2 className="w-5 h-5 text-muted-foreground mt-0.5" />
            <div>
-             <p className="text-xs font-medium">Configurações Salvas Localmente</p>
-             <p className="text-[10px] text-muted-foreground mt-0.5">
+             <p className="text-sm font-medium">Configurações Salvas Localmente</p>
+             <p className="text-xs text-muted-foreground mt-1">
                Suas preferências são salvas no navegador e persistem entre sessões.
              </p>
            </div>
