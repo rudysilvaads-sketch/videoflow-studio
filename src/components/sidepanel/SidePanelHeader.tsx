@@ -1,6 +1,7 @@
  import { motion } from "framer-motion";
  import { CheckCircle2, AlertTriangle, ExternalLink, RefreshCw, Loader2 } from "lucide-react";
  import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
  import logoDark from "@/assets/logo-lacasadark.png";
  
  interface SidePanelHeaderProps {
@@ -37,13 +38,16 @@
              <h1 className="font-bold text-sm bg-gradient-to-r from-primary to-purple-400 bg-clip-text text-transparent">
                LaCasaDark Flow
              </h1>
-             <p className="text-[11px] text-muted-foreground">Gerador de Vídeos com IA</p>
+            <p className="text-[11px] text-muted-foreground/80">Gerador de Vídeos com IA</p>
            </div>
          </div>
          
-         {checkingPage && (
-           <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-         )}
+        <div className="flex items-center gap-2">
+          <ThemeToggle size="sm" />
+          {checkingPage && (
+            <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+          )}
+        </div>
        </motion.div>
  
        {/* Connection Status */}
