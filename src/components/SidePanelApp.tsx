@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
- import { Reorder, useDragControls } from "framer-motion";
+  import { Reorder } from "framer-motion";
+ import { motion, AnimatePresence } from "framer-motion";
 import { Character } from "@/types/character";
 import { getPromptHistory, clearPromptHistory } from "@/lib/promptHistory";
 import { 
@@ -64,9 +65,12 @@ import {
   ExternalLink,
   AlertTriangle,
   CheckCircle2,
-   RefreshCw,
-   GripVertical,
-   Layers
+  RefreshCw,
+  GripVertical,
+  Layers,
+  Sparkles,
+  Video,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
@@ -788,39 +792,115 @@ export function SidePanelApp() {
   if (!checkingPage && !isOnFlowPage) {
     return (
       <div className="h-screen w-full bg-background flex flex-col overflow-hidden">
-        <div className="flex items-center gap-2 p-3 border-b border-border bg-card/50">
-          <img src={logoDark} alt="LaCasaDark" className="h-8 w-8 rounded-full" />
+        {/* Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-4 border-b border-border gradient-header"
+        >
+          <motion.img 
+            src={logoDark} 
+            alt="LaCasaDark" 
+            className="h-10 w-10 rounded-xl shadow-card"
+            whileHover={{ scale: 1.05, rotate: 5 }}
+          />
           <div>
-            <h1 className="font-bold text-sm">LaCasaDark Flow</h1>
-            <p className="text-xs text-muted-foreground">Character Consistency</p>
+            <h1 className="font-bold text-sm text-gradient">LaCasaDark Flow</h1>
+            <p className="text-[11px] text-muted-foreground">Gerador de Vídeos com IA</p>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="flex-1 p-4 flex flex-col justify-center gap-3">
-          <div className="rounded-lg border border-border bg-card/50 p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Abra o Google Flow para usar</span>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              A automação só fica disponível em: <span className="font-mono">{FLOW_URL}</span>
-            </p>
-          </div>
-
-          <Button onClick={openGoogleFlow} className="w-full h-10 gap-2">
-            <ExternalLink className="w-4 h-4" />
-            Abrir Google Flow
-          </Button>
-
-          <Button
-            variant="ghost"
-            className="w-full h-9 text-xs gap-2"
-            onClick={checkFlowPage}
+        {/* Content */}
+        <div className="flex-1 p-5 flex flex-col justify-center">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="text-center mb-8"
           >
-            <RefreshCw className="w-3.5 h-3.5" />
-            Verificar conexão
-          </Button>
+            <motion.div 
+              className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center"
+              animate={{ 
+                boxShadow: [
+                  "0 0 20px hsl(265 85% 60% / 0.2)",
+                  "0 0 40px hsl(265 85% 60% / 0.3)",
+                  "0 0 20px hsl(265 85% 60% / 0.2)"
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <Video className="w-10 h-10 text-primary" />
+            </motion.div>
+            <h2 className="text-lg font-bold mb-2">Conecte ao Google Flow</h2>
+            <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+              Abra o Google Flow para gerar vídeos com IA de forma automatizada.
+            </p>
+          </motion.div>
+
+          {/* Features */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="space-y-3 mb-8"
+          >
+            {[
+              { icon: Sparkles, text: "Consistência de personagens" },
+              { icon: Zap, text: "Processamento em lote" },
+              { icon: Video, text: "Download automático" },
+            ].map((feature, i) => (
+              <motion.div
+                key={feature.text}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 + i * 0.1 }}
+                className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border"
+              >
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <feature.icon className="w-4 h-4 text-primary" />
+                </div>
+                <span className="text-sm">{feature.text}</span>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Actions */}
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="space-y-3"
+          >
+            <Button 
+              onClick={openGoogleFlow} 
+              className="w-full h-12 gap-2 text-sm font-semibold shadow-button"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Abrir Google Flow
+            </Button>
+
+            <Button
+              variant="ghost"
+              className="w-full h-10 text-xs gap-2 text-muted-foreground"
+              onClick={checkFlowPage}
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              Verificar Conexão
+            </Button>
+          </motion.div>
         </div>
+
+        {/* Footer */}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6 }}
+          className="p-4 border-t border-border text-center"
+        >
+          <p className="text-[10px] text-muted-foreground/60">
+            Funciona apenas em <span className="font-mono">labs.google/fx/tools/flow</span>
+          </p>
+        </motion.div>
       </div>
     );
   }
@@ -909,108 +989,152 @@ export function SidePanelApp() {
       </Dialog>
 
       {/* Header */}
-      <div className="flex items-center justify-between p-3 border-b border-border bg-card/50">
-        <div className="flex items-center gap-2">
-          <img src={logoDark} alt="LaCasaDark" className="h-8 w-8 rounded-full" />
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-4 border-b border-border gradient-header"
+      >
+        <div className="flex items-center gap-3">
+          <motion.div
+            whileHover={{ scale: 1.05, rotate: 5 }}
+            transition={{ type: "spring", stiffness: 400 }}
+          >
+            <img src={logoDark} alt="LaCasaDark" className="h-10 w-10 rounded-xl shadow-card" />
+          </motion.div>
           <div>
-            <h1 className="font-bold text-sm">LaCasaDark Flow</h1>
-            <p className="text-xs text-muted-foreground">Character Consistency</p>
+            <h1 className="font-bold text-sm text-gradient">LaCasaDark Flow</h1>
+            <p className="text-[11px] text-muted-foreground">Gerador de Vídeos com IA</p>
           </div>
         </div>
-      </div>
+        
+        {checkingPage && (
+          <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
+        )}
+      </motion.div>
 
       {/* Flow Detection Banner */}
       {!isOnFlowPage && !checkingPage && (
-        <div className="p-3 bg-primary/10 border-b border-primary/30">
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="p-3 bg-destructive/10 border-b border-destructive/30"
+        >
           <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium">Não conectado ao Google Flow</span>
+            <AlertTriangle className="w-4 h-4 text-destructive" />
+            <span className="text-sm font-medium text-destructive">Desconectado</span>
           </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Abra o Google Flow para usar a automação de vídeos.
-          </p>
           <Button 
             onClick={openGoogleFlow}
-            className="w-full h-10 gap-2"
+            size="sm"
+            className="w-full h-9 gap-2"
           >
             <ExternalLink className="w-4 h-4" />
             Abrir Google Flow
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm"
-            className="w-full mt-2 h-8 text-xs gap-1.5"
-            onClick={checkFlowPage}
-          >
-            <RefreshCw className="w-3 h-3" />
-            Verificar conexão
-          </Button>
-        </div>
+        </motion.div>
       )}
 
       {/* Connected indicator */}
       {isOnFlowPage && !checkingPage && (
-        <div className="px-3 py-1.5 bg-accent/20 border-b border-accent/40 flex items-center gap-2">
-          <CheckCircle2 className="w-3.5 h-3.5 text-accent" />
-          <span className="text-xs text-accent">Conectado ao Google Flow</span>
+        <motion.div 
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          className="px-4 py-2.5 bg-accent/10 border-b border-accent/30 flex items-center gap-2.5"
+        >
+          <CheckCircle2 className="w-4 h-4 text-accent" />
+          <span className="text-xs text-accent font-medium">Conectado ao Google Flow</span>
           {!flowPageReady && (
-            <span className="text-[10px] text-muted-foreground ml-auto">Aguardando página...</span>
+            <span className="text-[10px] text-muted-foreground ml-auto flex items-center gap-1">
+              <Loader2 className="w-3 h-3 animate-spin" />
+              Carregando...
+            </span>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-10">
+        <TabsList className="w-full justify-start rounded-none border-b border-border bg-transparent p-0 h-11">
           <TabsTrigger 
             value="control" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
           >
             <Play className="w-3.5 h-3.5" />
-            Control
+            Controle
           </TabsTrigger>
           <TabsTrigger 
             value="settings" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
           >
             <Settings className="w-3.5 h-3.5" />
-            Settings
+            Config
           </TabsTrigger>
           <TabsTrigger 
             value="history" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
           >
             <Clock className="w-3.5 h-3.5" />
-            History
+            Histórico
           </TabsTrigger>
           <TabsTrigger 
             value="tools" 
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4"
+            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent flex items-center gap-1.5 text-xs px-4 transition-all"
           >
             <Wrench className="w-3.5 h-3.5" />
-            Tools
+            Ferramentas
           </TabsTrigger>
         </TabsList>
 
         {/* Control Tab */}
         <TabsContent value="control" className="flex-1 flex flex-col overflow-hidden mt-0 p-0">
-          <ScrollArea className="flex-1">
-            <div className="p-3 space-y-4">
+          <ScrollArea className="flex-1 scrollbar-thin">
+            <div className="p-4 space-y-5">
               {/* Character Selection */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-primary" />
-                   Personagem Consistente {selectedCharacterIds.length > 0 && `(${selectedCharacterIds.length})`}
-                </Label>
-                 <div className="space-y-1.5 max-h-32 overflow-y-auto border border-border rounded-lg p-2 bg-card/50">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
+                    <div className="p-1.5 rounded-md bg-primary/10">
+                      <User className="w-3.5 h-3.5 text-primary" />
+                    </div>
+                    Personagens
+                    {selectedCharacterIds.length > 0 && (
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                        {selectedCharacterIds.length} selecionado{selectedCharacterIds.length > 1 ? 's' : ''}
+                      </Badge>
+                    )}
+                  </Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[10px] text-muted-foreground hover:text-foreground"
+                    onClick={() => setSelectedCharacterIds([])}
+                    disabled={selectedCharacterIds.length === 0}
+                  >
+                    Limpar
+                  </Button>
+                </div>
+                 <div className="rounded-xl border border-border bg-card/50 overflow-hidden">
+                   <div className="max-h-28 overflow-y-auto scrollbar-thin p-2 space-y-1">
                    {characters.length === 0 ? (
-                     <p className="text-xs text-muted-foreground text-center py-2">Nenhum personagem</p>
+                     <div className="text-center py-4">
+                       <Sparkles className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
+                       <p className="text-xs text-muted-foreground">Nenhum personagem criado</p>
+                     </div>
                    ) : (
                      characters.map(char => (
-                       <label 
+                       <motion.label 
                          key={char.id} 
-                         className={`flex items-center gap-2 p-1.5 rounded cursor-pointer hover:bg-muted/50 transition-colors ${
-                           selectedCharacterIds.includes(char.id) ? 'bg-primary/10 border border-primary/30' : ''
+                         whileHover={{ scale: 1.01 }}
+                         whileTap={{ scale: 0.99 }}
+                         className={`flex items-center gap-2.5 p-2 rounded-lg cursor-pointer transition-all ${
+                           selectedCharacterIds.includes(char.id) 
+                             ? 'bg-primary/15 border border-primary/40 shadow-sm' 
+                             : 'hover:bg-muted/50 border border-transparent'
                          }`}
                        >
                          <input
@@ -1023,66 +1147,76 @@ export function SidePanelApp() {
                                setSelectedCharacterIds(prev => prev.filter(id => id !== char.id));
                              }
                            }}
-                           className="w-3.5 h-3.5 rounded border-border accent-primary"
+                           className="w-4 h-4 rounded border-border accent-primary cursor-pointer"
                          />
-                         {char.imageUrl && (
-                           <img src={char.imageUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+                         {char.imageUrl ? (
+                           <img src={char.imageUrl} alt="" className="w-7 h-7 rounded-lg object-cover ring-1 ring-border" />
+                         ) : (
+                           <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                             <User className="w-3.5 h-3.5 text-muted-foreground" />
+                           </div>
                          )}
-                         <span className="text-xs flex-1 truncate">{char.name}</span>
-                       </label>
+                         <div className="flex-1 min-w-0">
+                           <span className="text-xs font-medium truncate block">{char.name}</span>
+                           {char.attributes?.style && (
+                             <span className="text-[10px] text-muted-foreground">{char.attributes.style}</span>
+                           )}
+                         </div>
+                       </motion.label>
                      ))
                    )}
+                   </div>
+                   
+                   {/* Create New Button */}
+                   <div className="p-2 border-t border-border bg-muted/30">
+                     <Button 
+                       variant="ghost" 
+                       size="sm"
+                       className="w-full h-8 text-xs gap-1.5 justify-center hover:bg-primary/10 hover:text-primary"
+                       onClick={() => setShowCharacterForm(true)}
+                     >
+                       <Plus className="w-3.5 h-3.5" />
+                       Criar Novo Personagem
+                     </Button>
+                   </div>
                  </div>
-                 <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                     size="sm"
-                     className="flex-1 h-8 text-xs gap-1.5"
-                    onClick={() => setShowCharacterForm(true)}
+                 
+                 {selectedCharacters.length > 1 && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="p-3 rounded-xl bg-primary/5 border border-primary/20"
                   >
-                    <Plus className="w-4 h-4" />
-                     Novo Personagem
-                   </Button>
-                   <Button 
-                     variant="ghost" 
-                     size="sm"
-                     className="h-8 text-xs"
-                     onClick={() => setSelectedCharacterIds([])}
-                     disabled={selectedCharacterIds.length === 0}
-                   >
-                     Limpar
-                  </Button>
-                </div>
-                 {selectedCharacters.length > 0 && (
-                  <div className="p-2 rounded-lg bg-primary/10 border border-primary/30">
-                      <p className="text-[10px] text-muted-foreground mb-1.5">Arraste para reordenar (primeiro = principal):</p>
+                      <p className="text-[10px] text-muted-foreground mb-2 flex items-center gap-1.5">
+                        <GripVertical className="w-3 h-3" />
+                        Arraste para reordenar (primeiro = principal)
+                      </p>
                       <Reorder.Group 
                         axis="y" 
                         values={selectedCharacterIds} 
                         onReorder={setSelectedCharacterIds}
-                        className="space-y-1 mb-2"
+                        className="space-y-1"
                       >
-                        {selectedCharacterIds.map((charId) => {
+                        {selectedCharacterIds.map((charId, index) => {
                           const char = characters.find(c => c.id === charId);
                           if (!char) return null;
                           return (
                             <Reorder.Item 
                               key={charId}
                               value={charId}
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, scale: 0.9 }}
                               whileDrag={{ 
                                 scale: 1.02, 
                                 boxShadow: "0 8px 20px -5px rgba(0,0,0,0.3)",
                                 zIndex: 50
                               }}
-                              transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                              className="flex items-center gap-1.5 p-1.5 rounded bg-muted/50 group cursor-grab active:cursor-grabbing"
+                              className="flex items-center gap-2 p-2 rounded-lg bg-card border border-border group cursor-grab active:cursor-grabbing"
                             >
-                              <GripVertical className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <GripVertical className="w-3.5 h-3.5 text-muted-foreground/50" />
+                              <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-mono">
+                                {index + 1}
+                              </Badge>
                               {char.imageUrl && (
-                                <img src={char.imageUrl} alt="" className="w-4 h-4 rounded-full shrink-0 pointer-events-none" />
+                                <img src={char.imageUrl} alt="" className="w-5 h-5 rounded-md object-cover pointer-events-none" />
                               )}
                               <span className="text-xs flex-1 truncate pointer-events-none">{char.name}</span>
                               <Button
@@ -1100,19 +1234,28 @@ export function SidePanelApp() {
                           );
                         })}
                       </Reorder.Group>
-                      <p className="text-[10px] text-muted-foreground line-clamp-2 font-mono bg-muted/30 p-1.5 rounded">
-                        {selectedCharacterIds.map(id => characters.find(c => c.id === id)?.basePrompt || '').join(' [AND] ')}
-                    </p>
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </motion.div>
 
               {/* Prompt List */}
-              <div className="space-y-2">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="space-y-3"
+              >
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs font-medium">
-                    Prompt List
-                    <span className="text-muted-foreground ml-1">(Sample .txt file)</span>
+                  <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
+                    <div className="p-1.5 rounded-md bg-accent/10">
+                      <FileText className="w-3.5 h-3.5 text-accent" />
+                    </div>
+                    Lista de Prompts
+                    {promptCount > 0 && (
+                      <Badge className="text-[10px] px-1.5 py-0 h-4 bg-accent/20 text-accent border-0">
+                        {promptCount} cena{promptCount > 1 ? 's' : ''}
+                      </Badge>
+                    )}
                   </Label>
                   <input
                     ref={fileInputRef}
@@ -1124,50 +1267,71 @@ export function SidePanelApp() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-7 text-xs gap-1.5"
+                    className="h-7 text-[10px] gap-1.5 border-dashed"
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <Upload className="w-3 h-3" />
-                    Import file (.txt)
+                    Importar .txt
                   </Button>
                 </div>
                 <Textarea
                   value={batchText}
                   onChange={(e) => setBatchText(e.target.value)}
-                  placeholder={`Primeiro prompt (pode ter várias linhas).\nContinua aqui na mesma cena...\n\n[linha em branco separa]\n\nSegundo prompt começa aqui.\nTambém pode ter múltiplas linhas.\n\n[outra linha em branco]\n\nTerceiro prompt...`}
-                  className="min-h-[120px] text-sm font-mono resize-none"
+                  placeholder={`🎬 Primeira cena - descrição detalhada...
+Continue descrevendo a mesma cena aqui.
+
+🎬 Segunda cena - nova descrição...
+Com detalhes visuais e cinematográficos.
+
+🎬 Terceira cena - e assim por diante...
+
+💡 Dica: Linhas em branco separam as cenas!`}
+                  className="min-h-[140px] text-sm font-mono resize-none rounded-xl bg-card/50 border-border/50 focus:border-primary/50 placeholder:text-muted-foreground/40"
                 />
-              </div>
+                <p className="text-[10px] text-muted-foreground/70 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-accent/50" />
+                  Cada bloco separado por linha em branco = uma cena
+                </p>
+              </motion.div>
 
               {/* Download Folder */}
-              <div className="space-y-2">
-                <Label className="text-xs font-medium">Job Download Folder:</Label>
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.25 }}
+                className="space-y-2"
+              >
+                <Label className="text-xs font-semibold flex items-center gap-2 text-foreground/90">
+                  <div className="p-1.5 rounded-md bg-muted">
+                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                  </div>
+                  Pasta de Download
+                </Label>
                 <Input
                   value={folderName}
                   onChange={(e) => setFolderName(e.target.value)}
-                  placeholder="Flow-01"
-                  className="h-9 text-sm"
+                  placeholder="MeuProjeto_Cenas"
+                  className="h-9 text-sm rounded-lg bg-card/50"
                 />
-              </div>
+              </motion.div>
 
               {/* Action Buttons */}
               <div className="flex gap-2">
                 <Button 
                   variant="outline" 
-                  className="flex-1 h-9 text-xs gap-1.5 border-accent/50 text-accent-foreground hover:bg-accent/10"
+                  className="flex-1 h-9 text-xs gap-1.5 border-muted-foreground/20"
                   onClick={() => setShowQueueManager(true)}
                 >
                   <FolderPlus className="w-3.5 h-3.5" />
-                  Manage ({batchSession?.items.length || 0})
+                  Gerenciar ({batchSession?.items.length || 0})
                 </Button>
                 <Button 
-                  variant="outline" 
-                  className="flex-1 h-9 text-xs gap-1.5 border-primary/50 text-primary hover:bg-primary/10"
+                  className="flex-1 h-9 text-xs gap-1.5 shadow-button"
                   onClick={handleAddToQueue}
                   disabled={promptCount === 0}
                 >
                   <ListPlus className="w-3.5 h-3.5" />
-                  Add to Queue
+                  Adicionar à Fila
                 </Button>
                 <Button 
                   variant="outline" 
@@ -1182,18 +1346,33 @@ export function SidePanelApp() {
 
               {/* Progress */}
               {batchSession && batchSession.items.length > 0 && (
-                <div className="space-y-2">
-                  <Progress value={progress.percentage} className="h-2" />
-                  <div className="flex items-center justify-center gap-2">
-                    <p className="text-xs text-muted-foreground">
-                      {isRunning ? 'Processing...' : 'Ready'} • {progress.completed}/{progress.total}
-                    </p>
+                <motion.div 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center justify-between text-xs mb-1">
+                    <span className="font-medium flex items-center gap-2">
+                      {isRunning ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                          <span className="text-primary">Processando...</span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Pronto para iniciar</span>
+                      )}
+                    </span>
+                    <span className="text-muted-foreground font-mono">
+                      {progress.completed}/{progress.total}
+                    </span>
+                  </div>
+                  <Progress value={progress.percentage} className="h-2.5" />
                     {/* Reset button when stuck */}
                     {(isRunning || batchSession.items.some(i => i.status === 'processing' || i.status === 'sending')) && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-5 px-2 text-[10px] text-destructive hover:text-destructive hover:bg-destructive/10"
+                        className="w-full h-7 mt-2 text-[10px] text-destructive/80 hover:text-destructive hover:bg-destructive/10"
                         onClick={() => {
                           // Reset all processing/sending items to pending
                           const resetItems = batchSession.items.map(item => 
@@ -1205,37 +1384,35 @@ export function SidePanelApp() {
                           setBatchSession(resetSession);
                           saveBatch(resetSession);
                           setIsRunning(false);
-                          addLog('Queue reset - items stuck in processing returned to pending', 'warning');
-                          toast.info("Fila resetada - itens travados voltaram para pendente");
+                          addLog('Fila resetada - itens travados voltaram para pendente', 'warning');
+                          toast.info("Fila resetada");
                         }}
                       >
                         <RotateCcw className="w-3 h-3 mr-1" />
-                        Reset
+                        Resetar itens travados
                       </Button>
                     )}
-                  </div>
-                </div>
+                </motion.div>
               )}
 
               {/* Start/Stop Buttons */}
               <div className="flex gap-2">
                 <Button 
-                  variant="default"
-                  className="flex-1 h-10 gap-2 bg-primary hover:bg-primary/90"
+                  className="flex-1 h-10 gap-2 shadow-button"
                   onClick={handleStartQueue}
                   disabled={isRunning || !batchSession || batchSession.items.length === 0}
                 >
                   <Play className="w-4 h-4" />
-                  Start Queue
+                  Iniciar Fila
                 </Button>
                 <Button 
-                  variant="secondary"
-                  className="flex-1 h-10 gap-2 bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                  variant="destructive"
+                  className="flex-1 h-10 gap-2"
                   onClick={handleStopQueue}
                   disabled={!isRunning}
                 >
                   <Square className="w-4 h-4" />
-                  Stop
+                  Parar
                 </Button>
               </div>
  
@@ -1243,7 +1420,7 @@ export function SidePanelApp() {
               <div className="pt-2 border-t border-border">
                 <Button 
                   variant="outline"
-                  className="w-full h-10 gap-2 border-primary/50 text-primary hover:bg-primary/10"
+                  className="w-full h-9 gap-2 text-xs border-dashed border-primary/40 text-primary hover:bg-primary/5"
                   onClick={() => setShowParallelSetup(true)}
                   disabled={isRunning || (batchSession?.items.length || 0) === 0}
                 >
@@ -1263,64 +1440,90 @@ export function SidePanelApp() {
 
               {/* Queue Items Preview */}
               {batchSession && batchSession.items.length > 0 && (
-                <div className="space-y-2">
-                  <Label className="text-xs font-medium">Queue ({batchSession.items.length} items)</Label>
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {batchSession.items.map((item) => (
-                      <div 
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-2"
+                >
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs font-semibold text-muted-foreground">
+                      Fila de Processamento
+                    </Label>
+                    <Badge variant="outline" className="text-[10px]">
+                      {batchSession.items.length} itens
+                    </Badge>
+                  </div>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto scrollbar-thin pr-1">
+                    <AnimatePresence mode="popLayout">
+                      {batchSession.items.map((item) => (
+                        <motion.div 
                         key={item.id}
-                        className={`p-2 rounded border text-xs flex items-start gap-2 ${
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        className={`p-2.5 rounded-lg border text-xs flex items-start gap-2.5 transition-colors ${
                           item.status === 'processing' ? 'bg-primary/10 border-primary/30' :
+                          item.status === 'downloading' ? 'bg-accent/10 border-accent/30' :
                         item.status === 'completed' ? 'bg-accent/20 border-accent/40' :
                         item.status === 'error' ? 'bg-destructive/10 border-destructive/30' :
                           'bg-card border-border'
                         }`}
                       >
-                        <div className="mt-0.5">{getStatusIcon(item.status)}</div>
+                        <div className="mt-0.5 shrink-0">{getStatusIcon(item.status)}</div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                            <Badge variant="outline" className="text-[9px] px-1 py-0 h-4 font-mono">
                               {String(item.sceneNumber).padStart(2, '0')}
                             </Badge>
-                             {item.status === 'completed' && <span className="text-accent">✓</span>}
+                             {item.status === 'completed' && (
+                               <span className="text-accent text-[10px]">✓ Concluído</span>
+                             )}
+                             {item.status === 'processing' && (
+                               <span className="text-primary text-[10px]">Gerando...</span>
+                             )}
                           </div>
-                          <p className="text-muted-foreground line-clamp-1 mt-0.5">{item.prompt}</p>
+                          <p className="text-muted-foreground line-clamp-1 mt-1">{item.prompt}</p>
                           {item.errorMessage && (
-                            <p className="text-destructive text-[10px] mt-0.5">{item.errorMessage}</p>
+                            <p className="text-destructive text-[10px] mt-1">{item.errorMessage}</p>
                           )}
                         </div>
                         {item.status === 'error' && (
                           <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="h-6 w-6 shrink-0"
+                            className="h-6 w-6 shrink-0 hover:bg-destructive/10"
                             onClick={() => handleRetryItem(item)}
                           >
                             <RotateCcw className="w-3 h-3" />
                           </Button>
                         )}
-                      </div>
-                    ))}
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
                   </div>
-                </div>
+                </motion.div>
               )}
             </div>
           </ScrollArea>
         </TabsContent>
 
         {/* Settings Tab */}
-        <TabsContent value="settings" className="flex-1 overflow-auto mt-0 p-3 space-y-4">
+        <TabsContent value="settings" className="flex-1 overflow-auto mt-0 p-4 space-y-5">
           {/* General Settings */}
           <div>
-            <h3 className="text-sm font-medium text-primary mb-3">General Settings</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Settings className="w-4 h-4 text-primary" />
+              Configurações Gerais
+            </h3>
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Videos per task:</Label>
+                <Label className="text-xs">Vídeos por tarefa:</Label>
                 <Select 
                   value={String(settings.videosPerTask)} 
                   onValueChange={(v) => setSettings(s => ({ ...s, videosPerTask: parseInt(v) }))}
                 >
-                  <SelectTrigger className="w-32 h-8 text-xs">
+                  <SelectTrigger className="w-32 h-8 text-xs rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -1332,125 +1535,108 @@ export function SidePanelApp() {
               </div>
 
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Model (Optional):</Label>
+                <Label className="text-xs">Modelo:</Label>
                 <Select 
                   value={settings.model} 
                   onValueChange={(v) => setSettings(s => ({ ...s, model: v }))}
                 >
-                  <SelectTrigger className="w-40 h-8 text-xs">
+                  <SelectTrigger className="w-40 h-8 text-xs rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="veo-3.1-fast">Default (Veo 3.1 - Fast)</SelectItem>
+                    <SelectItem value="veo-3.1-fast">Veo 3.1 Fast (Rápido)</SelectItem>
+                    <SelectItem value="veo-3.1">Veo 3.1 (Qualidade)</SelectItem>
                     <SelectItem value="veo-3">Veo 3</SelectItem>
-                    <SelectItem value="imagen-3">Imagen 3</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Ratio (T2V & I2V Crop):</Label>
+                <Label className="text-xs">Proporção:</Label>
                 <Select 
                   value={settings.ratio} 
                   onValueChange={(v) => setSettings(s => ({ ...s, ratio: v }))}
                 >
-                  <SelectTrigger className="w-40 h-8 text-xs">
+                  <SelectTrigger className="w-40 h-8 text-xs rounded-lg">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="16:9">Landscape (16:9)</SelectItem>
-                    <SelectItem value="9:16">Portrait (9:16)</SelectItem>
-                    <SelectItem value="1:1">Square (1:1)</SelectItem>
+                    <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
+                    <SelectItem value="9:16">9:16 (Vertical/Shorts)</SelectItem>
+                    <SelectItem value="1:1">1:1 (Quadrado)</SelectItem>
+                    <SelectItem value="4:3">4:3 (Clássico)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Start from (Prompt/Image):</Label>
+                <Label className="text-xs">Iniciar do prompt:</Label>
                 <div className="flex items-center gap-1">
                   <Input 
                     type="number" 
                     min={1} 
                     value={settings.startFrom}
                     onChange={(e) => setSettings(s => ({ ...s, startFrom: parseInt(e.target.value) || 1 }))}
-                    className="w-16 h-8 text-xs text-center"
+                    className="w-16 h-8 text-xs text-center rounded-lg"
                   />
                   <span className="text-xs text-muted-foreground">#</span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between">
-                <Label className="text-xs">Video creation wait time (sec):</Label>
+                <Label className="text-xs">Tempo de espera (seg):</Label>
                 <div className="flex items-center gap-1">
                   <Input 
                     type="number" 
                     min={10} 
                     value={settings.waitTimeMin}
                     onChange={(e) => setSettings(s => ({ ...s, waitTimeMin: parseInt(e.target.value) || 30 }))}
-                    className="w-14 h-8 text-xs text-center"
+                    className="w-14 h-8 text-xs text-center rounded-lg"
                   />
-                  <span className="text-xs text-muted-foreground">to</span>
+                  <span className="text-xs text-muted-foreground">a</span>
                   <Input 
                     type="number" 
                     min={10} 
                     value={settings.waitTimeMax}
                     onChange={(e) => setSettings(s => ({ ...s, waitTimeMax: parseInt(e.target.value) || 60 }))}
-                    className="w-14 h-8 text-xs text-center"
+                    className="w-14 h-8 text-xs text-center rounded-lg"
                   />
                 </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Language:</Label>
-                <Select 
-                  value={settings.language} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, language: v }))}
-                >
-                  <SelectTrigger className="w-32 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pt">Português</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
             </div>
           </div>
 
           {/* Download Settings */}
           <div>
-            <h3 className="text-sm font-medium text-primary mb-3">Download Settings</h3>
-            <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <Download className="w-4 h-4 text-accent" />
+              Download
+            </h3>
+            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
               <div className="flex items-center gap-2">
-                <Label className="text-xs">Auto-download videos:</Label>
-                <Switch 
-                  checked={settings.autoDownload}
-                  onCheckedChange={(v) => setSettings(s => ({ ...s, autoDownload: v }))}
-                />
+                <div>
+                  <Label className="text-xs font-medium">Download Automático</Label>
+                  <p className="text-[10px] text-muted-foreground">Baixar vídeos ao concluir</p>
+                </div>
               </div>
-              <Button 
-                variant="link" 
-                size="sm" 
-                className="text-xs h-auto p-0 text-primary"
-                onClick={handleConfigureFolder}
-              >
-                Configure folder
-              </Button>
+              <Switch 
+                checked={settings.autoDownload}
+                onCheckedChange={(v) => setSettings(s => ({ ...s, autoDownload: v }))}
+              />
             </div>
-            <p className="text-[10px] text-muted-foreground mt-2">
-              Tip: Turn off 'Ask where to save...' in your browser's download settings for seamless auto-downloading.
-            </p>
           </div>
 
           {/* Character Management */}
           <div>
-            <h3 className="text-sm font-medium text-primary mb-3">Personagens Consistentes</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+              <User className="w-4 h-4 text-primary" />
+              Personagens
+            </h3>
             <div className="space-y-2">
               {characters.map(char => (
-                <div key={char.id} className="p-2 rounded-lg border border-border bg-card flex items-center gap-2">
+                <div key={char.id} className="p-2.5 rounded-xl border border-border bg-card flex items-center gap-2.5">
                   {char.imageUrl && (
-                    <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-full object-cover" />
+                    <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-border" />
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium truncate">{char.name}</p>
@@ -1468,24 +1654,27 @@ export function SidePanelApp() {
               ))}
               <Button 
                 variant="outline" 
-                className="w-full h-8 text-xs gap-1.5"
+                className="w-full h-9 text-xs gap-1.5 border-dashed"
                 onClick={() => setShowCharacterForm(true)}
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Character
+                Adicionar Personagem
               </Button>
             </div>
           </div>
         </TabsContent>
 
         {/* History Tab */}
-        <TabsContent value="history" className="flex-1 overflow-auto mt-0 p-3 space-y-3">
+        <TabsContent value="history" className="flex-1 overflow-auto mt-0 p-4 space-y-4">
           {/* Detailed Log */}
           <div>
-            <h3 className="text-sm font-medium text-primary mb-2">Detailed Log</h3>
-            <ScrollArea className="h-48 rounded border border-border bg-card/50 p-2">
+            <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-muted-foreground" />
+              Log Detalhado
+            </h3>
+            <ScrollArea className="h-48 rounded-xl border border-border bg-card/50 p-3">
               {logs.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">No logs yet</p>
+                <p className="text-xs text-muted-foreground text-center py-4">Nenhum log ainda</p>
               ) : (
                 <div className="space-y-1">
                   {logs.map(log => (
@@ -1504,12 +1693,13 @@ export function SidePanelApp() {
 
           {/* Failed Tasks */}
           <div>
-            <h3 className="text-sm font-medium text-destructive mb-2">
-              Failed Tasks ({failedTasks.length})
+            <h3 className="text-sm font-semibold text-destructive mb-2 flex items-center gap-2">
+              <AlertCircle className="w-4 h-4" />
+              Tarefas com Erro ({failedTasks.length})
             </h3>
-            <ScrollArea className="h-24 rounded border border-border bg-card/50 p-2">
+            <ScrollArea className="h-24 rounded-xl border border-destructive/20 bg-destructive/5 p-3">
               {failedTasks.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-2">No failed tasks</p>
+                <p className="text-xs text-muted-foreground text-center py-2">Nenhuma tarefa com erro</p>
               ) : (
                 <div className="space-y-1">
                   {failedTasks.map((task, idx) => (
@@ -1523,19 +1713,22 @@ export function SidePanelApp() {
             </ScrollArea>
             <Button 
               variant="outline" 
-              className="w-full h-9 mt-2 text-xs gap-1.5"
+              className="w-full h-9 mt-2 text-xs gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/10"
               onClick={copyFailedPrompts}
               disabled={failedTasks.length === 0}
             >
               <Copy className="w-3.5 h-3.5" />
-              Copy Failed Prompts/Images
+              Copiar Prompts com Erro
             </Button>
           </div>
 
           {/* Prompt History */}
           <div>
             <div className="flex justify-between items-center mb-2">
-              <h3 className="text-sm font-medium text-primary">Prompt History</h3>
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                Histórico de Prompts
+              </h3>
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -1543,20 +1736,20 @@ export function SidePanelApp() {
                 onClick={() => {
                   clearPromptHistory();
                   setHistoryItems([]);
-                  toast.success("History cleared");
+                  toast.success("Histórico limpo");
                 }}
                 disabled={historyItems.length === 0}
               >
                 <Trash2 className="w-3 h-3 mr-1" />
-                Clear
+                Limpar
               </Button>
             </div>
             {historyItems.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-4">No history yet</p>
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhum histórico ainda</p>
             ) : (
               <div className="space-y-1.5">
                 {historyItems.slice(0, 10).map(item => (
-                  <div key={item.id} className="p-1.5 rounded border border-border bg-card text-xs">
+                  <div key={item.id} className="p-2.5 rounded-xl border border-border bg-card text-xs hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-1 mb-0.5">
                       <Badge variant="secondary" className="text-[9px] px-1">{item.characterName}</Badge>
                     </div>
@@ -1569,45 +1762,66 @@ export function SidePanelApp() {
         </TabsContent>
 
         {/* Tools Tab */}
-        <TabsContent value="tools" className="flex-1 overflow-auto mt-0 p-3 space-y-4">
-          <div className="space-y-3">
+        <TabsContent value="tools" className="flex-1 overflow-auto mt-0 p-4 space-y-4">
+          <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+            <Wrench className="w-4 h-4 text-primary" />
+            Ferramentas Úteis
+          </h3>
+          
+          <div className="space-y-2">
             <Button 
               variant="outline" 
-              className="w-full h-10 justify-start gap-2 text-sm"
+              className="w-full h-11 justify-start gap-3 text-sm rounded-xl border-border hover:border-primary/30"
               onClick={handleExportQueue}
               disabled={!batchSession || batchSession.items.length === 0}
             >
-              <FileText className="w-4 h-4" />
-              Export Queue as .txt
+              <div className="p-1.5 rounded-lg bg-primary/10">
+                <FileText className="w-4 h-4 text-primary" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Exportar Fila</p>
+                <p className="text-[10px] text-muted-foreground">Salvar prompts como .txt</p>
+              </div>
             </Button>
             <Button 
               variant="outline" 
-              className="w-full h-10 justify-start gap-2 text-sm"
+              className="w-full h-11 justify-start gap-3 text-sm rounded-xl border-border hover:border-accent/30"
               onClick={handleDownloadAllVideos}
               disabled={!batchSession || batchSession.items.filter(i => i.status === 'completed').length === 0}
             >
-              <Download className="w-4 h-4" />
-              Download All Videos
+              <div className="p-1.5 rounded-lg bg-accent/10">
+                <Download className="w-4 h-4 text-accent" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Baixar Todos os Vídeos</p>
+                <p className="text-[10px] text-muted-foreground">Download de vídeos concluídos</p>
+              </div>
             </Button>
             <Button 
               variant="outline" 
-              className="w-full h-10 justify-start gap-2 text-sm"
+              className="w-full h-11 justify-start gap-3 text-sm rounded-xl border-border hover:border-muted-foreground/30"
               onClick={() => jsonInputRef.current?.click()}
             >
-              <User className="w-4 h-4" />
-              Import Character from JSON
+              <div className="p-1.5 rounded-lg bg-muted">
+                <Upload className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <p className="font-medium">Importar Personagem</p>
+                <p className="text-[10px] text-muted-foreground">Carregar de arquivo JSON</p>
+              </div>
             </Button>
           </div>
 
-          <div className="pt-4 border-t border-border">
-            <h3 className="text-sm font-medium text-primary mb-3">User Manual</h3>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 text-xs">
-                Português
-              </Button>
-              <Button variant="default" size="sm" className="flex-1 text-xs">
-                English
-              </Button>
+          {/* Tips */}
+          <div className="mt-6 p-3 rounded-xl bg-gradient-to-br from-primary/5 to-accent/5 border border-primary/10">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-4 h-4 text-primary mt-0.5" />
+              <div>
+                <p className="text-xs font-medium">Dica Pro</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Use o modo paralelo para processar até 4 vídeos simultaneamente em abas diferentes!
+                </p>
+              </div>
             </div>
           </div>
         </TabsContent>
