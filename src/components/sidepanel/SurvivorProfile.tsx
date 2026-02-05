@@ -223,6 +223,7 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   const [localDetails, setLocalDetails] = useState<CharacterDetails>(profile.details || {});
    const [isGeneratingWithAI, setIsGeneratingWithAI] = useState(false);
    const [aiDescription, setAiDescription] = useState("");
+   const [showLivePreview, setShowLivePreview] = useState(false);
 
   const { generate, isGenerating, lastResult } = useImageFxGeneration();
   const { hasImageFxCookies } = useCredentials();
@@ -230,6 +231,18 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
   const updateDetail = (key: keyof CharacterDetails, value: string) => {
     setLocalDetails(prev => ({ ...prev, [key]: value }));
   };
+ 
+   // Prompt gerado em tempo real baseado nos campos estruturados
+   const livePreviewPrompt = buildPromptFromDetails(
+     localDetails,
+     profile.name,
+     profile.lockClothing !== false,
+     profile.lockPhysicalOnly || false
+   );
+   
+   // Conta campos preenchidos
+   const filledFieldsCount = Object.values(localDetails).filter(v => v && v.trim()).length;
+   const totalFields = Object.keys(DETAIL_PLACEHOLDERS).length;
  
    const fillWithAI = async () => {
      if (!aiDescription.trim()) {
@@ -727,6 +740,41 @@ export function SurvivorProfile({ profile, onProfileChange }: SurvivorProfilePro
                 </Accordion>
 
                 <Separator />
+ 
+                 {/* Preview em Tempo Real */}
+                 <Collapsible open={showLivePreview} onOpenChange={setShowLivePreview}>
+                   <CollapsibleTrigger asChild>
+                     <button className="w-full flex items-center justify-between p-2 rounded-lg bg-accent/10 hover:bg-accent/20 transition-colors border border-accent/30">
+                       <span className="text-[10px] font-medium flex items-center gap-1.5 text-accent">
+                         {showLivePreview ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                         {showLivePreview ? "Ocultar Preview" : "Ver Preview do Prompt"}
+                       </span>
+                       <div className="flex items-center gap-1.5">
+                         <Badge variant="outline" className="text-[9px] h-4 border-accent/50 text-accent">
+                           {filledFieldsCount}/{totalFields} campos
+                         </Badge>
+                         <Badge variant="outline" className="text-[9px] h-4">
+                           {livePreviewPrompt.length} chars
+                         </Badge>
+                       </div>
+                     </button>
+                   </CollapsibleTrigger>
+                   <CollapsibleContent>
+                     <div className="mt-2 p-2.5 rounded-lg bg-muted/30 border border-border max-h-32 overflow-y-auto">
+                       {livePreviewPrompt ? (
+                         <p className="text-[10px] font-mono text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                           {livePreviewPrompt}
+                         </p>
+                       ) : (
+                         <p className="text-[10px] text-muted-foreground/50 italic">
+                           Preencha os campos acima para ver o prompt gerado...
+                         </p>
+                       )}
+                     </div>
+                   </CollapsibleContent>
+                 </Collapsible>
+ 
+                 <Separator />
 
                 <div>
                   <Label className="text-xs">Estilo Visual</Label>
