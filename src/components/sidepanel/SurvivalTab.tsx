@@ -28,6 +28,8 @@
      basePrompt: string;
      isLocked: boolean;
      visualStyle: string;
+     avatarUrl?: string;
+     avatarSeed?: number;
    };
  }
  
@@ -44,11 +46,20 @@
    
    // Persistent data
    const [series, setSeries] = useState<Series[]>([]);
-   const [survivor, setSurvivor] = useState({
+   const [survivor, setSurvivor] = useState<{
+     name: string;
+     basePrompt: string;
+     isLocked: boolean;
+     visualStyle: string;
+     avatarUrl?: string;
+     avatarSeed?: number;
+   }>({
      name: survivorCharacterTemplate.name,
      basePrompt: survivorCharacterTemplate.basePrompt,
      isLocked: true,
      visualStyle: survivorCharacterTemplate.visualStyle || "",
+     avatarUrl: undefined,
+     avatarSeed: undefined,
    });
  
    // Load from storage
@@ -106,8 +117,8 @@
              {/* Header */}
              <div className="p-4 border-b border-border">
                <div className="flex items-center gap-2 mb-3">
-                 <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-red-600 flex items-center justify-center">
-                   <Compass className="w-4 h-4 text-white" />
+                   <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+                     <Compass className="w-4 h-4 text-primary-foreground" />
                  </div>
                  <div>
                    <h2 className="text-sm font-bold">Canal de Sobrevivência</h2>

@@ -13,3 +13,4 @@ export { SeriesManager } from './SeriesManager';
 export { ScenarioLibrary } from './ScenarioLibrary';
 export { SurvivorProfile } from './SurvivorProfile';
 export { PromptBuilder } from './PromptBuilder';
+ export { ImageGenerator } from './ImageGenerator';
