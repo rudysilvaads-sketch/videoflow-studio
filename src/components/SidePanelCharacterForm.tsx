@@ -1,17 +1,18 @@
  import { useState, useRef, useCallback } from "react";
  import { motion, AnimatePresence } from "framer-motion";
-import { Character } from "@/types/character";
+import { Character, CinematographySettings } from "@/types/character";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
  import { Badge } from "@/components/ui/badge";
  import { ScrollArea } from "@/components/ui/scroll-area";
- import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users, Star, Trash2 } from "lucide-react";
+import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users, Star, Trash2, Film } from "lucide-react";
 import { toast } from "sonner";
  import { visualStyles, styleCategories, getStylesByCategory } from "@/data/visualStyles";
  import { characterTemplates, templateCategories, getTemplatesByCategory, TemplateCategory } from "@/data/characterTemplates";
  import { useCustomTemplates } from "@/hooks/useCustomTemplates";
+import { CinematographySections } from "./CinematographySections";
 
 interface SidePanelCharacterFormProps {
   character?: Character;
@@ -33,6 +34,7 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
       style: character?.attributes.style || "",
       features: character?.attributes.features || [],
     },
+    cinematography: character?.cinematography || {} as CinematographySettings,
   });
    
    const [styleDropdownOpen, setStyleDropdownOpen] = useState(false);
@@ -41,9 +43,20 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
    const [isDragging, setIsDragging] = useState(false);
    const [imagePreview, setImagePreview] = useState<string | null>(character?.imageUrl || null);
    const [showTemplates, setShowTemplates] = useState(false);
+  const [showCinematography, setShowCinematography] = useState(false);
   const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<string>("Todos");
    const fileInputRef = useRef<HTMLInputElement>(null);
  
+  const handleCinematographyChange = (cinematography: CinematographySettings) => {
+    setFormData(prev => ({ ...prev, cinematography }));
+  };
+
+  const getCinematographyFilledCount = (): number => {
+    const cinema = formData.cinematography;
+    if (!cinema) return 0;
+    return Object.values(cinema).filter(v => v?.trim()).length;
+  };
+
   // Combine built-in and custom templates
   const allTemplates = [
     ...customTemplates.map(t => ({ ...t, category: "Favoritos" as const })),
@@ -164,6 +177,7 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
          style: template.attributes.style || "",
          features: template.attributes.features || [],
        },
+      cinematography: {} as CinematographySettings,
      });
      setImagePreview(null);
      setShowTemplates(false);
@@ -238,6 +252,20 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
          >
            <Users className="w-3.5 h-3.5" />
            Templates
+         </Button>
+         <Button 
+           variant={showCinematography ? "secondary" : "ghost"}
+           size="sm" 
+           className="h-8 gap-1.5 text-xs"
+           onClick={() => setShowCinematography(!showCinematography)}
+         >
+           <Film className="w-3.5 h-3.5" />
+           Cinema
+           {getCinematographyFilledCount() > 0 && (
+             <span className="ml-0.5 text-[9px] bg-primary/20 text-primary px-1 rounded">
+               {getCinematographyFilledCount()}
+             </span>
+           )}
          </Button>
          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={onClose}>
            <X className="w-4 h-4" />
@@ -636,6 +664,24 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
            />
          </div>
         </div>
+
+        {/* Cinematography Sections */}
+        <AnimatePresence>
+          {showCinematography && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <CinematographySections
+                settings={formData.cinematography}
+                onChange={handleCinematographyChange}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </form>
 
       {/* Footer */}
