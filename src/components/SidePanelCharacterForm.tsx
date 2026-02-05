@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
  import { Badge } from "@/components/ui/badge";
  import { ScrollArea } from "@/components/ui/scroll-area";
- import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users } from "lucide-react";
+ import { X, Sparkles, Upload, ChevronDown, Search, Check, Image, Users, Star, Trash2 } from "lucide-react";
 import { toast } from "sonner";
  import { visualStyles, styleCategories, getStylesByCategory } from "@/data/visualStyles";
  import { characterTemplates, templateCategories, getTemplatesByCategory, TemplateCategory } from "@/data/characterTemplates";
+ import { useCustomTemplates } from "@/hooks/useCustomTemplates";
 
 interface SidePanelCharacterFormProps {
   character?: Character;
@@ -19,6 +20,8 @@ interface SidePanelCharacterFormProps {
 }
 
 export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanelCharacterFormProps) {
+  const { customTemplates, addCustomTemplate, removeCustomTemplate } = useCustomTemplates();
+  
   const [formData, setFormData] = useState({
     name: character?.name || "",
     description: character?.description || "",
@@ -38,10 +41,22 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
    const [isDragging, setIsDragging] = useState(false);
    const [imagePreview, setImagePreview] = useState<string | null>(character?.imageUrl || null);
    const [showTemplates, setShowTemplates] = useState(false);
-  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<TemplateCategory>("Todos");
+  const [selectedTemplateCategory, setSelectedTemplateCategory] = useState<string>("Todos");
    const fileInputRef = useRef<HTMLInputElement>(null);
  
-  const filteredTemplates = getTemplatesByCategory(selectedTemplateCategory);
+  // Combine built-in and custom templates
+  const allTemplates = [
+    ...customTemplates.map(t => ({ ...t, category: "Favoritos" as const })),
+    ...characterTemplates,
+  ];
+  
+  const extendedCategories = ["Favoritos", ...templateCategories] as const;
+  
+  const filteredTemplates = selectedTemplateCategory === "Favoritos"
+    ? customTemplates
+    : selectedTemplateCategory === "Todos"
+    ? characterTemplates
+    : getTemplatesByCategory(selectedTemplateCategory as TemplateCategory);
  
    const filteredStyles = visualStyles.filter(s => 
      s.label.toLowerCase().includes(styleSearch.toLowerCase()) ||
@@ -154,6 +169,38 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
      setShowTemplates(false);
      toast.success(`Template "${template.name}" aplicado!`);
    };
+ 
+   const saveAsCustomTemplate = () => {
+     if (!formData.name.trim() || !formData.basePrompt.trim()) {
+       toast.error("Preencha nome e prompt base para salvar como template");
+       return;
+     }
+     
+     const emojiOptions = ["⭐", "💎", "🎨", "✨", "🌟", "💫", "🔮", "🎭"];
+     const randomEmoji = emojiOptions[Math.floor(Math.random() * emojiOptions.length)];
+     
+     addCustomTemplate({
+       name: formData.name,
+       category: "Favoritos",
+       description: formData.description || "Template personalizado",
+       basePrompt: formData.basePrompt,
+       attributes: {
+         age: formData.attributes.age,
+         gender: formData.attributes.gender,
+         style: formData.attributes.style,
+         features: formData.attributes.features,
+       },
+       thumbnail: randomEmoji,
+     });
+     
+     toast.success("Template salvo nos favoritos!");
+   };
+ 
+   const handleDeleteCustomTemplate = (e: React.MouseEvent, templateId: string) => {
+     e.stopPropagation();
+     removeCustomTemplate(templateId);
+     toast.success("Template removido dos favoritos");
+   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -210,16 +257,20 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
            <div className="p-3">
             {/* Category Filter */}
             <div className="flex gap-1 mb-3 flex-wrap">
-              {templateCategories.map((category) => (
+              {extendedCategories.map((category) => (
                 <Button
                   key={category}
                   type="button"
                   variant={selectedTemplateCategory === category ? "default" : "outline"}
                   size="sm"
-                  className="h-6 text-[10px] px-2"
-                  onClick={() => setSelectedTemplateCategory(category)}
+                  className={`h-6 text-[10px] px-2 ${category === "Favoritos" ? "gap-1" : ""}`}
+                  onClick={() => setSelectedTemplateCategory(category as TemplateCategory)}
                 >
+                  {category === "Favoritos" && <Star className="w-2.5 h-2.5" />}
                   {category}
+                  {category === "Favoritos" && customTemplates.length > 0 && (
+                    <span className="ml-0.5 text-[9px] opacity-70">({customTemplates.length})</span>
+                  )}
                 </Button>
               ))}
             </div>
@@ -227,13 +278,32 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
             {/* Templates Grid */}
             <ScrollArea className="h-36">
               <div className="grid grid-cols-3 gap-2">
-                {filteredTemplates.map((template) => (
+                {selectedTemplateCategory === "Favoritos" && customTemplates.length === 0 ? (
+                  <div className="col-span-3 text-center py-6">
+                    <Star className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                    <p className="text-[10px] text-muted-foreground">
+                      Nenhum template favorito ainda.
+                    </p>
+                    <p className="text-[10px] text-muted-foreground/70">
+                      Use o botão ⭐ no formulário para salvar.
+                    </p>
+                  </div>
+                ) : filteredTemplates.map((template) => (
                   <button
                     key={template.id}
                     type="button"
                     onClick={() => applyTemplate(template)}
-                    className="p-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-center group"
+                    className="p-2 rounded-lg border border-border hover:border-primary hover:bg-primary/5 transition-all text-center group relative"
                   >
+                    {"isCustom" in template && (
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteCustomTemplate(e, template.id)}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    )}
                     <span className="text-2xl block mb-1">{template.thumbnail}</span>
                     <span className="text-[10px] font-medium text-foreground group-hover:text-primary line-clamp-1">
                       {template.name}
@@ -570,6 +640,9 @@ export function SidePanelCharacterForm({ character, onSave, onClose }: SidePanel
 
       {/* Footer */}
       <div className="p-3 border-t border-border flex gap-2">
+        <Button type="button" variant="ghost" size="icon" className="shrink-0" onClick={saveAsCustomTemplate} title="Salvar como template favorito">
+          <Star className="w-4 h-4" />
+        </Button>
         <Button type="button" variant="ghost" className="flex-1" onClick={onClose}>
           Cancelar
         </Button>
