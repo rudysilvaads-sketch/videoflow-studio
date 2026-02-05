@@ -41,8 +41,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
    }
  
   if (message.type === 'INJECT_PROMPT') {
-    const result = injectPromptToFlow(message.prompt);
-    sendResponse(result);
+    injectPromptToFlow(message.prompt)
+      .then((result) => sendResponse(result))
+      .catch((error) => {
+        console.error('[LaCasaDark] Erro no INJECT_PROMPT:', error);
+        sendResponse({ success: false, error: error?.message || String(error) });
+      });
     return true;
   }
   
@@ -415,10 +419,10 @@ function findSubmitButton() {
 }
 
 // Injetar prompt no campo de texto do Flow
-function injectPromptToFlow(prompt) {
+async function injectPromptToFlow(prompt) {
   console.log('[LaCasaDark] Tentando injetar prompt:', prompt.substring(0, 50) + '...');
-  
-  const promptField = findPromptField();
+
+  const promptField = (await waitForPromptField(6000)) || findPromptField();
   
   if (!promptField) {
     showNotification('❌ Campo de prompt não encontrado!', 'error');
@@ -426,51 +430,31 @@ function injectPromptToFlow(prompt) {
   }
   
   try {
-    // Focar no campo primeiro
-    promptField.focus();
-    
-    // Determinar o tipo de campo
-    if (promptField.tagName === 'TEXTAREA' || promptField.tagName === 'INPUT') {
-      // Campo de input padrão
-      promptField.value = prompt;
-      
-      // Disparar eventos para frameworks React/Angular
-      const inputEvent = new Event('input', { bubbles: true, cancelable: true });
-      promptField.dispatchEvent(inputEvent);
-      
-      const changeEvent = new Event('change', { bubbles: true, cancelable: true });
-      promptField.dispatchEvent(changeEvent);
-      
-      // Simular digitação para alguns frameworks
-      promptField.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'a', code: 'KeyA' }));
-      promptField.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true, key: 'a', code: 'KeyA' }));
-      
-    } else if (promptField.contentEditable === 'true') {
-      // Campo contenteditable
-      promptField.innerHTML = '';
-      promptField.textContent = prompt;
-      
-      // Disparar eventos
-      promptField.dispatchEvent(new Event('input', { bubbles: true }));
-      promptField.dispatchEvent(new Event('change', { bubbles: true }));
-    }
+    // Reusar a rotina robusta (fila) para inserir prompt
+    await insertPrompt(promptField, prompt);
     
     console.log('[LaCasaDark] Prompt inserido com sucesso!');
     showNotification('✅ Prompt inserido!', 'success');
-    
-    // Tentar clicar no botão de enviar após um delay
-    setTimeout(() => {
-      const submitButton = findSubmitButton();
-      if (submitButton) {
-        console.log('[LaCasaDark] Clicando no botão de enviar...');
-        submitButton.click();
-        showNotification('🚀 Enviando para o Flow...', 'info');
-      } else {
-        showNotification('⚠️ Clique na seta → para enviar', 'warning');
-      }
-    }, 500);
-    
-    return { success: true };
+
+    // Tentar enviar/gerar (com retry + fallback Enter)
+    await delay(350);
+    let submitted = false;
+    for (let i = 0; i < 8; i++) {
+      // Em alguns estados o botão habilita poucos ms depois do input
+      submitted = await clickSubmitButton();
+      if (submitted) break;
+      await delay(250);
+    }
+
+    if (submitted) {
+      showNotification('🚀 Gerando vídeo...', 'info');
+      // Iniciar monitor/download também no modo manual
+      startVideoMonitor(currentSceneNumber);
+      return { success: true };
+    }
+
+    showNotification('⚠️ Não consegui iniciar automaticamente — clique na seta →', 'warning');
+    return { success: true, warning: 'Submit button not clicked' };
     
   } catch (error) {
     console.error('[LaCasaDark] Erro ao injetar prompt:', error);
