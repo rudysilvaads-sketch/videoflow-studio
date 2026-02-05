@@ -74,6 +74,7 @@ import {
   Compass
 } from "lucide-react";
 import { SurvivalTab } from "@/components/sidepanel";
+ import { SettingsTab } from "@/components/sidepanel";
 import { toast } from "sonner";
 import logoDark from "@/assets/logo-lacasadark.png";
 
@@ -1518,159 +1519,48 @@ Com detalhes visuais e cinematográficos.
         </TabsContent>
 
         {/* Settings Tab */}
-        <TabsContent value="settings" className="flex-1 overflow-auto mt-0 p-4 space-y-5">
-          {/* General Settings */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Settings className="w-4 h-4 text-primary" />
-              Configurações Gerais
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Vídeos por tarefa:</Label>
-                <Select 
-                  value={String(settings.videosPerTask)} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, videosPerTask: parseInt(v) }))}
-                >
-                  <SelectTrigger className="w-32 h-8 text-xs rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5].map(n => (
-                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Modelo:</Label>
-                <Select 
-                  value={settings.model} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, model: v }))}
-                >
-                  <SelectTrigger className="w-40 h-8 text-xs rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="veo-3.1-fast">Veo 3.1 Fast (Rápido)</SelectItem>
-                    <SelectItem value="veo-3.1">Veo 3.1 (Qualidade)</SelectItem>
-                    <SelectItem value="veo-3">Veo 3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Proporção:</Label>
-                <Select 
-                  value={settings.ratio} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, ratio: v }))}
-                >
-                  <SelectTrigger className="w-40 h-8 text-xs rounded-lg">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="16:9">16:9 (Widescreen)</SelectItem>
-                    <SelectItem value="9:16">9:16 (Vertical/Shorts)</SelectItem>
-                    <SelectItem value="1:1">1:1 (Quadrado)</SelectItem>
-                    <SelectItem value="4:3">4:3 (Clássico)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Iniciar do prompt:</Label>
-                <div className="flex items-center gap-1">
-                  <Input 
-                    type="number" 
-                    min={1} 
-                    value={settings.startFrom}
-                    onChange={(e) => setSettings(s => ({ ...s, startFrom: parseInt(e.target.value) || 1 }))}
-                    className="w-16 h-8 text-xs text-center rounded-lg"
-                  />
-                  <span className="text-xs text-muted-foreground">#</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-xs">Tempo de espera (seg):</Label>
-                <div className="flex items-center gap-1">
-                  <Input 
-                    type="number" 
-                    min={10} 
-                    value={settings.waitTimeMin}
-                    onChange={(e) => setSettings(s => ({ ...s, waitTimeMin: parseInt(e.target.value) || 30 }))}
-                    className="w-14 h-8 text-xs text-center rounded-lg"
-                  />
-                  <span className="text-xs text-muted-foreground">a</span>
-                  <Input 
-                    type="number" 
-                    min={10} 
-                    value={settings.waitTimeMax}
-                    onChange={(e) => setSettings(s => ({ ...s, waitTimeMax: parseInt(e.target.value) || 60 }))}
-                    className="w-14 h-8 text-xs text-center rounded-lg"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Download Settings */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Download className="w-4 h-4 text-accent" />
-              Download
-            </h3>
-            <div className="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
-              <div className="flex items-center gap-2">
-                <div>
-                  <Label className="text-xs font-medium">Download Automático</Label>
-                  <p className="text-[10px] text-muted-foreground">Baixar vídeos ao concluir</p>
-                </div>
-              </div>
-              <Switch 
-                checked={settings.autoDownload}
-                onCheckedChange={(v) => setSettings(s => ({ ...s, autoDownload: v }))}
-              />
-            </div>
-          </div>
-
-          {/* Character Management */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <User className="w-4 h-4 text-primary" />
-              Personagens
-            </h3>
-            <div className="space-y-2">
-              {characters.map(char => (
-                <div key={char.id} className="p-2.5 rounded-xl border border-border bg-card flex items-center gap-2.5">
-                  {char.imageUrl && (
-                    <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-border" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium truncate">{char.name}</p>
-                    <p className="text-[10px] text-muted-foreground truncate">{char.attributes.style}</p>
-                  </div>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => setCharacters(prev => prev.filter(c => c.id !== char.id))}
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                </div>
-              ))}
-              <Button 
-                variant="outline" 
-                className="w-full h-9 text-xs gap-1.5 border-dashed"
-                onClick={() => setShowCharacterForm(true)}
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Adicionar Personagem
-              </Button>
-            </div>
-          </div>
+         <TabsContent value="settings" className="flex-1 overflow-auto mt-0">
+           <SettingsTab 
+             settings={settings} 
+             onSettingsChange={setSettings}
+           />
+           
+           {/* Character Management - mantido separadamente */}
+           <div className="px-4 pb-4">
+             <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+               <User className="w-4 h-4 text-primary" />
+               Personagens
+             </h3>
+             <div className="space-y-2">
+               {characters.map(char => (
+                 <div key={char.id} className="p-2.5 rounded-xl border border-border bg-card flex items-center gap-2.5">
+                   {char.imageUrl && (
+                     <img src={char.imageUrl} alt={char.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-border" />
+                   )}
+                   <div className="flex-1 min-w-0">
+                     <p className="text-xs font-medium truncate">{char.name}</p>
+                     <p className="text-[10px] text-muted-foreground truncate">{char.attributes.style}</p>
+                   </div>
+                   <Button 
+                     variant="ghost" 
+                     size="icon" 
+                     className="h-7 w-7 text-destructive hover:text-destructive"
+                     onClick={() => setCharacters(prev => prev.filter(c => c.id !== char.id))}
+                   >
+                     <Trash2 className="w-3.5 h-3.5" />
+                   </Button>
+                 </div>
+               ))}
+               <Button 
+                 variant="outline" 
+                 className="w-full h-9 text-xs gap-1.5 border-dashed"
+                 onClick={() => setShowCharacterForm(true)}
+               >
+                 <Plus className="w-3.5 h-3.5" />
+                 Adicionar Personagem
+               </Button>
+             </div>
+           </div>
         </TabsContent>
 
         {/* History Tab */}
