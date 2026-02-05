@@ -9,6 +9,7 @@
    prompt: string;
    cookies: string;
    seed?: number;
+  validateOnly?: boolean;
  }
  
  serve(async (req) => {
@@ -18,9 +19,9 @@
    }
  
    try {
-     const { prompt, cookies, seed }: GenerateRequest = await req.json();
+    const { prompt, cookies, seed, validateOnly }: GenerateRequest = await req.json();
  
-     if (!prompt) {
+    if (!prompt && !validateOnly) {
        return new Response(
          JSON.stringify({ error: 'Prompt is required' }),
          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -34,6 +35,66 @@
        );
      }
  
+    // Validation-only mode: test if cookies are valid
+    if (validateOnly) {
+      console.log('[ImageFX] Validating cookies...');
+      
+      // Make a minimal request to check if cookies are valid
+      const testPayload = {
+        userInput: {
+          candidatesCount: 1,
+          prompts: ["test validation"],
+          seed: 1,
+        },
+        clientContext: {
+          sessionId: crypto.randomUUID(),
+          tool: "IMAGE_FX",
+        },
+      };
+
+      const testResponse = await fetch('https://aisandbox-pa.googleapis.com/v1:runImageFx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Cookie': cookies,
+          'Origin': 'https://labs.google',
+          'Referer': 'https://labs.google/',
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        },
+        body: JSON.stringify(testPayload),
+      });
+
+      if (!testResponse.ok) {
+        const status = testResponse.status;
+        console.log('[ImageFX] Validation failed with status:', status);
+        
+        if (status === 401 || status === 403) {
+          return new Response(
+            JSON.stringify({ 
+              valid: false,
+              error: 'Cookies expirados ou inválidos.',
+              code: 'COOKIES_EXPIRED' 
+            }),
+            { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        return new Response(
+          JSON.stringify({ 
+            valid: false,
+            error: `Erro ao validar: ${status}`,
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      console.log('[ImageFX] Cookies validated successfully');
+      return new Response(
+        JSON.stringify({ valid: true }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
      console.log('[ImageFX] Generating image with prompt:', prompt.substring(0, 100) + '...');
      console.log('[ImageFX] Using seed:', seed || 'random');
  
